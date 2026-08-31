@@ -1,7 +1,7 @@
 SET GLOBAL log_bin_trust_function_creators = 1;
-DROP DATABASE IF EXISTS mcs_ctype_extent_utf8mb3;
-CREATE DATABASE mcs_ctype_extent_utf8mb3;
-USE mcs_ctype_extent_utf8mb3;
+DROP DATABASE IF EXISTS mcs_ctype_extent_utf8mb4;
+CREATE DATABASE mcs_ctype_extent_utf8mb4;
+USE mcs_ctype_extent_utf8mb4;
 SET default_storage_engine=ColumnStore;
 CREATE PROCEDURE show_extent_min_max(schema_arg VARCHAR(64),
 table_arg VARCHAR(64),
@@ -43,8 +43,8 @@ SET @errmsg=caltrace_extract_block_diagnostics(@errmsg);
 RESIGNAL SET MESSAGE_TEXT=@errmsg;
 END;
 DO calsettrace(1);
-SET stmt='CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci)';
-SET stmt=REPLACE(stmt,'utf8mb3_general_ci', collation);
+SET stmt='CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci)';
+SET stmt=REPLACE(stmt,'utf8mb4_general_ci', collation);
 SELECT stmt AS ``;
 EXECUTE IMMEDIATE stmt;
 INSERT INTO t1 VALUES ('a');
@@ -55,8 +55,8 @@ SHOW WARNINGS;
 SELECT * FROM t1 WHERE c1='b';
 SHOW WARNINGS;
 DROP TABLE t1;
-SET stmt='CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci)';
-SET stmt=REPLACE(stmt,'utf8mb3_general_ci', collation);
+SET stmt='CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci)';
+SET stmt=REPLACE(stmt,'utf8mb4_general_ci', collation);
 SELECT stmt AS ``;
 EXECUTE IMMEDIATE stmt;
 INSERT INTO t1 VALUES ('aa');
@@ -70,13 +70,13 @@ DROP TABLE t1;
 DO calsettrace(0);
 END;
 $$
-CALL test('utf8mb3_unicode_ci');
+CALL test('utf8mb4_unicode_ci');
 
-CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci)
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)
 c1	HEX(c1)
 a	61
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_utf8mb3	t1	c1	61	61
+mcs_ctype_extent_utf8mb4	t1	c1	61	61
 c1
 a
 Level	Code	Message
@@ -85,11 +85,11 @@ c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
 
-CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci)
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci)
 c1	HEX(c1)
 aa	6161
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_utf8mb3	t1	c1	6161	6161
+mcs_ctype_extent_utf8mb4	t1	c1	6161	6161
 c1
 aa
 Level	Code	Message
@@ -97,13 +97,13 @@ Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
-CALL test('utf8mb3_unicode_nopad_ci');
+CALL test('utf8mb4_unicode_nopad_ci');
 
-CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_nopad_ci)
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_nopad_ci)
 c1	HEX(c1)
 a	61
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_utf8mb3	t1	c1	61	61
+mcs_ctype_extent_utf8mb4	t1	c1	61	61
 c1
 a
 Level	Code	Message
@@ -112,11 +112,11 @@ c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
 
-CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_nopad_ci)
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_nopad_ci)
 c1	HEX(c1)
 aa	6161
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_utf8mb3	t1	c1	6161	6161
+mcs_ctype_extent_utf8mb4	t1	c1	6161	6161
 c1
 aa
 Level	Code	Message
@@ -124,13 +124,13 @@ Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
-CALL test('utf8mb3_general_ci');
+CALL test('utf8mb4_general_ci');
 
-CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci)
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci)
 c1	HEX(c1)
 a	61
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_utf8mb3	t1	c1	61	61
+mcs_ctype_extent_utf8mb4	t1	c1	61	61
 c1
 a
 Level	Code	Message
@@ -139,11 +139,11 @@ c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
 
-CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci)
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci)
 c1	HEX(c1)
 aa	6161
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_utf8mb3	t1	c1	6161	6161
+mcs_ctype_extent_utf8mb4	t1	c1	6161	6161
 c1
 aa
 Level	Code	Message
@@ -151,13 +151,13 @@ Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
-CALL test('utf8mb3_general_nopad_ci');
+CALL test('utf8mb4_general_nopad_ci');
 
-CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_nopad_ci)
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_nopad_ci)
 c1	HEX(c1)
 a	61
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_utf8mb3	t1	c1	61	61
+mcs_ctype_extent_utf8mb4	t1	c1	61	61
 c1
 a
 Level	Code	Message
@@ -166,11 +166,11 @@ c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
 
-CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_nopad_ci)
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_nopad_ci)
 c1	HEX(c1)
 aa	6161
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_utf8mb3	t1	c1	6161	6161
+mcs_ctype_extent_utf8mb4	t1	c1	6161	6161
 c1
 aa
 Level	Code	Message
@@ -178,13 +178,13 @@ Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
-CALL test('utf8mb3_bin');
+CALL test('utf8mb4_bin');
 
-CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin)
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin)
 c1	HEX(c1)
 a	61
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_utf8mb3	t1	c1	61	61
+mcs_ctype_extent_utf8mb4	t1	c1	61	61
 c1
 a
 Level	Code	Message
@@ -193,11 +193,11 @@ c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
 
-CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin)
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin)
 c1	HEX(c1)
 aa	6161
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_utf8mb3	t1	c1	6161	6161
+mcs_ctype_extent_utf8mb4	t1	c1	6161	6161
 c1
 aa
 Level	Code	Message
@@ -205,13 +205,13 @@ Note	9999	BlocksTouched-2; PartitionBlocksEliminated-0;
 c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
-CALL test('utf8mb3_nopad_bin');
+CALL test('utf8mb4_nopad_bin');
 
-CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_nopad_bin)
+CREATE TABLE t1 (c1 CHAR(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_nopad_bin)
 c1	HEX(c1)
 a	61
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_utf8mb3	t1	c1	61	61
+mcs_ctype_extent_utf8mb4	t1	c1	61	61
 c1
 a
 Level	Code	Message
@@ -220,11 +220,11 @@ c1
 Level	Code	Message
 Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
 
-CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_nopad_bin)
+CREATE TABLE t1 (c1 CHAR(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_nopad_bin)
 c1	HEX(c1)
 aa	6161
 table_schema	table_name	column_name	hex(CAST(e.min_value AS SIGNED))	hex(CAST(e.max_value AS SIGNED))
-mcs_ctype_extent_utf8mb3	t1	c1	6161	6161
+mcs_ctype_extent_utf8mb4	t1	c1	6161	6161
 c1
 aa
 Level	Code	Message
@@ -235,5 +235,5 @@ Note	9999	BlocksTouched-0; PartitionBlocksEliminated-1;
 DROP PROCEDURE test;
 DROP PROCEDURE show_extent_min_max;
 DROP FUNCTION caltrace_extract_block_diagnostics;
-DROP DATABASE mcs_ctype_extent_utf8mb3;
+DROP DATABASE mcs_ctype_extent_utf8mb4;
 USE test;

@@ -8,7 +8,7 @@ CREATE TABLE `part` (
   `P_CONTAINER` char(10) NOT NULL,
   `P_RETAILPRICE` decimal(15,2) NOT NULL,
   `P_COMMENT` varchar(23) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `part` (
     `P_PARTKEY`, `P_NAME`, `P_MFGR`, `P_BRAND`, `P_TYPE`, 

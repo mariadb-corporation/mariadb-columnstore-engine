@@ -25,7 +25,7 @@ CREATE TABLE `cs_test_lhh` (
   `level` int(11) NOT NULL,
   `is_estimate` tinyint(1) NOT NULL DEFAULT 0,
   `most_detailed` tinyint(4) DEFAULT NULL
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `cs_test_exclude` VALUES
     ('Value1',62,0,7),('Value1',63,0,7),('Value1',72,0,7),('Value1',4841,1,7),('Value1',4842,1,7),
@@ -91,7 +91,7 @@ INSERT INTO `cs_test_lhh` VALUES
     (99,193259578,966379021,1247,'4842',1,0,1),(100,798259742,56493273,1251,'4841',7,1,0);
 
 DELIMITER $$;
-CREATE FUNCTION `cs_test_function`(p_username VARCHAR(128), p_gbd_round_id INT(11)) RETURNS text CHARSET utf8mb3 COLLATE utf8mb3_general_ci
+CREATE FUNCTION `cs_test_function`(p_username VARCHAR(128), p_gbd_round_id INT(11)) RETURNS text CHARSET utf8mb4 COLLATE utf8mb4_general_ci
     READS SQL DATA
     DETERMINISTIC
 BEGIN

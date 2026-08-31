@@ -4,9 +4,9 @@
 
 SET NAMES utf8;
 
-SET @datatype='VARCHAR(4) CHARACTER SET utf8 COLLATE utf8_bin';
+SET @datatype='VARCHAR(4) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin';
 
-CREATE TABLE t1 (c1 VARCHAR(4) CHARACTER SET utf8 COLLATE utf8_bin);
+CREATE TABLE t1 (c1 VARCHAR(4) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin);
 
 CALL test01_populate(1,3);
 CALL test01_field_literal(1,4);

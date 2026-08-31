@@ -6,7 +6,7 @@ CREATE TABLE `t1` (
 `name1` char(10) DEFAULT NULL COMMENT 'test name',
 `name2` varchar(100) DEFAULT NULL COMMENT 'test name',
 `name3` text DEFAULT NULL COMMENT 'test name'
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 ALTER TABLE t1 CHANGE COLUMN id id1 INT;
 ALTER TABLE t1 CHANGE COLUMN id1 id INT COMMENT 'new comment';
 ALTER TABLE t1 CHANGE COLUMN name1 firstname char(10);
@@ -16,10 +16,10 @@ ALTER TABLE t1 CHANGE COLUMN lastname lastname varchar(100) COMMENT 'new comment
 ALTER TABLE t1 CHANGE COLUMN name3 surname text;
 ALTER TABLE t1 CHANGE COLUMN surname surname text COMMENT 'new comment';
 CREATE TABLE `t2` (
-`name4` varchar(2666) DEFAULT NULL COMMENT 'test name'
-) ENGINE=Columnstore DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
-ALTER TABLE t2 CHANGE COLUMN name4 pseudoname varchar(2666);
-ALTER TABLE t2 CHANGE COLUMN pseudoname pseudoname varchar(2666) COMMENT 'new comment';
+`name4` varchar(1999) DEFAULT NULL COMMENT 'test name'
+) ENGINE=Columnstore DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+ALTER TABLE t2 CHANGE COLUMN name4 pseudoname varchar(1999);
+ALTER TABLE t2 CHANGE COLUMN pseudoname pseudoname varchar(1999) COMMENT 'new comment';
 CREATE TABLE `t3` (
 `name4` varchar(8000) DEFAULT NULL COMMENT 'test name'
 ) ENGINE=Columnstore DEFAULT CHARSET=latin1;

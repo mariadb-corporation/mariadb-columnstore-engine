@@ -10,12 +10,17 @@ CREATE DATABASE mcol5744;
 SET old_mode='';
 
 CREATE TABLE t(x text CHARACTER SET utf8 COLLATE utf8_general_ci) ENGINE=COLUMNSTORE;
+# compatibility with old servers: server 10.6 or older does not show charset
+--replace_result "text DEFAULT NULL"  "text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL"
 SHOW CREATE TABLE t;
 DROP TABLE t;
 
+--disable_warnings
 SET old_mode='UTF8_IS_UTF8MB3';
+--enable_warnings
 
 CREATE TABLE t(x text CHARACTER SET utf8 COLLATE utf8_general_ci) ENGINE=COLUMNSTORE;
+--replace_result "text CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL" "text DEFAULT NULL"
 SHOW CREATE TABLE t;
 DROP TABLE t;
 

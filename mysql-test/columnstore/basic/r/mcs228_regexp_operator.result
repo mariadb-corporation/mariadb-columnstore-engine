@@ -538,7 +538,7 @@ t1_TIME	REGEXP_REPLACE(t1_TIME, '22$', 'KittyCat')
 22:12:02	22:12:02
 23:59:59	23:59:59
 SET character_set_connection = 'utf8';
-SET NAMES utf8mb3;
+SET NAMES utf8mb4;
 CREATE TABLE t2 (hello text) DEFAULT CHARSET=utf8 engine columnstore;
 INSERT INTO t2 values('こんにちは');
 INSERT INTO t2 values('привет');

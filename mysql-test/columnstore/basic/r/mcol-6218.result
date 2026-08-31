@@ -5,8 +5,8 @@ CREATE TABLE person (
 name VARCHAR(100) NOT NULL,
 surname VARCHAR(100) DEFAULT NULL
 ) ENGINE=Columnstore
-DEFAULT CHARSET=utf8mb3
-COLLATE=utf8mb3_general_ci;
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_general_ci;
 INSERT INTO person (name, surname) VALUES
 ('Warren Baby', NULL),
 ('Charlie', 'Parker'),

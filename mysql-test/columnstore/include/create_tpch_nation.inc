@@ -3,7 +3,7 @@ CREATE TABLE `nation` (
   `N_NAME` char(25) NOT NULL,
   `N_REGIONKEY` int(11) NOT NULL,
   `N_COMMENT` varchar(152) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `nation` (
     `N_NATIONKEY`, `N_NAME`, `N_REGIONKEY`, `N_COMMENT`

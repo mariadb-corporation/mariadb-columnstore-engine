@@ -151,7 +151,7 @@ SELECT t1_TIME, REGEXP_REPLACE(t1_TIME, '(59)+', 'KittyCat') FROM t1 ORDER BY 1;
 SELECT t1_TIME, REGEXP_REPLACE(t1_TIME, '22$', 'KittyCat') FROM t1 ORDER BY 1;
 
 SET character_set_connection = 'utf8';
-SET NAMES utf8mb3;
+SET NAMES utf8mb4;
 
 CREATE TABLE t2 (hello text) DEFAULT CHARSET=utf8 engine columnstore;
 INSERT INTO t2 values('こんにちは');

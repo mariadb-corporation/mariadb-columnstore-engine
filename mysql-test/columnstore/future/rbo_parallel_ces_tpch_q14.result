@@ -23,7 +23,7 @@ CREATE TABLE `lineitem` (
 `L_COMMENT` varchar(44) NOT NULL,
 `recdate_gt_commitdate` tinyint(4) NOT NULL DEFAULT 0,
 KEY `L_ORDERKEY` (`L_ORDERKEY`,`L_SUPPKEY`,`recdate_gt_commitdate`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 INSERT INTO `lineitem` (
 `L_ORDERKEY`, `L_PARTKEY`, `L_SUPPKEY`, `L_LINENUMBER`, 
 `L_QUANTITY`, `L_EXTENDEDPRICE`, `L_DISCOUNT`, `L_TAX`,
@@ -81,7 +81,7 @@ CREATE TABLE `part` (
 `P_CONTAINER` char(10) NOT NULL,
 `P_RETAILPRICE` decimal(15,2) NOT NULL,
 `P_COMMENT` varchar(23) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 INSERT INTO `part` (
 `P_PARTKEY`, `P_NAME`, `P_MFGR`, `P_BRAND`, `P_TYPE`, 
 `P_SIZE`, `P_CONTAINER`, `P_RETAILPRICE`, `P_COMMENT`
