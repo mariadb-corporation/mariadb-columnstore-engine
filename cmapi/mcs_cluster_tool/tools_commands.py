@@ -43,6 +43,7 @@ from mcs_cluster_tool.install_es_helpers import (
     get_current_versions,
     setup_install_es_logging,
     stop_upgrade_agents_on_cluster,
+    validate_cej_preupgrade,
     validate_es_token_and_version,
     wait_for_cmapi_ready,
     wait_for_upgrade_agents_ready,
@@ -623,6 +624,12 @@ def install_es(
             post_output.append(f'[{color}]{msg}[/{color}]')
         else:
             post_output.append(msg)
+
+    # Pre-upgrade check: make sure CEJ (Cross-Engine Join) credentials are
+    # valid before touching anything. Newer versions refuse to start the
+    # cluster with broken/empty CEJ credentials, so a currently-working
+    # installation with invalid credentials must be fixed before upgrading.
+    validate_cej_preupgrade(console)
 
     # Validate token and resolve target version
     target_version = validate_es_token_and_version(
