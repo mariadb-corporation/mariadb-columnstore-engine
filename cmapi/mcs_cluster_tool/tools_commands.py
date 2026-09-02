@@ -26,7 +26,7 @@ from cmapi_server.constants import (
 from cmapi_server.controllers.api_clients import (
     ClusterControllerClient, NodeControllerClient
 )
-from cmapi_server.exceptions import CEJError
+from cmapi_server.exceptions import CEJError, CMAPIBasicError
 from cmapi_server.handlers.cej import CEJPasswordHandler
 from cmapi_server.helpers import get_active_nodes, get_config_parser, get_current_key
 from cmapi_server.managers.transaction import TransactionManager
@@ -38,9 +38,12 @@ from mcs_cluster_tool.helpers import cook_sh_arg
 from mcs_cluster_tool.install_es_helpers import (
     INSTALL_ES_CMAPI_UPGRADE_SLEEP,
     INSTALL_ES_LONG_TRANSACTION_TIMEOUT,
+    MISSING_UPGRADE_API_HINT,
     build_node_status_table,
     call_upgrade_agents_on_all_nodes,
     get_current_versions,
+    is_missing_endpoint_error,
+    run_node_step_on_cluster,
     setup_install_es_logging,
     stop_upgrade_agents_on_cluster,
     validate_es_token_and_version,
@@ -692,6 +695,16 @@ def install_es(
         post_print('No active nodes found, used localhost.', 'yellow')
         active_nodes.append('localhost')
 
+    logger.info(
+        'Starting install_es: %s -> %s (%s) on %d node(s): %s | '
+        'cmapi_upgrade=%s, ignore_mismatch=%s, skip_cmapi=%s, '
+        'allow_cmapi_downgrade=%s',
+        mdb_curr_ver, target_version,
+        'downgrade' if is_downgrade else 'upgrade',
+        len(active_nodes), ', '.join(active_nodes),
+        should_upgrade_cmapi, ignore_mismatch, skip_cmapi, allow_cmapi_downgrade,
+    )
+
     with Progress(
         SpinnerColumn(),
         '[progress.description]{task.description}',
@@ -700,10 +713,12 @@ def install_es(
         console=console,
     ) as progress:
         step1_stop_cluster = progress.add_task('Stopping MCS cluster...', total=None)
+        logger.info('Stopping MCS cluster...')
         with TransactionManager(
             timeout=INSTALL_ES_LONG_TRANSACTION_TIMEOUT, handle_signals=True
         ):
             cluster_api_client.shutdown_cluster({'in_transaction': True})
+        logger.info('MCS cluster stopped.')
         progress.update(
             step1_stop_cluster, description='[green]MCS Cluster stopped ✓', total=100,
             completed=True
@@ -730,6 +745,27 @@ def install_es(
                 for node, resp in start_response.items()
                 if node != 'timestamp'
             }
+        except CMAPIBasicError as e:
+            # A 404/501 here means the running CMAPI predates the upgrade
+            # architecture and can't drive the rest of the flow. Give a clear,
+            # actionable message instead of a cryptic HTTP error and stop.
+            if is_missing_endpoint_error(e):
+                progress.update(
+                    step1_5_start_agents,
+                    description='[red]Upgrade architecture API not available ✗',
+                    total=100, completed=True,
+                )
+                progress.stop_task(step1_5_start_agents)
+                progress.stop()
+                logger.error(
+                    'start-upgrade-agent endpoint missing on connected CMAPI: %s',
+                    e.message,
+                )
+                console.print('[red]ERROR:[/red] Cannot start the upgrade agents.')
+                console.print(f'[yellow]{MISSING_UPGRADE_API_HINT}[/yellow]')
+                raise typer.Exit(code=1)
+            logger.error(f'Failed to start upgrade agents via CMAPI: {e.message}')
+            start_success = {}
         except requests.RequestException as e:
             logger.error(f'Failed to start upgrade agents via CMAPI: {e}')
             start_success = {}
@@ -759,8 +795,10 @@ def install_es(
         progress.stop_task(step1_5_start_agents)
 
         step2_stop_mariadb = progress.add_task('Stopping MariaDB server...', total=None)
+        logger.info('Stopping MariaDB server on all nodes...')
         # TODO: put MaxScale into maintainance mode
         cluster_api_client.stop_mariadb({'in_transaction': True})
+        logger.info('MariaDB server stopped on all nodes.')
         progress.update(
             step2_stop_mariadb, description='[green]MariaDB server stopped ✓', total=100,
             completed=True
@@ -770,7 +808,9 @@ def install_es(
         step3_install_es_repo = progress.add_task(
             'Installing MariaDB ES repository...', total=None
         )
+        logger.info('Installing MariaDB ES repository (target %s)...', target_version)
         cluster_api_client.install_repo(token=token, mariadb_version=target_version)
+        logger.info('MariaDB ES repository installed on all nodes.')
         progress.update(
             step3_install_es_repo, description='[green]Repository installed ✓', total=100,
             completed=True
@@ -835,9 +875,38 @@ def install_es(
         step4_preupgrade_backup = progress.add_task(
             'Starting pre-upgrade backup DBRM and configs on each node...', total=None
         )
-        cluster_api_client.preupgrade_backup()
+        # Iterate node by node so the progress bar shows exactly which node is
+        # being backed up instead of blocking until the whole cluster is done.
+        _, backup_errors = run_node_step_on_cluster(
+            active_nodes,
+            method_name='preupgrade_backup',
+            action_label='Backing up DBRM and configs',
+            progress=progress,
+            task_id=step4_preupgrade_backup,
+        )
+        if backup_errors:
+            failed_node = next(iter(backup_errors))
+            progress.update(
+                step4_preupgrade_backup,
+                description=f'[red]Pre-upgrade backup failed on {failed_node} ✗',
+                total=100, completed=True
+            )
+            progress.stop_task(step4_preupgrade_backup)
+            progress.stop()
+            console.print(
+                f'[red]ERROR:[/red] Pre-upgrade backup failed on {failed_node}.'
+            )
+            console.print(f'[red]{backup_errors[failed_node]}[/red]')
+            if is_missing_endpoint_error(CMAPIBasicError(backup_errors[failed_node])):
+                console.print(f'[yellow]{MISSING_UPGRADE_API_HINT}[/yellow]')
+            else:
+                console.print(
+                    '[yellow]Nothing was upgraded yet. Fix the issue and retry.[/yellow]'
+                )
+            raise typer.Exit(code=1)
         progress.update(
-            step4_preupgrade_backup, description='[green]PreUpgrade Backup completed ✓',
+            step4_preupgrade_backup,
+            description=f'[green]PreUpgrade Backup completed on {len(active_nodes)} node(s) ✓',
             total=100, completed=True
         )
         progress.stop_task(step4_preupgrade_backup)
@@ -845,9 +914,38 @@ def install_es(
         step5_upgrade_mdb_mcs = progress.add_task(
             'Upgrading MariaDB and Columnstore on each node...', total=None
         )
-        cluster_api_client.upgrade_mdb_mcs(
-            mariadb_version=mdb_target_ver, columnstore_version=mcs_target_ver
+        # Iterate node by node so long-running package upgrades report which
+        # node is currently being upgraded (a single node can take minutes).
+        _, upgrade_errors = run_node_step_on_cluster(
+            active_nodes,
+            method_name='upgrade_mdb_mcs',
+            action_label='Upgrading MariaDB and Columnstore',
+            progress=progress,
+            task_id=step5_upgrade_mdb_mcs,
+            mariadb_version=mdb_target_ver,
+            columnstore_version=mcs_target_ver,
         )
+        if upgrade_errors:
+            failed_node = next(iter(upgrade_errors))
+            progress.update(
+                step5_upgrade_mdb_mcs,
+                description=f'[red]Upgrade failed on {failed_node} ✗',
+                total=100, completed=True
+            )
+            progress.stop_task(step5_upgrade_mdb_mcs)
+            progress.stop()
+            console.print(
+                f'[red]ERROR:[/red] MariaDB/Columnstore upgrade failed on {failed_node}.'
+            )
+            console.print(f'[red]{upgrade_errors[failed_node]}[/red]')
+            if is_missing_endpoint_error(CMAPIBasicError(upgrade_errors[failed_node])):
+                console.print(f'[yellow]{MISSING_UPGRADE_API_HINT}[/yellow]')
+            else:
+                console.print(
+                    '[yellow]The cluster may be in a partially upgraded state. '
+                    'Check the upgrade log for details.[/yellow]'
+                )
+            raise typer.Exit(code=1)
         progress.update(
             step5_upgrade_mdb_mcs,
             description=f'[green]Upgraded to MariaDB {mdb_target_ver} and Columnstore {mcs_target_ver} ✓',
@@ -923,6 +1021,7 @@ def install_es(
 
         if should_upgrade_cmapi:
             step6_install_cmapi = progress.add_task('Upgrading CMAPI on each node...', total=None)
+            logger.info('Upgrading CMAPI to %s on all nodes...', cmapi_target_ver)
             try:
                 cluster_api_client.upgrade_cmapi(version=cmapi_target_ver)
                 # cmapi_updater service has 5 s timeout to give CMAPI time to handle response,
@@ -1132,14 +1231,20 @@ def install_es(
         # Start the cluster for both upgrades and downgrades (skip only on failure)
         if not failures:
             step8_start_cluster = progress.add_task('Starting MCS cluster...', total=None)
+            logger.info('Starting MCS cluster...')
             with TransactionManager(
                 timeout=INSTALL_ES_LONG_TRANSACTION_TIMEOUT, handle_signals=True
             ):
                 cluster_api_client.start_cluster({'in_transaction': True})
+            logger.info('MCS cluster started.')
             progress.update(
                 step8_start_cluster, description='[green]MCS Cluster started ✓', completed=True
             )
             progress.stop_task(step8_start_cluster)
+            logger.info(
+                'install_es completed successfully: %s -> %s.',
+                mdb_curr_ver, target_version,
+            )
             post_print('Upgrade completed and services restarted successfully.', 'green')
 
     # Render any deferred output now that the progress bar is complete

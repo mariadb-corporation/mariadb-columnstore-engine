@@ -34,6 +34,33 @@ INSTALL_ES_CMAPI_UPGRADE_SLEEP = 6    # seconds to wait after CMAPI upgrade requ
 INSTALL_ES_LONG_TRANSACTION_TIMEOUT = timedelta(days=1).total_seconds()
 
 
+# Message shown when the connected CMAPI does not expose the endpoints that
+# the upgrade architecture relies on (typically an older CMAPI version).
+MISSING_UPGRADE_API_HINT = (
+    'The CMAPI version currently running does not contain the upgrade '
+    'architecture APIs required to continue automatically.\n'
+    'Nothing else will be changed by this tool from here.\n'
+    'Please continue the process manually from this step (see the upgrade '
+    f'log at {UPGRADE_LOG_FILEPATH} for the exact point reached).'
+)
+
+
+def is_missing_endpoint_error(exc: CMAPIBasicError) -> bool:
+    """Return ``True`` if the error looks like a missing/unimplemented endpoint.
+
+    The API client wraps HTTP errors into ``CMAPIBasicError`` and embeds the
+    status code in the message. A ``404`` (or ``501``) means the connected
+    CMAPI version does not implement the requested upgrade-architecture
+    endpoint.
+
+    :param exc: The raised ``CMAPIBasicError``.
+    :return: Whether the error indicates a missing endpoint.
+    :rtype: bool
+    """
+    msg = getattr(exc, 'message', '') or str(exc)
+    return 'code 404' in msg or 'code 501' in msg
+
+
 def setup_install_es_logging() -> None:
     """Configure file logging for the ``install_es`` operation."""
     os.makedirs(UPGRADE_DIR, exist_ok=True)
@@ -401,6 +428,78 @@ def stop_upgrade_agents_on_cluster(
             results[node] = False
 
     return results
+
+
+def build_node_client(node: str, request_timeout: float = None) -> NodeControllerClient:
+    """Build a ``NodeControllerClient`` targeting a specific node.
+
+    :param node: Node hostname/IP. ``localhost``/``127.0.0.1`` target the
+        current node's CMAPI directly.
+    :param request_timeout: Optional per-request timeout (seconds).
+    :return: A configured ``NodeControllerClient``.
+    :rtype: NodeControllerClient
+    """
+    if node in ('localhost', '127.0.0.1'):
+        return NodeControllerClient(request_timeout=request_timeout)
+    return NodeControllerClient(
+        base_url=f'https://{node}:{CMAPI_PORT}',
+        request_timeout=request_timeout,
+    )
+
+
+def run_node_step_on_cluster(
+    active_nodes: list[str],
+    method_name: str,
+    action_label: str,
+    progress: Progress,
+    task_id,
+    request_timeout: float = None,
+    fail_fast: bool = True,
+    **method_kwargs,
+) -> tuple[dict[str, dict], dict[str, str]]:
+    """Run a ``NodeControllerClient`` method on each node one by one.
+
+    Unlike calling the cluster-wide endpoint (which blocks for the whole
+    cluster with no visible progress), this iterates node by node so the
+    progress bar can show exactly which node is currently being processed.
+    Each node's step is also logged to the upgrade log.
+
+    :param active_nodes: Nodes to run the step on, in order.
+    :param method_name: ``NodeControllerClient`` method to invoke per node.
+    :param action_label: Human-readable action name for progress/log messages
+        (e.g. ``'Upgrading MariaDB and Columnstore'``).
+    :param progress: Rich ``Progress`` instance to update.
+    :param task_id: Progress task ID to update.
+    :param request_timeout: Optional per-request timeout (seconds).
+    :param fail_fast: If ``True``, stop at the first failing node.
+    :param method_kwargs: Extra keyword args forwarded to the method.
+    :return: Tuple ``(results, errors)`` mapping node -> response / error text.
+    :rtype: tuple[dict[str, dict], dict[str, str]]
+    """
+    logger = logging.getLogger('mcs_cli')
+    results: dict[str, dict] = {}
+    errors: dict[str, str] = {}
+    total = len(active_nodes)
+
+    for i, node in enumerate(active_nodes, start=1):
+        progress.update(
+            task_id,
+            description=f'{action_label} on {node} ({i}/{total})...',
+            completed=None,
+        )
+        logger.info('%s on %s (%d/%d)...', action_label, node, i, total)
+        client = build_node_client(node, request_timeout=request_timeout)
+        try:
+            method = getattr(client, method_name)
+            results[node] = method(**method_kwargs)
+            logger.info('%s completed on %s (%d/%d).', action_label, node, i, total)
+        except CMAPIBasicError as exc:
+            errors[node] = exc.message
+            logger.error('%s failed on %s: %s', action_label, node, exc.message)
+            if fail_fast:
+                break
+
+    return results, errors
 
 
 def call_upgrade_agents_on_all_nodes(
