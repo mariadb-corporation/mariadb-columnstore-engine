@@ -56,6 +56,8 @@ endif()
 if(NOT TARGET columnstore)
     return()
 endif()
+# Vendored third-party code for the server SBOM generator (see the file).
+include(sbom_3rdparty)
 # releasenum is used by external scripts for various tasks. Leave it alone.
 columnstore_install_file(${CMAKE_CURRENT_BINARY_DIR}/build/releasenum ${ENGINE_SUPPORTDIR})
 columnstore_install_file(${CMAKE_CURRENT_BINARY_DIR}/gitversionEngine ${ENGINE_SUPPORTDIR})
