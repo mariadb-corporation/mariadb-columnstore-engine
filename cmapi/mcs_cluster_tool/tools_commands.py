@@ -26,10 +26,11 @@ from cmapi_server.constants import (
 from cmapi_server.controllers.api_clients import (
     ClusterControllerClient, NodeControllerClient
 )
-from cmapi_server.exceptions import CEJError
+from cmapi_server.exceptions import CEJError, CMAPIBasicError
 from cmapi_server.handlers.cej import CEJPasswordHandler
 from cmapi_server.helpers import get_active_nodes, get_config_parser, get_current_key
 from cmapi_server.managers.transaction import TransactionManager
+from cmapi_server.managers.upgrade.preinstall import PreInstallManager
 from cmapi_server.managers.upgrade.utils import ComparableVersion
 from cmapi_server.process_dispatchers.base import BaseDispatcher
 from mcs_cluster_tool.constants import MCS_COLUMNSTORE_REVIEW_SH
@@ -628,6 +629,17 @@ def install_es(
     target_version = validate_es_token_and_version(
         node_api_client, token, target_version, console
     )
+
+    # Prechecks: fail fast, before the cluster is stopped.
+    console.print('Running pre-upgrade checks...', style='green')
+    try:
+        PreInstallManager.check_gtid_strict_mode()
+        PreInstallManager.check_installed_plugins()
+    except CMAPIBasicError as exc:
+        console.print('[red]Pre-upgrade check failed:[/red]')
+        console.print(exc.message)
+        raise typer.Exit(code=1)
+    console.print('[green]Pre-upgrade checks passed ✓[/green]')
 
     # Retrieve current versions (handles mismatch display)
     versions = get_current_versions(cluster_api_client, console, ignore_mismatch)
