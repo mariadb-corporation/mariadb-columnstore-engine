@@ -16,7 +16,7 @@ source $(optparse.build)
 # Define test suite lists
 # 'future' suite is run separately because it requires innodb_queries_use_mcs=ON
 # (a READONLY startup variable for Query Accelerator / RBO tests).
-MTR_BASIC_SUITE_LIST="basic,bugfixes"
+MTR_BASIC_SUITE_LIST="basic,bugfixes,autopilot"
 MTR_FULL_SUITE_LIST="basic,bugfixes,devregression,autopilot,extended,multinode,oracle,1pmonly"
 MTR_FUTURE_SUITE="future"
 
