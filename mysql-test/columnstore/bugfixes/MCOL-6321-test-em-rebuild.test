@@ -151,9 +151,6 @@ SELECT SUBSTR(x,1,10) FROM t;
 --exec echo "deleting restored files"
 --exec rm -f /var/lib/columnstore/data1/systemFiles/dbrm/*
 
---exec echo "list /dev/shm/*"
---exec ls /dev/shm
-
 --exec echo "copy files back"
 --exec cp -p /var/lib/columnstore/data1/systemFiles/backup/* /var/lib/columnstore/data1/systemFiles/dbrm
 

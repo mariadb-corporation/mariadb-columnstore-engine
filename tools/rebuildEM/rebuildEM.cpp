@@ -118,7 +118,6 @@ int32_t EMReBuilder::collectExtents(const std::string& dbRootPath)
   }
 
   // generate FileId's for invisible LBIDs - these are not recorded in headers.
-  //addInvisibleLBIDs();
   solveExtents();
 
   // setup HWMs for all OIDs.
@@ -330,7 +329,10 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     SATProblem* satProb = nullptr;
     if (isDict)
     {
-      std::cout << "OID " << oid << " is a dictionary\n";
+      if (doVerbose())
+      {
+        std::cout << "OID " << oid << " is a dictionary\n";
+      }
       satProb = &(problems[oid]);
     }
     if (satProb)
@@ -402,7 +404,10 @@ void EMReBuilder::solveExtents()
 {
   for(auto& [_oid, prob] : problems)
   {
-    std::cout << "solving problem for OID " << _oid << "\n";
+    if (doVerbose())
+    {
+      std::cout << "solving problem for OID " << _oid << "\n";
+    }
     prob.solve(extentMap);
   }
 }
@@ -605,7 +610,10 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
   {
     std::set<uint64_t> seenBlockOffsets;
     uint32_t dictOID = findDictOID(oid);
-    std::cout << "for probable token column " << oid << " we get dict OID " << dictOID << "\n";
+    if (doVerbose())
+    {
+      std::cout << "for probable token column " << oid << " we get dict OID " << dictOID << "\n";
+    }
     if (dictOID)
     {
       scanTokensForLBIDs(dictOID, chunkManagerWrapper->getTokens(), chunkManagerWrapper->numTokens(), seenBlockOffsets);
@@ -645,7 +653,10 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
 void EMReBuilder::scanTokensForLBIDs(uint32_t oidForDict, const WriteEngine::Token* tokens, uint32_t numTokens, std::set<uint64_t>& seen)
 {
   SATProblem& problem = problems[oidForDict];
-  std::cout << "creating problem for possible dictionary OID " << oidForDict << "\n";
+  if (doVerbose())
+  {
+    std::cout << "creating problem for possible dictionary OID " << oidForDict << "\n";
+  }
   for(uint32_t i=0;i<numTokens;i++)
   {
     if (tokens[i].isNotPhysical())

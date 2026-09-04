@@ -227,12 +227,9 @@ class EMReBuilder
     void oneOf(const std::vector<int>& vars)
     {
       // encode requirement that at least one of vars is set.
-      std::cout << "  one of vars:";
       for(uint32_t i = 0; i < vars.size();i++) {
-        std::cout << " " << vars[i];
         problem.push_back(vars[i]);
       }
-      std::cout << std::endl;
       problem.push_back(0); // close clause
 
       // encode requirement that if any variable is set to true, other
@@ -259,7 +256,6 @@ class EMReBuilder
         return ; // do not repeat ourselves.
       }
       oneOfStarts.insert(start);
-      std::cout << "one of for range, start " << start << ", step " << step << ", n " << n << "\n";
       std::vector<int> vars;
       for(int i = 0;i < n; i++, start += step)
       {
@@ -267,13 +263,11 @@ class EMReBuilder
 	vars.push_back(var);
       }
       oneOf(vars);
-      std::cout << "done one of for range, start " << start << ", step " << step << ", n " << n << "\n";
     }
 
     void mustBe(uint64_t range)
     {
       int v = getRangeVar(range);
-      std::cout << "asserting presence of range start " << range << ", var " << v << "\n";
       assumptions.push_back(v);
       //problem.push_back(v); // assert presence.
       //problem.push_back(0);
@@ -285,7 +279,6 @@ class EMReBuilder
       {
         return ;
       }
-      std::cout << "header LBID " << range << "\n";
       headerLBIDs.insert(range);
       mustBe(range);
     }
@@ -294,15 +287,12 @@ class EMReBuilder
     {
       int v = getRangeVar(range);
       assumptions.push_back(-v);
-      //problem.push_back(-v); // assert absence.
-      //problem.push_back(0);
     }
 
     // add the fact that some FBO is utilized - it may require one of ranges and
     // also prevent use of some ranges.
     void addWrittenFBO(uint64_t fbo, uint64_t lengthInBlocks)
     {
-      std::cout << "data record: fbo " << fbo << ", length in blocks " << lengthInBlocks << "\n";
       // why 512 - this is least possible extent size in blocks.
       const uint64_t smallestAlignment = 512;
       const uint64_t extentSize = 8192;
@@ -317,53 +307,20 @@ class EMReBuilder
       int n = (highest_offset - lowest_offset) / smallestAlignment + 1;
       oneOf(lowest_offset, smallestAlignment, n);
       uint64_t dataEnd = fbo + lengthInBlocks;
-      if (false && dataEnd / smallestAlignment != fbo / smallestAlignment) // may span adjacent ranges.
-      {
-        // mark as invalid ranges whose bounds are inside written data.
-	for(uint64_t end = highest_offset + smallestAlignment; end < dataEnd; end += smallestAlignment)
-	{
-	  if (end >= extentSize)
-	  {
-	    uint64_t start = end - extentSize;
-	    if (start != fbo)
-	    {
-              std::cout << "  precluding start " << start << " which end " << end << " within range " << fbo << " and " << fbo + lengthInBlocks << "\n";
-	      mustNotBe(start);
-	    }
-	  }
-	  if (end < std::numeric_limits<uint64_t>::max() - extentSize && end != fbo)
-	  {
-              std::cout << "  precluding start " << end << " within range " << fbo << " and " << fbo + lengthInBlocks << "\n";
-	    mustNotBe(end);
-	  }
-	}
-      }
     }
 
     void setTemplateFileId(const FileId& fileId)
     {
-      std::cout << "set template FileId: " << fileId << std::endl;
       templateFileId = fileId;
     }
 
     void solve(std::vector<FileId>& ranges)
     {
-      std::cout << "---------------------------------------------" << std::endl;
-      std::cout << "Problem:" << std::endl;
-      for (const auto& [var, range] : fromVarToRange)
-      {
-        std::cout << "c var " << var << ", range " << range << std::endl;
-      }
       PicoSAT* psat = picosat_init();
       idbassert(psat);
       for(int lit : problem)
       {
         picosat_add(psat, lit);
-	std::cout << " " << lit;
-	if (!lit)
-	{
-	  std::cout << std::endl;
-	}
       }
       for(int lit : assumptions)
       {
@@ -374,13 +331,13 @@ class EMReBuilder
       if (retCode == PICOSAT_UNSATISFIABLE)
       {
         const int* fa = picosat_failed_assumptions(psat);
-	std::cout << "failed:";
+	std::cerr << "failed:";
 	while (*fa)
 	{
-          std::cout << " " << getVarRange(*fa) << "(" << *fa << ")";
+          std::cerr << " " << getVarRange(*fa) << "(" << *fa << ")";
 	  fa ++;
 	}
-	std::cout << '\n';
+	std::cerr << '\n';
       }
 
       idbassert(retCode == PICOSAT_SATISFIABLE); // we always generate satisfiable problems.
@@ -399,7 +356,6 @@ class EMReBuilder
 	    // not a header range so we need to generate a FileId.
 	    FileId fid(templateFileId);
 	    fid.lbid = range;
-	    std::cout << "  pushing FileId " << fid << ", for positive var " << v << ", range start " << range << std::endl;
             ranges.push_back(fid);
 	  }
 	}

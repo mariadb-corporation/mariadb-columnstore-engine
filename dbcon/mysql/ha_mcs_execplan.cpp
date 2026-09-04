@@ -97,24 +97,6 @@ using namespace funcexp;
 
 using namespace std;
 
-#define idblog(x)                                                                       \
-  do                                                                                       \
-  {                                                                                        \
-    {                                                                                      \
-      std::ostringstream os;                                                               \
-                                                                                           \
-      os << __FILE__ << "@" << __LINE__ << ": \'" << x << "\'"; \
-      std::cerr << os.str() << std::endl;                                                  \
-      logging::MessageLog logger((logging::LoggingID()));                                  \
-      logging::Message message;                                                            \
-      logging::Message::Args args;                                                         \
-                                                                                           \
-      args.add(os.str());                                                                  \
-      message.format(args);                                                                \
-      logger.logErrorMessage(message);                                                     \
-    }                                                                                      \
-  } while (0)
-
 namespace cal_impl_if
 {
 // Helper utilities to store plan strings and applied rules into cal_connection_info
@@ -7580,7 +7562,6 @@ int getSelectPlan(gp_walk_info& gwi, SELECT_LEX& select_lex, SCSEP& csep, bool i
   csep->derivedTableList(gwi.derivedTbList);
   csep->selectSubList(selectSubList);
   csep->subSelectList(gwi.subselectList);
-  idblog(csep->toString());
   return 0;
 }
 
