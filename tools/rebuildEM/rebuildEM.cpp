@@ -118,7 +118,7 @@ int32_t EMReBuilder::collectExtents(const std::string& dbRootPath)
   }
 
   // generate FileId's for invisible LBIDs - these are not recorded in headers.
-  addInvisibleLBIDs();
+  solveExtents();
 
   // setup HWMs for all OIDs.
   setupHWMs();
@@ -326,13 +326,30 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
     // We process LBIDs in the header the same way regardless of their count in the header.
     uint64_t blockOffset = 0;
     oidHWMs[oid] = hwm; // remember HWM to assign later.
+    SATProblem* satProb = nullptr;
+    if (isDict)
+    {
+      if (doVerbose())
+      {
+        std::cout << "OID " << oid << " is a dictionary\n";
+      }
+      satProb = &(problems[oid]);
+    }
+    if (satProb)
+    {
+      FileId templateFileId(oid, partition, segment, getDBRoot(), colWidth, colDataType, /* lbid */0, /* hwm */ 0, isDict, blockOffset);
+      satProb->setTemplateFileId( templateFileId);
+    }
     for (uint32_t lbidIndex = 0; lbidIndex < lbidCount; ++lbidIndex, blockOffset += 8192)
     {
       auto lbid = compress::CompressInterface::getLBIDByIndex(fileHeader, lbidIndex);
       lastUsedLBID = std::max(lbid, lastUsedLBID);
       FileId fileId(oid, partition, segment, getDBRoot(), colWidth, colDataType, lbid, /*hwm*/ 0, isDict, blockOffset);
       extentMap.push_back(fileId);
-      oidKnownBlockOffsets[oid].insert(blockOffset);
+      if (satProb)
+      {
+        satProb->headerLBID(lbid);
+      }
       if (doVerbose())
         std::cout << "FileId is collected " << fileId << std::endl;
     }
@@ -381,6 +398,18 @@ int32_t EMReBuilder::collectExtent(const std::string& fullFileName)
   }
 
   return 0;
+}
+
+void EMReBuilder::solveExtents()
+{
+  for(auto& [_oid, prob] : problems)
+  {
+    if (doVerbose())
+    {
+      std::cout << "solving problem for OID " << _oid << "\n";
+    }
+    prob.solve(extentMap);
+  }
 }
 
 int32_t EMReBuilder::rebuildExtentMap()
@@ -580,15 +609,41 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
   if (probablyTokenColumn)
   {
     std::set<uint64_t> seenBlockOffsets;
-    scanTokensForLBIDs(oid + 1, chunkManagerWrapper->getTokens(), chunkManagerWrapper->numTokens(), seenBlockOffsets);
-    for(currentBlock--; currentBlock >= 0; currentBlock --)
+    uint32_t dictOID = findDictOID(oid);
+    if (doVerbose())
+    {
+      std::cout << "for probable token column " << oid << " we get dict OID " << dictOID << "\n";
+    }
+    if (dictOID)
+    {
+      scanTokensForLBIDs(dictOID, chunkManagerWrapper->getTokens(), chunkManagerWrapper->numTokens(), seenBlockOffsets);
+      for(currentBlock--; currentBlock >= 0; currentBlock --)
+      {
+        chunkManagerWrapper->readBlock(currentBlock);
+        if (chunkManagerWrapper->isEmptyBlock())
+        {
+          continue;
+        }
+        scanTokensForLBIDs(dictOID, chunkManagerWrapper->getTokens(), chunkManagerWrapper->numTokens(), seenBlockOffsets);
+      }
+    }
+  }
+
+  // read either objectIDs or dictIDs - we need an association between them.
+  if (oid == execplan::OID_SYSCOLUMN_OBJECTID || oid == execplan::OID_SYSCOLUMN_DICTOID)
+  {
+    std::vector<uint32_t>& oidsToFill = oid == execplan::OID_SYSCOLUMN_OBJECTID ? objectIDs : objectDictOIDs;
+    for(uint64_t currentBlock = 0; currentBlock < blockCount; currentBlock ++)
     {
       chunkManagerWrapper->readBlock(currentBlock);
-      if (chunkManagerWrapper->isEmptyBlock())
+      bool empty = chunkManagerWrapper->isEmptyBlock(); // we cannot skip empty blocks as we associate our OIDs by row index.
+      const uint32_t* blockOIDs = chunkManagerWrapper->getOIDs();
+      uint32_t numOIDs = chunkManagerWrapper->numOIDs();
+      for(uint32_t i = 0; i < numOIDs; i ++)
       {
-        continue;
+        uint32_t o = empty ? 0 : blockOIDs[i];
+	oidsToFill.push_back(o);
       }
-      scanTokensForLBIDs(oid + 1, chunkManagerWrapper->getTokens(), chunkManagerWrapper->numTokens(), seenBlockOffsets);
     }
   }
 
@@ -597,6 +652,11 @@ int32_t EMReBuilder::searchHWMInSegmentFile(const std::string& fullFileName, uin
 
 void EMReBuilder::scanTokensForLBIDs(uint32_t oidForDict, const WriteEngine::Token* tokens, uint32_t numTokens, std::set<uint64_t>& seen)
 {
+  SATProblem& problem = problems[oidForDict];
+  if (doVerbose())
+  {
+    std::cout << "creating problem for possible dictionary OID " << oidForDict << "\n";
+  }
   for(uint32_t i=0;i<numTokens;i++)
   {
     if (tokens[i].isNotPhysical())
@@ -604,17 +664,40 @@ void EMReBuilder::scanTokensForLBIDs(uint32_t oidForDict, const WriteEngine::Tok
       continue;
     }
     uint64_t fbo = tokens[i].fbo;
-    uint64_t lbidBlockOffset = fbo - (fbo % 8192);
-    if (seen.count(lbidBlockOffset) == 0)
+    uint64_t length = tokens[i].bc;
+    problem.addWrittenFBO(fbo, length);
+  }
+}
+
+uint32_t EMReBuilder::findDictOID(uint32_t oid)
+{
+  assert(objectIDs.size() > 0);
+  assert(objectDictOIDs.size() > 0);
+
+  for(uint32_t i = 0; i< objectIDs.size();i++)
+  {
+    if (objectIDs[i] == oid)
     {
-      if (doVerbose())
+
+      if (i >= objectDictOIDs.size())
       {
-        std::cout << "Adding block offset " << lbidBlockOffset << " for dict OID " << oidForDict << std::endl;
+        std::cerr << "OID " << oid << " is at position " << i
+             << " and object dictOIDs vector has only " << objectDictOIDs.size() << " elements\n";
+        return 0;
       }
-      oidBlockOffsetsFromTokens[oidForDict].insert(lbidBlockOffset);
-      seen.insert(lbidBlockOffset);
+
+      uint32_t dictOID = objectDictOIDs[i];
+
+      if (dictOID > 0 && dictOID < (1U << 31))
+      {
+        return dictOID; // valid one - not deleted and not NULL.
+      }
+
+      return 0;
     }
   }
+
+  return 0;
 }
 
 void EMReBuilder::showExtentMap()

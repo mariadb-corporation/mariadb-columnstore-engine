@@ -34,6 +34,8 @@
 #include "we_dbfileop.h"
 #include <we_typeext.h>
 
+#include "picosat.h"
+
 using namespace idbdatafile;
 
 namespace RebuildExtentMap
@@ -68,6 +70,12 @@ struct FileId
    , hwm(other.hwm)
    , isDict(other.isDict)
    , blockOffset(other.blockOffset)
+  {
+  }
+
+  FileId()
+   : colWidth(-1)
+   , colDataType(execplan::CalpontSystemCatalog::INT)
   {
   }
 
@@ -145,6 +153,9 @@ class EMReBuilder
   // Returns -1 on error.
   int32_t initializeSystemExtents();
 
+  // Solve all SAT problems for dictionaries.
+  void solveExtents();
+
   // Rebuilds extent map from the collected map.
   int32_t rebuildExtentMap();
 
@@ -165,6 +176,195 @@ class EMReBuilder
   void showExtentMap();
 
  private:
+  struct SATProblem
+  {
+    int varIndex = 0;
+
+    // template FileId to construct other FileIds.
+    FileId templateFileId;
+
+    // standard domain mapping between ranges and logical variables.
+    std::map<uint64_t, int> fromRangeToVar;
+    std::map<int, uint64_t> fromVarToRange;
+
+    // to do not repeat ourselves, record starts of one-of encodings.
+    std::set<uint64_t> oneOfStarts;
+
+    // the problem itself, standard DIMACS body encoding: clauses end with 0,
+    // positive integer is a variable, negative integer is a variable's negation.
+    std::vector<int> problem;
+
+    // assumptions for what should and should not be in the problem.
+    std::vector<int> assumptions;
+
+    // LBIDs that are in header are marked as already added to the list.
+    std::set<uint64_t> headerLBIDs;
+
+    // invent new var or return existing for a range identified by start block offset.
+    int getRangeVar(uint64_t range)
+    {
+      if (fromRangeToVar.count(range) > 0)
+      {
+        return fromRangeToVar[range];
+      }
+      varIndex ++; // preincrement because vars should not be zero.
+      int v = varIndex;
+      fromRangeToVar[range] = v;
+      fromVarToRange[v] = range;
+      return v;
+    }
+    uint64_t getVarRange(int v)
+    {
+      if (v < 0)
+      {
+        v = -v;
+      }
+      idbassert(fromVarToRange.count(v) > 0);
+      return fromVarToRange[v];
+    }
+
+    // 1-from-N encoding.
+    void oneOf(const std::vector<int>& vars)
+    {
+      // encode requirement that at least one of vars is set.
+      for(uint32_t i = 0; i < vars.size();i++) {
+        problem.push_back(vars[i]);
+      }
+      problem.push_back(0); // close clause
+
+      // encode requirement that if any variable is set to true, other
+      // must be set to false.
+      // This is quadratic to the number of vars, but simple and results
+      // in faster solution process.
+      for(uint32_t i = 0; i < vars.size(); i++) {
+        int a = vars[i];
+        for(uint32_t j = i + 1; j < vars.size(); j++) {
+          int b = vars[j];
+	  problem.push_back(-a);
+	  problem.push_back(-b);
+	  problem.push_back(0);
+        }
+      }
+    }
+
+    // 1-from-N encoding for ranges' range.
+    // Do not do anything if we already added such subproblem.
+    void oneOf(uint64_t start, uint64_t step, int n)
+    {
+      if (oneOfStarts.count(start) > 0)
+      {
+        return ; // do not repeat ourselves.
+      }
+      oneOfStarts.insert(start);
+      std::vector<int> vars;
+      for(int i = 0;i < n; i++, start += step)
+      {
+        int var = getRangeVar(start);
+	vars.push_back(var);
+      }
+      oneOf(vars);
+    }
+
+    void mustBe(uint64_t range)
+    {
+      int v = getRangeVar(range);
+      assumptions.push_back(v);
+      //problem.push_back(v); // assert presence.
+      //problem.push_back(0);
+    }
+
+    void headerLBID(uint64_t range)
+    {
+      if (headerLBIDs.count(range) > 0)
+      {
+        return ;
+      }
+      headerLBIDs.insert(range);
+      mustBe(range);
+    }
+
+    void mustNotBe(uint64_t range)
+    {
+      int v = getRangeVar(range);
+      assumptions.push_back(-v);
+    }
+
+    // add the fact that some FBO is utilized - it may require one of ranges and
+    // also prevent use of some ranges.
+    void addWrittenFBO(uint64_t fbo, uint64_t lengthInBlocks)
+    {
+      // why 512 - this is least possible extent size in blocks.
+      const uint64_t smallestAlignment = 512;
+      const uint64_t extentSize = 8192;
+      idbassert(fbo < std::numeric_limits<uint64_t>::max() - extentSize);
+
+      uint64_t highest_offset = fbo - (fbo % smallestAlignment);
+      uint64_t lowest_offset = 0;
+      if (highest_offset >= extentSize)
+      {
+        lowest_offset = highest_offset + smallestAlignment - extentSize;
+      }
+      int n = (highest_offset - lowest_offset) / smallestAlignment + 1;
+      oneOf(lowest_offset, smallestAlignment, n);
+      uint64_t dataEnd = fbo + lengthInBlocks;
+    }
+
+    void setTemplateFileId(const FileId& fileId)
+    {
+      templateFileId = fileId;
+    }
+
+    void solve(std::vector<FileId>& ranges)
+    {
+      PicoSAT* psat = picosat_init();
+      idbassert(psat);
+      for(int lit : problem)
+      {
+        picosat_add(psat, lit);
+      }
+      for(int lit : assumptions)
+      {
+        picosat_assume(psat, lit);
+      }
+
+      int retCode = picosat_sat(psat, -1);
+      if (retCode == PICOSAT_UNSATISFIABLE)
+      {
+        const int* fa = picosat_failed_assumptions(psat);
+	std::cerr << "failed:";
+	while (*fa)
+	{
+          std::cerr << " " << getVarRange(*fa) << "(" << *fa << ")";
+	  fa ++;
+	}
+	std::cerr << '\n';
+      }
+
+      idbassert(retCode == PICOSAT_SATISFIABLE); // we always generate satisfiable problems.
+
+      // obtaining the values of literals.
+      // We are interested only in 1 values (assigned to true).
+      for(int v = 1; v < varIndex; v++)
+      {
+        int l = picosat_deref(psat, v);
+	if (l > 0)
+	{
+	  // this var is assigned true, meaning it's range allowed into distribution..
+	  uint64_t range = fromVarToRange[v];
+	  if (headerLBIDs.count(range) < 1)
+	  {
+	    // not a header range so we need to generate a FileId.
+	    FileId fid(templateFileId);
+	    fid.lbid = range;
+            ranges.push_back(fid);
+	  }
+	}
+      }
+      picosat_reset(psat);
+    }
+
+  };
+
   EMReBuilder(const EMReBuilder&) = delete;
   EMReBuilder(EMReBuilder&&) = delete;
   EMReBuilder& operator=(const EMReBuilder&) = delete;
@@ -183,12 +383,20 @@ class EMReBuilder
   std::map<uint32_t, uint64_t> oidHWMs; // HWM is assigned at the very end, to the LBID that properly contains it.
   uint64_t lastUsedLBID = 0;
   std::set<uint32_t> dictOIDs; // set of OIDs that are dicts.
+  std::map<uint32_t, SATProblem> problems;
   std::map<uint32_t, std::set<uint64_t>> oidBlockOffsetsFromTokens; // block offsets generated from tokens read.
   std::map<uint32_t, std::set<uint64_t>> oidKnownBlockOffsets; // the set of block offsets that need not new LBIDs.
+
+  // these two we associate by row indices.
+  std::vector<uint32_t> objectIDs; // Calpont System Catalog SYSCOLUMN table - objectIDs.
+  std::vector<uint32_t> objectDictOIDs; // Calpont System Catalog SYSCOLUMN table - dictOIDs.
+  // Find dictionary OID for a an object ID, zero means no dictionary is associated with the column.
+  uint32_t findDictOID(uint32_t oid);
 
   // TEXT and other long variable length columns are stored as two OIDs, one (OID) for tokens and other
   // (OID+1) for the actual data.
   // This method receives OID+1 - we scan tokens for LBIDs that belong to the the next OID file(s).
+  // All this method do is to fill SATProblem for OID+1 to solve later.
   void scanTokensForLBIDs(uint32_t oid, const WriteEngine::Token* tokens, uint32_t numTokens, std::set<uint64_t>& seen);
 
   // generate FileId's for invisible LBIDs - these are not recorded in headers.
@@ -225,8 +433,14 @@ class ChunkManagerWrapper
   // return internal buffer as an array of tokens
   const WriteEngine::Token* getTokens() const { return reinterpret_cast<const WriteEngine::Token*>(blockData); }
 
+  // return internal buffer as an array of uint32_t - OIDs
+  const uint32_t* getOIDs() const { return reinterpret_cast<const uint32_t*>(blockData); }
+
   // convenience: return nummber of tokens in block.
   uint32_t numTokens() const { return WriteEngine::BYTE_PER_BLOCK/sizeof(WriteEngine::Token); }
+
+  // convenience: return nummber of OIDs in block.
+  uint32_t numOIDs() const { return WriteEngine::BYTE_PER_BLOCK/sizeof(uint32_t); }
 
  protected:
   uint32_t oid;
