@@ -210,3 +210,26 @@ software for any particular purpose. It is provided "as is"
 without express or implied warranty of any kind.
 These notices must be retained in any copies of any part of this
 documentation and/or software.
+
+7. SHA-1 class by Paul E. Jones
+-------------------------------
+Version:  n/a (unversioned class)
+Upstream: https://www.packetizer.com/security/sha1/
+Files:    utils/funcexp/sha.h, utils/funcexp/func_sha.cpp (implements the
+          SQL SHA()/SHA1() functions)
+License:  Freeware Public License (FPL)
+
+Copyright (C) 1998, 2009
+Paul E. Jones <paulej@packetizer.com>
+
+Freeware Public License (FPL)
+
+This software is licensed as "freeware."  Permission to distribute
+this software in source and binary forms, including incorporation
+into other products, is hereby granted without a fee.  THIS SOFTWARE
+IS PROVIDED 'AS IS' AND WITHOUT ANY EXPRESSED OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS FOR A PARTICULAR PURPOSE.  THE AUTHOR SHALL NOT BE HELD
+LIABLE FOR ANY DAMAGES RESULTING FROM THE USE OF THIS SOFTWARE, EITHER
+DIRECTLY OR INDIRECTLY, INCLUDING, BUT NOT LIMITED TO, LOSS OF DATA
+OR DATA BEING RENDERED INACCURATE.
