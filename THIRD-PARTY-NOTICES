@@ -273,3 +273,49 @@ SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
 FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
 ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
+
+9. Code fragments in datatypes/mcs_float128.h
+---------------------------------------------
+Version:  n/a (code fragments)
+Files:    datatypes/mcs_float128.h
+License:  Sun Microsystems / SunPro notice (fmodq);
+          Boost Software License 1.0 (numeric_limits<float128_t>, pown,
+          fromString)
+
+The function fmodq is taken from libquadmath (part of GCC), file
+math/fmodq.c, which is the IEEE quad version of fdlibm's e_fmodl.c.
+Upstream: https://gcc.gnu.org/git/?p=gcc.git;a=blob;f=libquadmath/math/fmodq.c
+
+e_fmodl.c -- long double version of e_fmod.c.
+Conversion to IEEE quad long double by Jakub Jelinek, jj@ultra.linux.cz.
+
+====================================================
+Copyright (C) 1993, 2011 by Sun Microsystems, Inc. All rights reserved.
+
+Developed at SunPro, a Sun Microsystems, Inc. business.
+Permission to use, copy, modify, and distribute this
+software is freely granted, provided that this notice
+is preserved.
+====================================================
+
+The specialization numeric_limits<float128_t> is taken from
+Boost.Multiprecision, file boost/multiprecision/float128.hpp.
+Upstream: https://github.com/boostorg/multiprecision
+
+Copyright 2013 John Maddock. Distributed under the Boost
+Software License, Version 1.0. (See accompanying file
+LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
+
+The functions pown and fromString are taken from Boost.Math, files
+boost/math/cstdfloat/cstdfloat_cmath.hpp (pown) and
+boost/math/cstdfloat/cstdfloat_iostream.hpp (convert_from_string).
+Upstream: https://github.com/boostorg/math
+
+Copyright Christopher Kormanyos 2014.
+Copyright John Maddock 2014.
+Copyright Paul Bristow 2014.
+Distributed under the Boost Software License,
+Version 1.0. (See accompanying file LICENSE_1_0.txt
+or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+The text of the Boost Software License 1.0 is reproduced in section 8.
