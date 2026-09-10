@@ -15,13 +15,16 @@
 
 # Read one "#define <macro> <number>" from a header, fail loudly otherwise.
 function(columnstore_header_define header macro out_var)
-    file(STRINGS "${header}" line REGEX "^#define[ \t]+${macro}[ \t]+[0-9]+")
-    if(NOT line)
+    file(STRINGS "${header}" lines REGEX "^[ \t]*#define[ \t]+${macro}[ \t]+[0-9]+")
+    list(LENGTH lines count)
+    if(count EQUAL 0)
         message(FATAL_ERROR "SBOM: '${macro}' not found in ${header}")
+    elseif(count GREATER 1)
+        message(FATAL_ERROR "SBOM: '${macro}' defined more than once in ${header}: ${lines}")
     endif()
-    string(REGEX REPLACE "^#define[ \t]+${macro}[ \t]+([0-9]+).*$" "\\1" value "${line}")
+    string(REGEX REPLACE "^[ \t]*#define[ \t]+${macro}[ \t]+([0-9]+).*$" "\\1" value "${lines}")
     if(NOT value MATCHES "^[0-9]+$")
-        message(FATAL_ERROR "SBOM: cannot parse '${macro}' from '${line}' in ${header}")
+        message(FATAL_ERROR "SBOM: cannot parse '${macro}' from '${lines}' in ${header}")
     endif()
     set(${out_var} "${value}" PARENT_SCOPE)
 endfunction()
@@ -40,7 +43,7 @@ function(columnstore_sbom_vendored name url tag version license copyright descri
     # Rebuild the exported list on every configure: drop our own name first so
     # re-configuring the same build dir never duplicates an entry, but keep
     # anything the user passed with -DEXTRA_SBOM_DEPENDENCIES=...
-    set(deps ${EXTRA_SBOM_DEPENDENCIES})
+    set(deps "${EXTRA_SBOM_DEPENDENCIES}")
     list(REMOVE_ITEM deps "${name}")
     list(APPEND deps "${name}")
     set(EXTRA_SBOM_DEPENDENCIES "${deps}" CACHE INTERNAL "Extra components for SBOM generation" FORCE)
