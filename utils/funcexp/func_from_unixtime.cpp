@@ -102,13 +102,15 @@ bool getUnixTimestampParts(rowgroup::Row& row, FunctionParm& parm, int64_t& val,
   return true;
 }
 
-DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& isNull)
+DateTime getDateTime(rowgroup::Row& row, FunctionParm& parm, bool& isNull, CalpontSystemCatalog::ColType& ct)
 {
   int64_t val = 0;
   uint32_t msec = 0;
 
   if (!getUnixTimestampParts(row, parm, val, msec, isNull))
     return 0;
+
+  val += ct.getTimeZone();
 
   DateTime dt;
 
@@ -140,9 +142,9 @@ CalpontSystemCatalog::ColType Func_from_unixtime::operationType(FunctionParm& /*
 }
 
 string Func_from_unixtime::getStrVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                     CalpontSystemCatalog::ColType&)
+                                     CalpontSystemCatalog::ColType& ct)
 {
-  DateTime dt = getDateTime(row, parm, isNull);
+  DateTime dt = getDateTime(row, parm, isNull, ct);
 
   if (*reinterpret_cast<int64_t*>(&dt) == 0)
   {
@@ -168,9 +170,9 @@ int32_t Func_from_unixtime::getDateIntVal(rowgroup::Row& row, FunctionParm& parm
 }
 
 int64_t Func_from_unixtime::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                              CalpontSystemCatalog::ColType& /*ct*/)
+                                              CalpontSystemCatalog::ColType& ct)
 {
-  DateTime dt = getDateTime(row, parm, isNull);
+  DateTime dt = getDateTime(row, parm, isNull, ct);
 
   if (*reinterpret_cast<int64_t*>(&dt) == 0)
   {
@@ -182,9 +184,9 @@ int64_t Func_from_unixtime::getDatetimeIntVal(rowgroup::Row& row, FunctionParm& 
 }
 
 int64_t Func_from_unixtime::getTimeIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                          CalpontSystemCatalog::ColType& /*ct*/)
+                                          CalpontSystemCatalog::ColType& ct)
 {
-  DateTime dt = getDateTime(row, parm, isNull);
+  DateTime dt = getDateTime(row, parm, isNull, ct);
 
   if (*reinterpret_cast<int64_t*>(&dt) == 0)
   {
@@ -223,9 +225,9 @@ int64_t Func_from_unixtime::getTimestampIntVal(rowgroup::Row& row, FunctionParm&
 }
 
 int64_t Func_from_unixtime::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                      CalpontSystemCatalog::ColType& /*ct*/)
+                                      CalpontSystemCatalog::ColType& ct)
 {
-  DateTime dt = getDateTime(row, parm, isNull);
+  DateTime dt = getDateTime(row, parm, isNull, ct);
 
   if (*reinterpret_cast<int64_t*>(&dt) == 0)
   {
@@ -243,7 +245,7 @@ double Func_from_unixtime::getDoubleVal(rowgroup::Row& row, FunctionParm& parm, 
 {
   if (parm.size() == 1)
   {
-    DateTime dt = getDateTime(row, parm, isNull);
+    DateTime dt = getDateTime(row, parm, isNull, ct);
 
     if (*reinterpret_cast<int64_t*>(&dt) == 0)
     {
