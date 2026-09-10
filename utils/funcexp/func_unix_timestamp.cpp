@@ -42,7 +42,7 @@ CalpontSystemCatalog::ColType Func_unix_timestamp::operationType(FunctionParm& /
 }
 
 int64_t Func_unix_timestamp::getIntVal(rowgroup::Row& row, FunctionParm& parm, bool& isNull,
-                                       CalpontSystemCatalog::ColType& /*ct*/)
+                                       CalpontSystemCatalog::ColType& ct)
 {
   int64_t val = parm[0]->data()->getIntVal(row, isNull);
 
@@ -84,7 +84,7 @@ int64_t Func_unix_timestamp::getIntVal(rowgroup::Row& row, FunctionParm& parm, b
     case CalpontSystemCatalog::CHAR:
     case CalpontSystemCatalog::VARCHAR:
     case CalpontSystemCatalog::TEXT:
-      val = dataconvert::DataConvert::stringToDatetime(parm[0]->data()->getStrVal(row, isNull));
+      val = dataconvert::DataConvert::stringToDatetimeStamp(parm[0]->data()->getStrVal(row, isNull), ct.getTimeZone());
 
       if (val == -1)
       {
