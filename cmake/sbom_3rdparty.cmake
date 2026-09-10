@@ -98,4 +98,17 @@ columnstore_sbom_vendored(
     "UTF-8 with C++ in a Portable Way, vendored into ColumnStore as utils/funcexp/utf8*, with local edits in core.h"
 )
 
+# PicoSAT - tools/rebuildEM/picosat.c + picosat.h, compiled into mcsRebuildEM.
+# Release 965 with local edits. No version macro in the source, so the version
+# is fixed here. Upstream is https://fmv.jku.at/picosat/ (not GitHub), hence
+# the generic purl. The URL below is only parsed by the generator for the
+# component name (last segment) and supplier (first segment).
+set(_picosat_version "965")
+set(picosat_PURL "pkg:generic/picosat@${_picosat_version}" CACHE INTERNAL "SBOM: purl of vendored picosat")
+columnstore_sbom_vendored(
+    picosat "https://fmv.jku.at/picosat/picosat" "${_picosat_version}" "${_picosat_version}" "MIT"
+    "Copyright (c) 2006 - 2015, Armin Biere, Johannes Kepler University"
+    "PicoSAT SAT solver, vendored into ColumnStore as tools/rebuildEM/picosat.c and linked into mcsRebuildEM"
+)
+
 unset(_vendored_root)
