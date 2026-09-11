@@ -70,6 +70,9 @@ DEFAULT_JIRA_URL = "https://jira.mariadb.org"
 # Keep descriptions inside Jira's field limit; iteration 6 will attach the
 # full list instead of truncating.
 MAX_LOCATIONS_IN_DESCRIPTION = 200
+# Per-location explanations are much longer than the location lines, so they
+# get a tighter cap of their own.
+MAX_DETAILED_LOCATIONS_IN_DESCRIPTION = 50
 
 # A finding group == one ticket. Iteration 4 replaces this hardcoded input
 # with a parsed report.json plus the path -> component mapping; until then
@@ -196,12 +199,23 @@ def parse_report(path, include_suppressed=False):
         stats["picked"] += 1
         component = map_component(file_path, unmapped)
         key = (component, finding.get("bug_type", "UNKNOWN"))
-        buckets.setdefault(key, set()).add(f"{file_path}:{finding.get('line', 0)}")
+        location = f"{file_path}:{finding.get('line', 0)}"
+        qualifiers = buckets.setdefault(key, {}).setdefault(location, set())
+        # Infer's human-readable explanation of the finding. Whitespace is
+        # normalized so the rendered description stays byte-stable.
+        qualifier = " ".join(str(finding.get("qualifier", "")).split())
+        if qualifier:
+            qualifiers.add(qualifier)
 
-    groups = [
-        {"component": component, "bug_type": bug_type, "locations": sorted(locations)}
-        for (component, bug_type), locations in sorted(buckets.items())
-    ]
+    groups = []
+    for (component, bug_type), locations in sorted(buckets.items()):
+        group = {"component": component, "bug_type": bug_type,
+                 "locations": sorted(locations)}
+        details = {location: sorted(qualifiers)
+                   for location, qualifiers in locations.items() if qualifiers}
+        if details:
+            group["details"] = details
+        groups.append(group)
     return groups, stats, unmapped
 
 
@@ -452,6 +466,22 @@ def ticket_description(group, branch=None):
     if total > len(shown):
         lines.append(f"... and {total - len(shown)} more")
     lines.append("{noformat}")
+    # Infer's explanation per location, so the ticket says what the problem
+    # is, not just where. Kept in a second {noformat} block: parse_locations
+    # only ever reads the first one.
+    details = group.get("details") or {}
+    detailed = [loc for loc in shown if details.get(loc)]
+    if detailed:
+        cut = detailed[:MAX_DETAILED_LOCATIONS_IN_DESCRIPTION]
+        lines.extend(["", "*What Infer says:*", "{noformat}"])
+        for location in cut:
+            lines.append(location)
+            for qualifier in details[location]:
+                lines.append(f"    {qualifier}")
+        if len(detailed) > len(cut):
+            lines.append(f"... and {len(detailed) - len(cut)} more "
+                         f"(see the scan output in the CI artifacts)")
+        lines.append("{noformat}")
     lines.extend(
         [
             "",
@@ -513,7 +543,13 @@ def parse_locations(description):
 
 
 def new_locations_comment(group, added):
-    listing = "\n".join(sorted(added))
+    details = group.get("details") or {}
+    lines = []
+    for location in sorted(added):
+        lines.append(location)
+        for qualifier in details.get(location, []):
+            lines.append(f"    {qualifier}")
+    listing = "\n".join(lines)
     plural = "s" if len(added) != 1 else ""
     return (
         f"The Infer scan reports {len(added)} new location{plural} for "
@@ -542,6 +578,11 @@ def load_groups(path):
                 raise JiraError(f"{where}: missing {field!r}")
         if not isinstance(group["locations"], list) or not group["locations"]:
             raise JiraError(f"{where}: 'locations' must be a non-empty list")
+        if "details" in group and not isinstance(group["details"], dict):
+            raise JiraError(
+                f"{where}: 'details' must be an object mapping a location "
+                f"to its list of Infer messages"
+            )
         # Two groups with the same identity would fight over one ticket.
         identity = (group["component"], group["bug_type"])
         if identity in seen:
@@ -1126,8 +1167,11 @@ def cmd_parse(args):
     for group in groups:
         print(f"  {group['component']} / {group['bug_type']} "
               f"({len(group['locations'])} location(s))")
+        details = group.get("details") or {}
         for location in group["locations"]:
             print(f"      {location}")
+            for qualifier in details.get(location, []):
+                print(f"          {qualifier}")
     total = sum(len(g["locations"]) for g in groups)
     print(f"\n{len(groups)} group(s), {total} unique location(s) "
           f"-> would become {len(groups)} ticket(s)")
