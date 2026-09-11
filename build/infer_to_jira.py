@@ -203,7 +203,9 @@ def parse_report(path, include_suppressed=False):
         qualifiers = buckets.setdefault(key, {}).setdefault(location, set())
         # Infer's human-readable explanation of the finding. Whitespace is
         # normalized so the rendered description stays byte-stable.
-        qualifier = " ".join(str(finding.get("qualifier", "")).split())
+        # `or ""` also covers an explicit "qualifier": null, which would
+        # otherwise render as the literal string "None".
+        qualifier = " ".join(str(finding.get("qualifier") or "").split())
         if qualifier:
             qualifiers.add(qualifier)
 
@@ -578,7 +580,11 @@ def load_groups(path):
                 raise JiraError(f"{where}: missing {field!r}")
         if not isinstance(group["locations"], list) or not group["locations"]:
             raise JiraError(f"{where}: 'locations' must be a non-empty list")
-        if "details" in group and not isinstance(group["details"], dict):
+        details = group.get("details")
+        if details is not None and (
+            not isinstance(details, dict)
+            or not all(isinstance(msgs, list) for msgs in details.values())
+        ):
             raise JiraError(
                 f"{where}: 'details' must be an object mapping a location "
                 f"to its list of Infer messages"
