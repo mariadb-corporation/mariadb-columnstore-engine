@@ -157,7 +157,6 @@ int64_t Func_unix_timestamp::getIntVal(rowgroup::Row& row, FunctionParm& parm, b
   if ((year == helpers::TIMESTAMP_MAX_YEAR) && (month == 1) && (day > 4))
   {
     day -= 2;
-    shift = 2;
   }
 
   tmp_t = ((helpers::calc_mysql_daynr(year, month, day) - 719528L) * 86400L + int64_t(hour) * 3600L +
