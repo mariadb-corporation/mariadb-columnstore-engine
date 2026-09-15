@@ -871,6 +871,31 @@ local InferPipeline() = {
 };
 
 
+// Fails when vendored third-party code is not declared in the manifest, the
+// SBOM declarations and THIRD-PARTY-NOTICES.
+local VendoredCodeCheckPipeline() = {
+  kind: "pipeline",
+  type: "docker",
+  name: "vendored code check",
+  platform: { arch: "amd64" },
+  clone: { depth: 10 },
+  steps: [
+    {
+      name: "check",
+      image: "alpine/git:2.49.0",
+      commands: [
+        "apk add --no-cache python3",
+        "python3 build/check_vendored_code.py",
+      ],
+    },
+  ],
+  trigger: {
+    event: ["pull_request", "cron"],
+    branch: ["stable-23.10"],
+  },
+};
+
+
 local AllPipelines =
   [
     Pipeline(b, platform, triggeringEvent, a, server, flag, "")
@@ -988,4 +1013,5 @@ AllPipelines +
 ] +
 [
   InferPipeline(),
+  VendoredCodeCheckPipeline(),
 ]
