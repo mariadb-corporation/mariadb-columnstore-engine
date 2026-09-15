@@ -7,12 +7,12 @@ local servers = {
   [current_branch]: ["10.6-enterprise"],
 };
 
-local extra_servers = {
-  [current_branch]: ["11.4-enterprise"],
+local servers_main_support = {
+  [current_branch]: ["11.4-enterprise", "11.8-enterprise"],
 };
 
-local extra_servers_11_8 = {
-  [current_branch]: ["11.8-enterprise", "12.3-enterprise"],
+local servers_frontier_dev = {
+  [current_branch]: ["12.3-enterprise"],
 };
 
 
@@ -20,12 +20,12 @@ local platforms = {
   [current_branch]: ["rockylinux:8", "rockylinux:9", "rockylinux:10", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
 };
 
-local extra_servers_platforms = {
-  [current_branch]: ["rockylinux:9", "debian:13", "ubuntu:24.04", "ubuntu:22.04"],
+local servers_main_support_platforms = {
+  [current_branch]: ["rockylinux:9", "debian:13", "ubuntu:24.04"],
 };
 
-local extra_servers_platforms_11_8 = {
-  [current_branch]:  extra_servers_platforms[current_branch] + ["ubuntu:26.04"],
+local servers_frontier_dev_platforms = {
+  [current_branch]:  servers_main_support_platforms[current_branch] + ["ubuntu:22.04", "ubuntu:26.04"],
 };
 
 //local archs = ["amd64", "arm64"];
@@ -909,16 +909,16 @@ local AllPipelines =
     Pipeline(b, platform, triggeringEvent, a, server, "", "")
     for a in ["amd64"]
     for b in std.objectFields(platforms)
-    for server in extra_servers[current_branch]
-    for platform in extra_servers_platforms[current_branch]
+    for server in servers_main_support[current_branch]
+    for platform in servers_main_support_platforms[current_branch]
     for triggeringEvent in events
   ] +
   [
     Pipeline(b, platform, triggeringEvent, a, server, "", "")
     for a in ["amd64"]
     for b in std.objectFields(platforms)
-    for server in extra_servers_11_8[current_branch]
-    for platform in extra_servers_platforms_11_8[current_branch]
+    for server in servers_frontier_dev[current_branch]
+    for platform in servers_frontier_dev_platforms[current_branch]
     for triggeringEvent in events
   ] +
   [
