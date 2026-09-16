@@ -72,5 +72,8 @@ else
   gzip -c Packages >"./${RESULT}/Packages.gz"
 fi
 
-mkdir -p "/drone/src/${RESULT}"
-cp -vrf "./${RESULT}/." "/drone/src/${RESULT}"
+# Drone mounts the workspace at /drone/src, Woodpecker exports it as CI_WORKSPACE.
+WORKSPACE="${CI_WORKSPACE:-/drone/src}"
+
+mkdir -p "${WORKSPACE}/${RESULT}"
+cp -vrf "./${RESULT}/." "${WORKSPACE}/${RESULT}"

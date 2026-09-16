@@ -12,6 +12,9 @@ source $(optparse.build)
 
 echo "Arguments received: $@"
 
+# Drone mounts the workspace at /drone/src, Woodpecker exports it as CI_WORKSPACE.
+WORKSPACE="${CI_WORKSPACE:-/drone/src}"
+
 
 cleanup() {
     if [[ -n $(docker ps -q --filter "name=${CONTAINER_NAME}") ]]; then
@@ -72,7 +75,7 @@ if [[ "${CONTAINER_NAME}" == *smoke* ]] || [[ "${CONTAINER_NAME}" == *mtr* ]] ||
 
     if [[ "${CONTAINER_NAME}" == *mtr* ]]; then
         echo
-        docker cp "${CONTAINER_NAME}:${MTR_PATH}/var/log" "/drone/src/${RESULT}/mtr-logs" || echo "missing ${MTR_PATH}/var/log"
+        docker cp "${CONTAINER_NAME}:${MTR_PATH}/var/log" "${WORKSPACE}/${RESULT}/mtr-logs" || echo "missing ${MTR_PATH}/var/log"
     fi
 
     if [[ "${CONTAINER_NAME}" == *cmapi* ]]; then
@@ -91,16 +94,16 @@ elif [[ "${CONTAINER_NAME}" == *regression* ]]; then
     execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest; cat go.log' || echo "missing go.log"
     echo "---------- end columnstore regression short report ----------"
     echo
-    docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/" "/drone/src/${RESULT}/" || echo "missing regression logs"
-    docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz" "/drone/src/${RESULT}/" || echo "missing testErrorLogs.tgz"
+    docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/reg-logs/" "${WORKSPACE}/${RESULT}/" || echo "missing regression logs"
+    docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs.tgz" "${WORKSPACE}/${RESULT}/" || echo "missing testErrorLogs.tgz"
     
     # Copy memory-monitor logs into alltest for archive
     execInnerDocker "$CONTAINER_NAME" 'cp /regression-results/memory-monitor-* /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/ 2>/dev/null' || echo "no memory-monitor logs"
     
     execInnerDocker "$CONTAINER_NAME" 'tar czf regressionQueries.tgz /mariadb-columnstore-regression-test/mysql/queries/'
     execInnerDocker "$CONTAINER_NAME" 'cd /mariadb-columnstore-regression-test/mysql/queries/nightly/alltest && tar czf testErrorLogs2.tgz *.log memory-monitor-* /var/log/mariadb/columnstore 2>/dev/null' || echo "failed to grab regression results"
-    docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs2.tgz" "/drone/src/${RESULT}/" || echo "missing testErrorLogs2.tgz"
-    docker cp "${CONTAINER_NAME}:regressionQueries.tgz" "/drone/src/${RESULT}/" || echo "missing regressionQueries.tgz"
+    docker cp "${CONTAINER_NAME}:/mariadb-columnstore-regression-test/mysql/queries/nightly/alltest/testErrorLogs2.tgz" "${WORKSPACE}/${RESULT}/" || echo "missing testErrorLogs2.tgz"
+    docker cp "${CONTAINER_NAME}:regressionQueries.tgz" "${WORKSPACE}/${RESULT}/" || echo "missing regressionQueries.tgz"
 
 else
     echo "Unknown stage's container provided: ${CONTAINER_NAME}"
@@ -115,12 +118,12 @@ if ! execInnerDocker "$CONTAINER_NAME" "/check_sanitizer_reports.sh core ${STAGE
     SANITIZER_FAILED=1
 fi
 
-docker cp "${CONTAINER_NAME}:/core/" "/drone/src/${RESULT}/"
-docker cp "${CONTAINER_NAME}:/unit_logs/" "/drone/src/${RESULT}/"
+docker cp "${CONTAINER_NAME}:/core/" "${WORKSPACE}/${RESULT}/"
+docker cp "${CONTAINER_NAME}:/unit_logs/" "${WORKSPACE}/${RESULT}/"
 
 execInnerDocker "$CONTAINER_NAME" "/core_dump_drop.sh core"
 echo "Saved artifacts:"
-ls -R "/drone/src/${RESULT}/"
+ls -R "${WORKSPACE}/${RESULT}/"
 echo "Done reporting ${STAGE}"
 
 # Exit with error if sanitizer issues found

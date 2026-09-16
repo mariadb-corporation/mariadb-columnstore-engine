@@ -16,7 +16,7 @@
 # Requirements: x86_64 Linux with glibc >= 2.38 (Infer 1.3 needs it -> use
 # ubuntu:24.04 / debian:13, NOT ubuntu:22.04 or Rocky 8/9).
 #
-# Usage (as invoked from .drone.jsonnet):
+# Usage (as invoked from CI):
 #   run_infer.sh --distro ubuntu:24.04 --install-deps --result-dir /drone/src/infer
 #
 set -o pipefail
