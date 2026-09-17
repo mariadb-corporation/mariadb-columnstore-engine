@@ -1,0 +1,115 @@
+{
+  "_comment": [
+    "Third-party code copied into this repository, checked by build/check_vendored_code.py.",
+    "sbom: declared in cmake/sbom_3rdparty.cmake under the same name.",
+    "notice: has a section in THIRD-PARTY-NOTICES listing the same files.",
+    "ignore: our own files and license texts that contain a license phrase."
+  ],
+  "components": [
+    {
+      "name": "json",
+      "files": ["utils/json/json.hpp"],
+      "license": "MIT",
+      "sbom": true,
+      "notice": true
+    },
+    {
+      "name": "robin-hood-hashing",
+      "files": ["utils/common/robin_hood.h"],
+      "license": "MIT",
+      "sbom": true,
+      "notice": true
+    },
+    {
+      "name": "jpcre2",
+      "files": ["utils/pcre2/jpcre2.hpp"],
+      "license": "BSD-3-Clause",
+      "sbom": true,
+      "notice": true
+    },
+    {
+      "name": "utfcpp",
+      "files": [
+        "utils/funcexp/utf8.h",
+        "utils/funcexp/utf8/core.h",
+        "utils/funcexp/utf8/checked.h",
+        "utils/funcexp/utf8/unchecked.h"
+      ],
+      "license": "BSL-1.0",
+      "sbom": true,
+      "notice": true
+    },
+    {
+      "name": "picosat",
+      "files": ["tools/rebuildEM/picosat.c", "tools/rebuildEM/picosat.h"],
+      "license": "MIT",
+      "sbom": true,
+      "notice": true
+    },
+    {
+      "name": "eremin-checksum",
+      "files": ["utils/messageqcpp/inetstreamsocket.cpp"],
+      "license": "BSD-2-Clause",
+      "sbom": false,
+      "notice": true
+    },
+    {
+      "name": "mcnickle-md5",
+      "files": ["utils/funcexp/func_md5.cpp"],
+      "license": "RSA-MD",
+      "sbom": false,
+      "notice": true
+    },
+    {
+      "name": "jones-sha1",
+      "files": ["utils/funcexp/sha.h", "utils/funcexp/func_sha.cpp"],
+      "license": "Freeware Public License (FPL)",
+      "sbom": false,
+      "notice": true
+    },
+    {
+      "name": "static-any",
+      "files": ["utils/common/any.hpp"],
+      "license": "BSL-1.0",
+      "sbom": false,
+      "notice": true
+    },
+    {
+      "name": "float128-fragments",
+      "files": ["datatypes/mcs_float128.h"],
+      "license": "SunPro, BSL-1.0",
+      "sbom": false,
+      "notice": true
+    },
+    {
+      "name": "sql-crypt",
+      "files": ["utils/funcexp/sql_crypt.cpp", "utils/funcexp/sql_crypt.h"],
+      "license": "GPL-2.0",
+      "sbom": false,
+      "notice": false,
+      "note": "Copied from MariaDB server sql/sql_crypt.cc; same GPLv2 as ColumnStore, Oracle header kept."
+    },
+    {
+      "name": "threadpool",
+      "files": ["utils/threadpool/threadpool.h"],
+      "license": "public domain",
+      "sbom": false,
+      "notice": false,
+      "note": "Derived from Devguy.com's public-domain thread pool; no notice duty."
+    }
+  ],
+  "ignore": [
+    "COPYING",
+    "LICENSE.md",
+    "THIRD-PARTY-NOTICES",
+    "cmapi/LICENSE.GPL2",
+    "oam/oamcpp/COPYING",
+    "build/check_vendored_code.py",
+    "dbcon/DBConnector.xmi",
+    "utils/loggingcpp/logging.xmi",
+    "utils/messageqcpp/messagequeue.xmi",
+    "versioning/BRM/BlockResolutionManager.xmi",
+    "dbcon/joblist/bandeddl.h.set",
+    "dbcon/joblist/bandeddl.h.vector"
+  ]
+}
