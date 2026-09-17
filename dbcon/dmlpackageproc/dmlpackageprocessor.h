@@ -129,6 +129,7 @@ class DMLPackageProcessor
     std::string extendedStats;
     std::string miniStats;
     querystats::QueryStats stats;
+    std::string bloatAnalysis;
 
     DMLResult() : result(NO_ERROR), rowCount(0){};
   };

@@ -96,6 +96,44 @@ int SlaveDBRMNode::createStripeColumnExtents(const std::vector<CreateStripeColum
 }
 
 //------------------------------------------------------------------------------
+// Create hidden stripe column extents
+//------------------------------------------------------------------------------
+int SlaveDBRMNode::createHiddenStripeColumnExtents(const std::vector<CreateStripeColumnExtentsArgIn>& cols,
+                                                   uint16_t dbRoot, uint32_t& partitionNum, uint16_t& segmentNum,
+                                                   std::vector<CreateStripeColumnExtentsArgOut>& extents) throw()
+{
+  try
+  {
+    em.createHiddenStripeColumnExtents(cols, dbRoot, partitionNum, segmentNum, extents);
+  }
+  catch (exception& e)
+  {
+    cerr << e.what() << endl;
+    return -1;
+  }
+
+  return 0;
+}
+
+//------------------------------------------------------------------------------
+// Make a hidden partition visible
+//------------------------------------------------------------------------------
+int SlaveDBRMNode::makePartitionVisible(const std::set<OID_t>& oids, uint16_t dbRoot, uint32_t partitionNum) throw()
+{
+  try
+  {
+    em.makePartitionVisible(oids, dbRoot, partitionNum);
+  }
+  catch (exception& e)
+  {
+    cerr << e.what() << endl;
+    return -1;
+  }
+
+  return 0;
+}
+
+//------------------------------------------------------------------------------
 // Create an extent for the specified OID and DBRoot.
 //------------------------------------------------------------------------------
 int SlaveDBRMNode::createColumnExtent_DBroot(OID_t oid, uint32_t colWidth, uint16_t dbRoot,

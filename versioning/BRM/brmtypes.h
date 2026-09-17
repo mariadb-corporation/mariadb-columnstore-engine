@@ -483,6 +483,8 @@ const uint8_t MARK_ALL_PARTITION_FOR_DELETION = 41;
 const uint8_t CREATE_COLUMN_EXTENT_EXACT_FILE = 42;
 const uint8_t DELETE_DBROOT = 43;
 const uint8_t CREATE_STRIPE_COLUMN_EXTENTS = 44;
+const uint8_t CREATE_HIDDEN_STRIPE_COLUMN_EXTENTS = 107;
+const uint8_t MAKE_PARTITION_VISIBLE = 108;
 
 /* SessionManager interface */
 const uint8_t VER_ID = 45;
