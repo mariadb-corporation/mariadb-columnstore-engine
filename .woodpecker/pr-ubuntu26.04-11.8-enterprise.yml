@@ -1,0 +1,402 @@
+clone:
+  git:
+    image: woodpeckerci/plugin-git
+    settings:
+      depth: 10
+      partial: false
+      recursive: false
+labels:
+  platform: linux/amd64
+steps:
+- commands:
+  - git config --global --add safe.directory "$${CI_WORKSPACE}"
+  - git submodule update --init --recursive
+  - git config cmake.update-submodules no
+  - git rev-parse --abbrev-ref HEAD && git rev-parse HEAD
+  image: alpine/git:2.49.0
+  name: submodules
+- commands:
+  - apk add --no-cache -q bash jsonnet python3 py3-yaml
+  - bash ./scripts/ci/generate_woodpecker.sh --check
+  depends_on:
+  - submodules
+  image: alpine/git:2.49.0
+  name: check-jsonnet-ymls-sync
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - echo running on $${CI_MACHINE}
+  - echo "https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances:search=:$${CI_MACHINE};v=3;%24case=tags:true%5C,client:false;%24regex=tags:false%5C,client:false;sort=desc:launchTime"
+  - ': "$${SERVER_REF:=11.8-enterprise}"'
+  - ': "$${SERVER_REMOTE:=https://github.com/mariadb-corporation/MariaDBEnterprise}"'
+  - ': "$${SERVER_SHA:=11.8-enterprise}"'
+  - export SERVER_REF SERVER_REMOTE SERVER_SHA
+  - echo $$SERVER_REF
+  - echo $$SERVER_REMOTE
+  - ': "$${GITHUB_TOKEN:?github_token secret is required to clone https://github.com/mariadb-corporation/MariaDBEnterprise}"'
+  - printf "machine github.com login x-access-token password %s\n" "$$GITHUB_TOKEN"
+    > $$HOME/.netrc
+  - chmod 600 $$HOME/.netrc
+  - rm -rf /mdb/* || true
+  - mkdir -p /mdb/verylongdirnameforverystrangecpackbehavior && cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - 'git config --global url."https://github.com/".insteadOf git@github.com:'
+  - git -c submodule."storage/rocksdb/rocksdb".update=none -c submodule."wsrep-lib".update=none
+    -c submodule."storage/columnstore/columnstore".update=none clone --recurse-submodules
+    --depth 200 --branch $$SERVER_REF $$SERVER_REMOTE .
+  - git reset --hard $$SERVER_SHA
+  - git rev-parse --abbrev-ref HEAD && git rev-parse HEAD
+  - git config cmake.update-submodules no
+  - rm -rf storage/columnstore/columnstore
+  - cp -r "$${CI_WORKSPACE}" /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore
+  depends_on:
+  - check-jsonnet-ymls-sync
+  environment:
+    GITHUB_TOKEN:
+      from_secret: github_token
+    SERVER_REF: ${SERVER_REF}
+    SERVER_REMOTE: ${SERVER_REMOTE}
+    SERVER_SHA: ${SERVER_SHA}
+  image: alpine/git:2.49.0
+  name: clone-mdb
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - mkdir /mdb/verylongdirnameforverystrangecpackbehavior/ubuntu26.04
+  - bash -c "set -o pipefail && bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/bootstrap_mcs.sh
+    --build-type RelWithDebInfo --distro ubuntu:26.04 --build-packages --install-deps
+    --sccache --build-path /mdb/verylongdirnameforverystrangecpackbehavior/builddir    2>&1
+    | bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/ansi2txt.sh
+    /mdb/verylongdirnameforverystrangecpackbehavior/ubuntu26.04/build.log "
+  depends_on:
+  - clone-mdb
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_REGION: us-east-1
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+    DEBIAN_FRONTEND: noninteractive
+    SCCACHE_BUCKET: cs-sccache
+    SCCACHE_REGION: us-east-1
+    SCCACHE_S3_KEY_PREFIX: ubuntu26.04stable-23.1011.8-enterpriseamd64
+    SCCACHE_S3_USE_SSL: 'true'
+  image: detravi/ubuntu:26.04
+  name: build
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - export CMAPI_GIT_REVISION="$${CI_COMMIT_SHA}"
+  - bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/build_cmapi.sh  --distro
+    ubuntu:26.04
+  depends_on:
+  - clone-mdb
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  image: detravi/ubuntu:26.04
+  name: cmapi-build
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/createrepo.sh  --result
+    ubuntu26.04
+  depends_on:
+  - build
+  - cmapi-build
+  image: detravi/ubuntu:26.04
+  name: createrepo
+  when:
+  - status:
+    - success
+    - failure
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - ': "$${SERVER_REF:=11.8-enterprise}"'
+  - ': "$${SERVER_REMOTE:=https://github.com/mariadb-corporation/MariaDBEnterprise}"'
+  - cd /mdb/verylongdirnameforverystrangecpackbehavior
+  - 'echo "engine: $${CI_COMMIT_SHA}" > buildinfo.txt'
+  - 'echo "server: $$(git rev-parse HEAD)" >> buildinfo.txt'
+  - 'echo "buildNo: $${CI_PIPELINE_NUMBER}" >> buildinfo.txt'
+  - 'echo "serverBranch: $$SERVER_REF" >> buildinfo.txt'
+  - 'echo "serverRepo: $$SERVER_REMOTE" >> buildinfo.txt'
+  - 'echo "engineBranch: $${CI_COMMIT_SOURCE_BRANCH}" >> buildinfo.txt'
+  - 'echo "engineRepo: $${CI_REPO_URL}" >> buildinfo.txt'
+  - mv buildinfo.txt ./ubuntu26.04/
+  - yes | cp -vr ./ubuntu26.04/. "$${CI_WORKSPACE}/ubuntu26.04/"
+  - ls -l "$${CI_WORKSPACE}/ubuntu26.04"
+  - echo "check columnstore package:"
+  - ls -l "$${CI_WORKSPACE}/ubuntu26.04" | grep columnstore
+  depends_on:
+  - createrepo
+  environment:
+    SERVER_REF: ${SERVER_REF}
+    SERVER_REMOTE: ${SERVER_REMOTE}
+  image: alpine/git:2.49.0
+  name: pkg
+  when:
+  - status:
+    - success
+    - failure
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - sleep 10
+  - ls -lR ubuntu26.04
+  - source /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/VERSION
+    && CURRENT_VERSION=$${COLUMNSTORE_VERSION_MAJOR}.$${COLUMNSTORE_VERSION_MINOR}.$${COLUMNSTORE_VERSION_PATCH}
+    && aws s3 rm s3://cspkg/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04/
+    --recursive --exclude "*" --include "*columnstore*.deb" --include "*columnstore*.rpm"
+    --exclude "*$${CURRENT_VERSION}*.deb" --exclude "*$${CURRENT_VERSION}*.rpm" --only-show-errors
+  - aws s3 sync ubuntu26.04/ s3://cspkg/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04
+    --only-show-errors
+  - 'echo "Data uploaded to: https://cspkg.s3.amazonaws.com/index.html?prefix=stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04/"'
+  depends_on:
+  - cmapi-build
+  - createrepo
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_REGION: us-east-1
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  image: amazon/aws-cli:2.22.30
+  name: publish-cmapi-build
+  when:
+  - status:
+    - success
+    - failure
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - sleep 10
+  - ls -lR ubuntu26.04
+  - source /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/VERSION
+    && CURRENT_VERSION=$${COLUMNSTORE_VERSION_MAJOR}.$${COLUMNSTORE_VERSION_MINOR}.$${COLUMNSTORE_VERSION_PATCH}
+    && aws s3 rm s3://cspkg/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04/
+    --recursive --exclude "*" --include "*columnstore*.deb" --include "*columnstore*.rpm"
+    --exclude "*$${CURRENT_VERSION}*.deb" --exclude "*$${CURRENT_VERSION}*.rpm" --only-show-errors
+  - aws s3 sync ubuntu26.04/ s3://cspkg/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04
+    --only-show-errors
+  - 'echo "Data uploaded to: https://cspkg.s3.amazonaws.com/index.html?prefix=stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04/"'
+  depends_on:
+  - pkg
+  - createrepo
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_REGION: us-east-1
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  image: amazon/aws-cli:2.22.30
+  name: publish-pkg
+  when:
+  - status:
+    - success
+    - failure
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - sh -c "apk add bash && timeout 1800 bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/prepare_test_container.sh  --container-name
+    smoke-ubuntu26.04$${CI_PIPELINE_NUMBER} --docker-image detravi/ubuntu:26.04 --result-path
+    ubuntu26.04 --packages-url https://cspkg.s3.amazonaws.com/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise
+    --do-setup true --do-install true --do-install-builddeps true"
+  - timeout 1800 bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/run_smoke.sh  --container-name
+    smoke-ubuntu26.04$${CI_PIPELINE_NUMBER}
+  depends_on:
+  - publish-pkg
+  image: docker:28.2.2
+  name: smoke
+  volumes:
+  - /var/run/docker.sock:/var/run/docker.sock
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - sh -c "apk add bash && bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/report_test_stage.sh  --container-name
+    smoke-ubuntu26.04$${CI_PIPELINE_NUMBER} --result-path ubuntu26.04 --stage smoke"
+  depends_on:
+  - smoke
+  image: docker:28.2.2
+  name: smokelog
+  volumes:
+  - /var/run/docker.sock:/var/run/docker.sock
+  when:
+  - status:
+    - success
+    - failure
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - sleep 10
+  - ls -lR ubuntu26.04
+  - source /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/VERSION
+    && CURRENT_VERSION=$${COLUMNSTORE_VERSION_MAJOR}.$${COLUMNSTORE_VERSION_MINOR}.$${COLUMNSTORE_VERSION_PATCH}
+    && aws s3 rm s3://cspkg/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04/
+    --recursive --exclude "*" --include "*columnstore*.deb" --include "*columnstore*.rpm"
+    --exclude "*$${CURRENT_VERSION}*.deb" --exclude "*$${CURRENT_VERSION}*.rpm" --only-show-errors
+  - aws s3 sync ubuntu26.04/ s3://cspkg/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04
+    --only-show-errors
+  - 'echo "Data uploaded to: https://cspkg.s3.amazonaws.com/index.html?prefix=stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04/"'
+  depends_on:
+  - smokelog
+  - createrepo
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_REGION: us-east-1
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  image: amazon/aws-cli:2.22.30
+  name: publish-smokelog
+  when:
+  - status:
+    - success
+    - failure
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - sh -c "apk add bash && timeout 1800 bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/prepare_test_container.sh  --container-name
+    cmapi-ubuntu26.04$${CI_PIPELINE_NUMBER} --docker-image detravi/ubuntu:26.04 --result-path
+    ubuntu26.04 --packages-url https://cspkg.s3.amazonaws.com/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise
+    --do-setup true --do-install true --do-install-builddeps true"
+  - apk add bash && timeout 3600 bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/run_cmapi_test.sh  --container-name
+    cmapi-ubuntu26.04$${CI_PIPELINE_NUMBER} --pkg-format deb
+  depends_on:
+  - publish-cmapi-build
+  environment:
+    PYTHONPATH: /usr/share/columnstore/cmapi/deps
+  image: docker:git
+  name: cmapi-test
+  volumes:
+  - /var/run/docker.sock:/var/run/docker.sock
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - sh -c "apk add bash && bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/report_test_stage.sh  --container-name
+    cmapi-ubuntu26.04$${CI_PIPELINE_NUMBER} --result-path ubuntu26.04 --stage cmapi"
+  depends_on:
+  - cmapi-test
+  image: docker:28.2.2
+  name: cmapilog
+  volumes:
+  - /var/run/docker.sock:/var/run/docker.sock
+  when:
+  - status:
+    - success
+    - failure
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - sleep 10
+  - ls -lR ubuntu26.04
+  - source /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/VERSION
+    && CURRENT_VERSION=$${COLUMNSTORE_VERSION_MAJOR}.$${COLUMNSTORE_VERSION_MINOR}.$${COLUMNSTORE_VERSION_PATCH}
+    && aws s3 rm s3://cspkg/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04/
+    --recursive --exclude "*" --include "*columnstore*.deb" --include "*columnstore*.rpm"
+    --exclude "*$${CURRENT_VERSION}*.deb" --exclude "*$${CURRENT_VERSION}*.rpm" --only-show-errors
+  - aws s3 sync ubuntu26.04/ s3://cspkg/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04
+    --only-show-errors
+  - 'echo "Data uploaded to: https://cspkg.s3.amazonaws.com/index.html?prefix=stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04/"'
+  depends_on:
+  - cmapilog
+  - createrepo
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_REGION: us-east-1
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  image: amazon/aws-cli:2.22.30
+  name: publish-cmapilog
+  when:
+  - status:
+    - success
+    - failure
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - ': "$${MTR_FULL_SUITE:=false}"'
+  - sh -c "apk add bash && timeout 1800 bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/prepare_test_container.sh  --container-name
+    mtr-ubuntu26.04$${CI_PIPELINE_NUMBER} --docker-image detravi/ubuntu:26.04 --result-path
+    ubuntu26.04 --packages-url https://cspkg.s3.amazonaws.com/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise
+    --do-setup true --do-install true --do-install-builddeps true"
+  - apk add bash && timeout 18000 bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/run_mtr.sh  --container-name
+    mtr-ubuntu26.04$${CI_PIPELINE_NUMBER} --distro ubuntu:26.04 --run-as-extern --triggering-event
+    pull_request --full-mtr $${MTR_FULL_SUITE}
+  depends_on:
+  - smoke
+  environment:
+    MTR_FULL_SUITE: ${MTR_FULL_SUITE}
+  image: docker:git
+  name: mtr
+  volumes:
+  - /var/run/docker.sock:/var/run/docker.sock
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - sh -c "apk add bash && bash /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/build/report_test_stage.sh  --container-name
+    mtr-ubuntu26.04$${CI_PIPELINE_NUMBER} --result-path ubuntu26.04 --stage mtr"
+  depends_on:
+  - mtr
+  image: docker:28.2.2
+  name: mtrlog
+  volumes:
+  - /var/run/docker.sock:/var/run/docker.sock
+  when:
+  - status:
+    - success
+    - failure
+- commands:
+  - mkdir -p "$${CI_WORKSPACE}/../mdb"
+  - rm -rf /mdb
+  - ln -s "$${CI_WORKSPACE}/../mdb" /mdb
+  - sleep 10
+  - ls -lR ubuntu26.04
+  - source /mdb/verylongdirnameforverystrangecpackbehavior/storage/columnstore/columnstore/VERSION
+    && CURRENT_VERSION=$${COLUMNSTORE_VERSION_MAJOR}.$${COLUMNSTORE_VERSION_MINOR}.$${COLUMNSTORE_VERSION_PATCH}
+    && aws s3 rm s3://cspkg/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04/
+    --recursive --exclude "*" --include "*columnstore*.deb" --include "*columnstore*.rpm"
+    --exclude "*$${CURRENT_VERSION}*.deb" --exclude "*$${CURRENT_VERSION}*.rpm" --only-show-errors
+  - aws s3 sync ubuntu26.04/ s3://cspkg/stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04
+    --only-show-errors
+  - 'echo "Data uploaded to: https://cspkg.s3.amazonaws.com/index.html?prefix=stable-23.10/pull_request/$${CI_PIPELINE_NUMBER}/11.8-enterprise/amd64/ubuntu26.04/"'
+  depends_on:
+  - mtrlog
+  - createrepo
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: aws_access_key_id
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_REGION: us-east-1
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: aws_secret_access_key
+  image: amazon/aws-cli:2.22.30
+  name: publish-mtrlog
+  when:
+  - status:
+    - success
+    - failure
+when:
+- branch: stable-23.10
+  event:
+  - pull_request
+  - manual
