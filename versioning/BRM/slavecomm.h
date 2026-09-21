@@ -107,6 +107,18 @@ class SlaveComm
 
   void do_undo();
   void do_confirm();
+
+  /** @brief Rollbacks a write transaction the controller never finished.
+   *
+   * A command changes a copy of the data areas and leaves the update open;
+   * CONFIRM publishes it, BRM_UNDO throws it away. An open update holds the
+   * segment's update mutex, so one that is never finished either way blocks
+   * every writer in the cluster - and the robust mutex does not help, because
+   * this process is alive and simply holding it.
+   *
+   * @param why what broke the sequence, for the log.
+   */
+  void rollBackUnfinishedUpdate(const char* why);
   void do_flushInodeCache();
   void do_clear();
   void do_ownerCheck(messageqcpp::ByteStream& msg);
