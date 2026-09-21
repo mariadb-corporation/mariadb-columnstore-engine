@@ -30,10 +30,12 @@
 #include <iomanip>
 #include <string>
 #include <mutex>
+#include <dirent.h>
 using namespace std;
 
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/sync/named_semaphore.hpp>
+#include <boost/interprocess/detail/shared_dir_helpers.hpp>
 namespace bi = boost::interprocess;
 
 #include <boost/thread/thread.hpp>
@@ -48,10 +50,8 @@ bool vFlg;
 bool nFlg;
 std::mutex coutMutex;
 
-void shmDoit(key_t shm_key, const string& label)
+void shmDoitName(key_t shm_key, const string& key_name, const string& label)
 {
-  string key_name = ShmKeys::keyToName(shm_key);
-
   if (vFlg)
   {
     try
@@ -74,6 +74,89 @@ void shmDoit(key_t shm_key, const string& label)
   }
 }
 
+void shmDoit(key_t shm_key, const string& label)
+{
+  shmDoitName(shm_key, ShmKeys::keyToName(shm_key), label);
+}
+
+/* Where the objects actually are. boost hands a name straight to shm_open()
+   when BOOST_INTERPROCESS_POSIX_SHARED_MEMORY_OBJECTS is on, which on Linux
+   means /dev/shm. ipcdetail::get_shared_dir() answers a different question -
+   it is the directory the filesystem-backed emulation uses - and would send us
+   to /tmp/boost_interprocess, where none of this lives. */
+string sharedMemoryDir()
+{
+#if defined(BOOST_INTERPROCESS_POSIX_SHARED_MEMORY_OBJECTS) && \
+    !defined(BOOST_INTERPROCESS_FILESYSTEM_BASED_POSIX_SHARED_MEMORY)
+  return "/dev/shm";
+#else
+  string dir;
+  bi::ipcdetail::get_shared_dir(dir);
+  return dir;
+#endif
+}
+
+/// What ShmKeys::keyToName() puts in front of the key, and how many hex digits
+/// of key it writes after it.
+const size_t KeyNameHexDigits = 8;
+
+string keyNamePrefix()
+{
+  const string zero = ShmKeys::keyToName(0);
+  return zero.substr(0, zero.size() - KeyNameHexDigits);
+}
+
+/* The data areas of a versioned segment are named for the id of the version in
+   them as well as for their key - <prefix><key in hex>-<id> - so the sweep over
+   the numeric keys below cannot reach them. There is no bound on the id and no
+   way to enumerate the ones a process that died mid-publication left behind, so
+   they have to be found by looking at what is actually there.
+
+   Named areas are unlinked a couple of publications after they are retired, so
+   in the normal course of things this finds one or two per structure. It is the
+   abnormal course it is here for. */
+void shmDoitSuffixedRange(key_t base, const string& label)
+{
+  if (base == 0)
+    return;
+
+  DIR* d = opendir(sharedMemoryDir().c_str());
+
+  if (!d)
+    return;
+
+  const string prefix = keyNamePrefix();
+  const size_t keyPos = prefix.size();
+  const size_t dashPos = keyPos + KeyNameHexDigits;
+
+  for (const struct dirent* ent = readdir(d); ent != nullptr; ent = readdir(d))
+  {
+    const string name(ent->d_name);
+
+    // <prefix><8 hex>-<at least one digit>
+    if (name.size() <= dashPos + 1 || name.compare(0, prefix.size(), prefix) != 0 || name[dashPos] != '-')
+      continue;
+
+    const string keyText = name.substr(keyPos, KeyNameHexDigits);
+
+    if (keyText.find_first_not_of("0123456789abcdefABCDEF") != string::npos)
+      continue;
+
+    if (name.find_first_not_of("0123456789", dashPos + 1) != string::npos)
+      continue;
+
+    const unsigned long key = strtoul(keyText.c_str(), nullptr, 16);
+
+    if (key < static_cast<unsigned long>(base) ||
+        key >= static_cast<unsigned long>(base) + ShmKeys::KEYRANGE_SIZE)
+      continue;
+
+    shmDoitName(static_cast<key_t>(key), name, label);
+  }
+
+  closedir(d);
+}
+
 void semDoit(key_t sem_key, const string& label)
 {
   shmDoit(sem_key, label);
@@ -86,10 +169,15 @@ void shmDoitRange(key_t shm_key, const string& label)
 
   unsigned shm_key_cnt;
 
+  const key_t base = shm_key;
+
   for (shm_key_cnt = 0; shm_key_cnt < ShmKeys::KEYRANGE_SIZE; shm_key_cnt++, shm_key++)
   {
     shmDoit(shm_key, label);
   }
+
+  // The names the key sweep above cannot express.
+  shmDoitSuffixedRange(base, label);
 }
 
 void usage()
