@@ -201,7 +201,6 @@ static int is_columnstore_extents_fill(THD* thd, TABLE_LIST* tables, COND* cond)
   BRM::OID_t cond_oid = 0;
   TABLE* table = tables->table;
 
-  BRM::DBRM::refreshShmWithLock();
   std::unique_ptr<BRM::DBRM> emp(new BRM::DBRM());
 
   if (!emp || !emp->isDBRMReady())

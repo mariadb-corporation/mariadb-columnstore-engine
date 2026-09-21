@@ -397,28 +397,6 @@ typedef std::vector<EmDbRootHWMInfo> EmDbRootHWMInfo_v;
 /// A container for VBRanges
 typedef std::vector<VBRange> VBRange_v;
 
-/* Definitions to support 'undo' operations */
-
-#define ID_MAXSIZE 200
-
-/** @brief ImageDeltas describe how an image in memory changed.
- *
- * ImageDelta objects contain the data that occupied the space at 'start'
- * before the last write operation was performed.  To reverse the change,
- * memcpy(ImageDelta.start, ImageDelta.data, ImageDelta.size).  The
- * shared memory segments should not be unlinked or unlocked since the
- * write operation.
- *
- * Right now it is used specifically to record how BRM data is modified.
- * Usage can be generalized.
- */
-struct ImageDelta
-{
-  void* start;
-  int size;
-  char data[ID_MAXSIZE];  /// Has to be as large as the largest change
-};
-
 // SubSystemLogId enumeration values should be in sync with SubsystemID[]
 // that is defined in messagelog.cpp
 enum SubSystemLogId

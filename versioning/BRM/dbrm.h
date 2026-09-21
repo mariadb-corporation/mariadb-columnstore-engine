@@ -45,7 +45,6 @@
 #include "calpontsystemcatalog.h"
 #include "sessionmanagerserver.h"
 #include "configcpp.h"
-#include "mastersegmenttable.h"
 
 #define EXPORT
 
@@ -100,14 +99,6 @@ class DBRM
   // It can speed up init if the caller only needs the other structures.
   EXPORT DBRM(bool noBRMFcns = false);
   EXPORT ~DBRM();
-
-  static void refreshShmWithLock()
-  {
-    MasterSegmentTableImpl::refreshShmWithLock();
-    ExtentMapRBTreeImpl::refreshShmWithLock();
-    ExtentMapIndexImpl::refreshShmWithLock();
-    FreeListImpl::refreshShmWithLock();
-  }
 
   // @bug 1055+ - Added functions below for multiple files per OID enhancement.
 
@@ -1007,7 +998,6 @@ class DBRM
 
   void deleteAISequence(uint32_t OID);  // called as part of deleteOID & deleteOIDs
 
-  boost::scoped_ptr<MasterSegmentTable> mst;
   boost::scoped_ptr<ExtentMap> em;
   boost::scoped_ptr<VBBM> vbbm;
   boost::scoped_ptr<VSS> vss;
