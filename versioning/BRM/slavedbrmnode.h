@@ -32,7 +32,6 @@
 
 #include "brmtypes.h"
 #include "rwlock.h"
-#include "mastersegmenttable.h"
 #include "extentmap.h"
 
 #include "vss.h"
@@ -414,6 +413,9 @@ class SlaveDBRMNode
   EXPORT void confirmChanges() throw();
   EXPORT void undoChanges() throw();
 
+  /// Whether any of the four structures still has a write transaction open.
+  EXPORT bool hasOpenUpdate() const;
+
   EXPORT int loadExtentMap(const std::string& filename);
   EXPORT int saveExtentMap(const std::string& filename);
 
@@ -455,18 +457,11 @@ class SlaveDBRMNode
   EXPORT int loadState(std::string filename) throw();
   EXPORT int saveState(std::string filename) throw();
 
-  EXPORT const bool* getEMFLLockStatus();
-  EXPORT const bool* getEMLockStatus();
-  EXPORT const bool* getEMIndexLockStatus();
-  EXPORT const bool* getVBBMLockStatus();
-  EXPORT const bool* getVSSLockStatus();
-
  private:
   explicit SlaveDBRMNode(const SlaveDBRMNode& brm);
   SlaveDBRMNode& operator=(const SlaveDBRMNode& brm);
   int lookup(OID_t oid, LBIDRange_v& lbidList) throw();
 
-  MasterSegmentTable mst;
   ExtentMap em;
   VBBM vbbm;
   VSS vss;

@@ -46,6 +46,7 @@
 
 #undef root_name
 #include <boost/filesystem.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "calpontselectexecutionplan.h"
 #include "mcsanalyzetableexecutionplan.h"
