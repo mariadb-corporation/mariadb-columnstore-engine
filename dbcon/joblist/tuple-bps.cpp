@@ -2773,6 +2773,13 @@ void TupleBPS::receiveMultiPrimitiveMessages()
       }
     }
 
+    /* Publish the versioned data area before notifying consumers as early
+     * as possible to prevent data race. So it should be done before endOfInput() */
+    if (ffirstStepType == SCAN && bop == BOP_AND && !cancelled())
+    {
+      lbidList->UpdateAllPartitionInfo(fColType);
+    }
+
     // Notify consumers as early as possible.
     dlp->endOfInput();
 
@@ -2829,10 +2836,6 @@ void TupleBPS::receiveMultiPrimitiveMessages()
       postStepSummaryTele(sts);
     }
 
-    if (ffirstStepType == SCAN && bop == BOP_AND && !cancelled())
-    {
-      lbidList->UpdateAllPartitionInfo(fColType);
-    }
   }
   else
   {
