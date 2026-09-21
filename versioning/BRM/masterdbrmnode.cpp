@@ -998,12 +998,31 @@ void MasterDBRMNode::undo() noexcept
   }
 }
 
+/* Waited for the responses, not fire and forget.
+ *
+ * A slave holds the changes of a command in a copy of the data area that no
+ * reader can see, and publishes it when it processes this message. A client
+ * told its command is done before that has happened can read the extent map
+ * and fail to find its own change.
+ *
+ * So the reply to the client waits on these */
 void MasterDBRMNode::confirm()
 {
   ByteStream confirmMsg;
 
   confirmMsg << CONFIRM;
   distribute(&confirmMsg);
+
+  vector<ByteStream*> responses;
+  bool readErrFlag = false;
+
+  /* Errors are reported the way they are for every other command: a slave
+     that does not answer sets halting and readErrFlag, which the loop that
+     called this acts on */
+  gatherResponses(CONFIRM, confirmMsg.length(), &responses, readErrFlag);
+
+  for (vector<ByteStream*>::iterator it = responses.begin(); it != responses.end(); ++it)
+    delete *it;
 }
 
 void MasterDBRMNode::finalCleanup()
