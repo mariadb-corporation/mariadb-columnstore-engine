@@ -15,11 +15,9 @@ set(brm_LIB_SRCS
     extentmap.cpp
     lbidresourcegraph.cpp
     logicalpartition.cpp
-    mastersegmenttable.cpp
     oidserver.cpp
     resourcenode.cpp
     rgnode.cpp
-    rwlockmonitor.cpp
     sessionmanagerserver.cpp
     shmkeys.cpp
     slavedbrmnode.cpp
