@@ -31,7 +31,6 @@
 #include <set>
 
 #include "brmtypes.h"
-#include "mastersegmenttable.h"
 #include "extentmap.h"
 #include "vbbm.h"
 #include "vss.h"
@@ -107,9 +106,9 @@ class BlockResolutionManager
   EXPORT int saveState(std::string filename) throw();
 
  private:
-  explicit BlockResolutionManager(const BlockResolutionManager& brm);
-  BlockResolutionManager& operator=(const BlockResolutionManager& brm);
-  MasterSegmentTable mst;
+  explicit BlockResolutionManager(const BlockResolutionManager&) = delete;
+  BlockResolutionManager& operator=(const BlockResolutionManager&) = delete;
+
   ExtentMap em;
   VBBM vbbm;
   VSS vss;

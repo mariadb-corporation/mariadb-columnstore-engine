@@ -30,11 +30,12 @@
 #include <boost/thread.hpp>
 //#define NDEBUG
 #include <cassert>
+#include <functional>
+#include <utility>
 
 #include "dataconvert.h"
 #include "oamcache.h"
 #include "rwlock.h"
-#include "mastersegmenttable.h"
 #include "extentmap.h"
 #include "copylocks.h"
 #include "vss.h"
@@ -45,6 +46,7 @@
 #include "messagequeuepool.h"
 #include "blocksize.h"
 #define DBRM_DLLEXPORT
+#include "scopeexit.h"
 #include "dbrm.h"
 #undef DBRM_DLLEXPORT
 
@@ -76,7 +78,6 @@ DBRM::DBRM(bool noBRMinit) : fDebug(false)
 {
   if (!noBRMinit)
   {
-    mst.reset(new MasterSegmentTable());
     em.reset(new ExtentMap());
     vss.reset(new VSS());
     vbbm.reset(new VBBM());
@@ -147,39 +148,84 @@ int DBRM::saveState(string filename) throw()
   string emFilename = filename + "_em";
   string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
-  bool locked[3] = {false, false, false};
 
+  /* The three files have to agree with each other: a VSS entry names a version
+     buffer block the saved VBBM has to describe, and that block's LBID has to
+     be in the saved extent map. This is what gets loaded on the next start, so
+     an inconsistent set here is a broken database later.
+
+     A read of any of these structures takes no lock - a reader is kept safe by
+     the pin it holds on a published data area, and a pin says nothing about
+     which published version it caught - so the pins alone do not make the
+     three files agree. What does is the read lock writers exclude, which
+     lockForSave() takes. But it is only needed while the pins are being taken:
+     a pinned area cannot change, so once every structure is pinned the
+     snapshot is fixed and the locks have nothing left to protect. They go back
+     before a single byte is written, which matters because writing these files
+     can take minutes and may be going to object storage - and used to hold off
+     every writer in the cluster for all of it.
+
+     The copy locks are not saved. Their read lock is taken anyway so that a VB
+     copy cannot slip between the VBBM and the VSS being pinned.
+
+     Three things about the order. The bootstraps go first, because publishing
+     an empty data area needs that structure's write lock and no order lets a
+     caller ask for it while holding the read locks. The read locks then go in
+     the order writers take the write locks - VBBM, VSS, copy locks - and the
+     extent map, which writers take after all three, is pinned from inside
+     them. And the guards give everything back however this function leaves,
+     including through the early return on a failed extent map save. */
   try
   {
-    vbbm->lock(VBBM::READ);
-    locked[0] = true;
-    vss->lock(VSS::READ);
-    locked[1] = true;
-    copylocks->lock(CopyLocks::READ);
-    locked[2] = true;
+    vbbm->ensureDataArea();
+    vss->ensureDataArea();
+    copylocks->ensureDataArea();
 
-    saveExtentMap(emFilename);
+    vbbm->lockForSave();
+    ScopeExit unlockVBBM([this] { vbbm->unlockForSave(); });
+    vss->lockForSave();
+    ScopeExit unlockVSS([this] { vss->unlockForSave(); });
+    copylocks->lockForSave();
+    ScopeExit unlockCL([this] { copylocks->unlockForSave(); });
+
+    /* The pins. Everything below is written out of these, and a pinned data
+       area cannot change, so from here on they - and not the locks above - are
+       what holds the snapshot still. The extent map's are taken here too, from
+       inside the exclusion, so that the three files agree with each other;
+       ExtentMap::save() below counts onto them rather than taking its own. */
+    vbbm->lock(VBBM::READ);
+    ScopeExit releaseVBBM([this] { vbbm->release(VBBM::READ); });
+    vss->lock(VSS::READ);
+    ScopeExit releaseVSS([this] { vss->release(VSS::READ); });
+    em->pinForSave();
+    ScopeExit unpinEM([this] { em->unpinForSave(); });
+
+    /* Everything is pinned, so the exclusion has done its whole job: let the
+       writers back in before the files are written, which is the slow part and
+       may be going to object storage. What the locks bought was that the pins
+       agree with each other, and that survives their release. */
+    unlockCL.releaseNow();
+    unlockVSS.releaseNow();
+    unlockVBBM.releaseNow();
+
+    /* Reported rather than ignored: saveExtentMap() swallows its own exception
+       and says so in its return value, so leaving it unchecked - as this used to
+       - meant a saveState() that had failed to write the extent map still
+       returned success, and the caller went on to treat the set as good. */
+    if (saveExtentMap(emFilename) < 0)
+      return -1;
+
     vbbm->save(vbbmFilename);
     vss->save(vssFilename);
-
-    copylocks->release(CopyLocks::READ);
-    locked[2] = false;
-    vss->release(VSS::READ);
-    locked[1] = false;
-    vbbm->release(VBBM::READ);
-    locked[0] = false;
   }
   catch (exception& e)
   {
-    if (locked[2])
-      copylocks->release(CopyLocks::READ);
-
-    if (locked[1])
-      vss->release(VSS::READ);
-
-    if (locked[0])
-      vbbm->release(VBBM::READ);
-
+    cerr << "DBRM::saveState(): " << e.what() << endl;
+    return -1;
+  }
+  catch (...)
+  {
+    cerr << "DBRM::saveState(): caught an exception" << endl;
     return -1;
   }
 
@@ -663,17 +709,24 @@ int DBRM::vssLookup(LBID_t lbid, const QueryContext& verInfo, VER_t txnID, VER_t
 
 #endif
 
-  if (!vbOnly && vss->isEmpty())
-  {
-    *outVer = 0;
-    *vbFlag = false;
-    return -1;
-  }
-
   bool locked = false;
 
   try
   {
+    /* Inside the try, and it has to be. This short circuit used to be a read of
+       a shmkey out of the master segment table, which could not fail; it is now
+       a pin of the VSS's published data area, which maps shared memory, may
+       have to bootstrap an empty area under the VSS write lock, and throws when
+       either of those goes wrong. This function is declared throw(), so an
+       exception leaving it is a call to std::terminate() rather than an error
+       the caller gets to see. */
+    if (!vbOnly && vss->isEmpty())
+    {
+      *outVer = 0;
+      *vbFlag = false;
+      return -1;
+    }
+
     int rc = 0;
     vss->lock(VSS::READ);
     locked = true;
@@ -700,10 +753,10 @@ int DBRM::bulkVSSLookup(const std::vector<LBID_t>& lbids, const QueryContext_vss
   try
   {
     out->resize(lbids.size());
-    vss->lock(VSS::READ);
-    locked = true;
 
-    if (vss->isEmpty(false))
+    // Same short circuit vssLookup() takes, and for the same reason: isEmpty()
+    // needs no lock of its own, so there is no point taking one to ask.
+    if (vss->isEmpty())
     {
       for (i = 0; i < lbids.size(); i++)
       {
@@ -712,14 +765,17 @@ int DBRM::bulkVSSLookup(const std::vector<LBID_t>& lbids, const QueryContext_vss
         vd.vbFlag = false;
         vd.returnCode = -1;
       }
+
+      return 0;
     }
-    else
+
+    vss->lock(VSS::READ);
+    locked = true;
+
+    for (i = 0; i < lbids.size(); i++)
     {
-      for (i = 0; i < lbids.size(); i++)
-      {
-        VSSData& vd = (*out)[i];
-        vd.returnCode = vss->lookup(lbids[i], verInfo, txnID, &vd.verID, &vd.vbFlag, false);
-      }
+      VSSData& vd = (*out)[i];
+      vd.returnCode = vss->lookup(lbids[i], verInfo, txnID, &vd.verID, &vd.vbFlag, false);
     }
 
     vss->release(VSS::READ);

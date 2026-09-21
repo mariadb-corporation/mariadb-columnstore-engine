@@ -29,7 +29,6 @@
 #include "slavecomm.h"
 #include "liboamcpp.h"
 #include "brmtypes.h"
-#include "rwlockmonitor.h"
 
 #include "IDBPolicy.h"
 
@@ -140,13 +139,10 @@ int ServiceWorkerNode::Child()
     return 1;
   }
 
-  /* Start 4 threads to monitor write lock state */
-  monitorThreads.create_thread(RWLockMonitor(&die, comm->getSlaveNode().getEMFLLockStatus(), keys.KEYRANGE_EMFREELIST_BASE));
-  monitorThreads.create_thread(RWLockMonitor(&die, comm->getSlaveNode().getEMLockStatus(), keys.KEYRANGE_EXTENTMAP_BASE));
-  monitorThreads.create_thread(RWLockMonitor(&die, comm->getSlaveNode().getVBBMLockStatus(), keys.KEYRANGE_VBBM_BASE));
-  monitorThreads.create_thread(RWLockMonitor(&die, comm->getSlaveNode().getVSSLockStatus(), keys.KEYRANGE_VSS_BASE));
-  monitorThreads.create_thread(
-      RWLockMonitor(&die, comm->getSlaveNode().getEMIndexLockStatus(), keys.KEYRANGE_EXTENTMAP_INDEX_BASE));
+  /* The five RWLockMonitor threads that used to start here are gone with the
+     locks they watched. What they did was drop the read locks of readers that
+     had died; readers take no lock now, and a writer that dies is recovered by
+     the segment's update mutex being robust. */
 
   try
   {

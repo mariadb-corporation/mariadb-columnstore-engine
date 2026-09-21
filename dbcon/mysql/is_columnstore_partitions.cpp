@@ -31,7 +31,6 @@
 
 #include "idberrorinfo.h"
 #include "exceptclasses.h"
-#include "mastersegmenttable.h"
 #include "extentmap.h"
 #include "dbrm.h"
 #include "brmtypes.h"
@@ -49,7 +48,6 @@ ST_FIELD_INFO is_columnstore_partitions_fields[] = {
 
 static int is_columnstore_partitions_fill(THD* thd, TABLE_LIST* tables, COND* cond)
 {
-  BRM::DBRM::refreshShmWithLock();
   DBRM em;
   CHARSET_INFO* cs = system_charset_info;
   TABLE* table = tables->table;
