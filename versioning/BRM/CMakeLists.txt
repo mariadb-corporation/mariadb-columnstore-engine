@@ -26,7 +26,6 @@ set(brm_LIB_SRCS
     tablelockserver.cpp
     tracer.cpp
     transactionnode.cpp
-    undoable.cpp
     vbbm.cpp
     vss.cpp
     ../../datatypes/mcs_datatype.cpp)
