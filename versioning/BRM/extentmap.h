@@ -1,5 +1,5 @@
 /* Copyright (C) 2014 InfiniDB, Inc.
-   Copyright (C) 2016-2022 MariaDB Corporation
+   Copyright (C) 2016-2026 MariaDB Corporation
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public License
@@ -47,8 +47,6 @@
 
 #include "shmkeys.h"
 #include "brmtypes.h"
-#include "mastersegmenttable.h"
-#include "undoable.h"
 
 #include "brmshmimpl.h"
 #include "exceptclasses.h"
@@ -88,10 +86,7 @@ namespace BRM
 using PartitionNumberT = uint32_t;
 using DBRootT = uint16_t;
 using SegmentT = uint16_t;
-using LastExtentIndexT = int;
-using EmptyEMEntry = int;
 using HighestOffset = uint32_t;
-using LastIndEmptyIndEmptyInd = std::pair<LastExtentIndexT, EmptyEMEntry>;
 using DBRootVec = std::vector<DBRootT>;
 
 // assumed column width when calculating dictionary store extent size
@@ -259,32 +254,112 @@ using EMEntryKeyValueTypeAllocator =
 using ExtentMapRBTree =
     boost::interprocess::map<int64_t, EMEntry, std::less<int64_t>, EMEntryKeyValueTypeAllocator>;
 
+// The name of the RBTree object inside an extent map data area.
+static const constexpr char* EmMapRBTreeObjectName = "EmMapRBTree";
+
+// The name of the index object inside an extent map index data area.
+static const constexpr char* EmIndexObjectName = "i";
+
+/** @brief The extent map RBTree, held in a versioned shared memory segment.
+ *
+ * Readers work off the data area the metadata area points at. Writers never
+ * touch it: beginUpdate() gives them a private copy to change and
+ * publishUpdate() makes that copy the current one with a single atomic store.
+ * See BRMVersionedShmImpl for the layout.
+ */
 class ExtentMapRBTreeImpl
 {
  public:
+  /// A data area that stays mapped for as long as the handle is held.
+  using DataAreaPin = BRMVersionedShmImpl::DataAreaPin;
+
   ~ExtentMapRBTreeImpl() = default;
 
-  static ExtentMapRBTreeImpl* makeExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly, bool& emLocked,
-                                                      const MasterSegmentTable* emSegTable = nullptr);
+  static ExtentMapRBTreeImpl* makeExtentMapRBTreeImpl(unsigned keyBase, off_t size, bool readOnly = false);
 
-  static void refreshShmWithLock()
+  // Reader side.
+  inline uint64_t currentId() const
   {
-    boost::mutex::scoped_lock lk(fInstanceMutex);
-    return refreshShm();
+    return fManagedShm.currentId();
+  }
+  inline uint64_t mappedId() const
+  {
+    return fManagedShm.mappedId();
+  }
+  inline bool refresh()
+  {
+    return fManagedShm.refresh();
+  }
+  /* Pins the published data area and returns it. This, rather than a lock on the
+     EM table, is what a reader relies on: the area stays mapped for as long as
+     the pin is held, so pointers and iterators into it stay good even after a
+     writer has published a replacement. */
+  inline DataAreaPin pin()
+  {
+    return fManagedShm.pin();
   }
 
-  static void refreshShm()
+  /* The tree inside a pinned data area. Unlike get(), this never constructs
+     anything: an area is only ever published with the tree already in it, so a
+     null return means the area was not properly published. Static because it
+     depends on nothing but the pin - in particular not on what this process has
+     mapped right now, which may already be a newer area.
+   *
+   * find_no_lock() rather than find(), and this matters: find() takes a mutex
+   * that lives inside the image, and a writer copies a published area with a
+   * memcpy of the whole image. A copy taken while a reader held that mutex
+   * would carry it locked, and since the copy is what gets published next,
+   * every later lookup in it would wait for an owner that never existed. It is
+   * also what makes a read of this class need no lock at all, which is the
+   * point of the whole arrangement. Safe because a published area is never
+   * written: named objects are only ever constructed in a copy nobody else can
+   * reach, so the index this walks cannot change under it. */
+  static inline ExtentMapRBTree* treeIn(const DataAreaPin& area)
   {
-    if (fInstance)
-    {
-      delete fInstance;
-      fInstance = NULL;
-    }
+    return area ? area->find_no_lock<ExtentMapRBTree>(EmMapRBTreeObjectName).first : nullptr;
   }
 
-  inline void grow(unsigned key, off_t size)
+  // Writer side; all of these need the EM write lock.
+  inline bool inUpdate() const
   {
-    fManagedShm.grow(key, size);
+    return fManagedShm.inUpdate();
+  }
+  /* Marks the window in which this group of data areas - the extent map, its
+     index and the free list - is part published and part not. The extent
+     map's segment is where the whole group's sequence lives; see
+     ExtentMap::finishChanges() and ExtentMap::grabEMAndIndexForRead(). */
+  inline void beginGroupPublish()
+  {
+    fManagedShm.beginGroupPublish();
+  }
+  inline void endGroupPublish()
+  {
+    fManagedShm.endGroupPublish();
+  }
+  inline uint64_t groupPublishSequence() const
+  {
+    return fManagedShm.groupPublishSequence();
+  }
+  inline void beginUpdate(off_t minSize)
+  {
+    fManagedShm.beginUpdate(minSize);
+  }
+  inline void growUpdate(off_t incSize)
+  {
+    fManagedShm.growUpdate(incSize);
+  }
+  inline uint64_t publishUpdate()
+  {
+    return fManagedShm.publishUpdate();
+  }
+  inline void discardUpdate()
+  {
+    fManagedShm.discardUpdate();
+  }
+
+  inline void makeReadOnly()
+  {
+    fManagedShm.setReadOnly();
   }
 
   inline unsigned key() const
@@ -292,180 +367,306 @@ class ExtentMapRBTreeImpl
     return fManagedShm.key();
   }
 
+  /* Returns the tree of the area currently being worked on: the copy while an
+     update is open, the published area otherwise. Writer side - it needs the EM
+     write lock, which is what stops the mapping it reads from being replaced
+     under it; a reader goes through pin() and treeIn(). The tree is only ever
+     constructed in a copy, so finding nothing means looking at a data area that
+     was never properly published, which this says rather than allocating in a
+     segment other processes are reading. */
   inline ExtentMapRBTree* get() const
   {
-    VoidAllocator allocator(fManagedShm.fShmSegment->get_segment_manager());
-    return fManagedShm.fShmSegment->find_or_construct<ExtentMapRBTree>("EmMapRBTree")(std::less<LBID_t>(),
-                                                                                      allocator);
+    auto* segment = fManagedShm.segment();
+
+    if (!segment)
+      return nullptr;
+
+    // No lock on a published area, for the reason treeIn() gives
+    if (!fManagedShm.inUpdate())
+      return segment->find_no_lock<ExtentMapRBTree>(EmMapRBTreeObjectName).first;
+
+    VoidAllocator allocator(segment->get_segment_manager());
+    return segment->find_or_construct<ExtentMapRBTree>(EmMapRBTreeObjectName)(std::less<LBID_t>(),
+                                                                              allocator);
   }
 
   inline uint64_t getFreeMemory() const
   {
-    return fManagedShm.fShmSegment->get_free_memory();
+    auto* segment = fManagedShm.segment();
+    return segment ? segment->get_free_memory() : 0;
   }
   inline uint64_t getSize() const
   {
-    return fManagedShm.fShmSegment->get_size();
+    auto* segment = fManagedShm.segment();
+    return segment ? segment->get_size() : 0;
   }
 
  private:
-  ExtentMapRBTreeImpl(unsigned key, off_t size, bool readOnly = false);
+  ExtentMapRBTreeImpl(unsigned keyBase, off_t size, bool readOnly = false);
   ExtentMapRBTreeImpl(const ExtentMapRBTreeImpl& rhs);
   ExtentMapRBTreeImpl& operator=(const ExtentMapRBTreeImpl& rhs);
 
-  BRMManagedShmImplRBTree fManagedShm;
+  BRMVersionedShmImpl fManagedShm;
 
   static boost::mutex fInstanceMutex;
   static ExtentMapRBTreeImpl* fInstance;
 };
 
+/** @brief The header at the front of the free list's shared memory image.
+ *
+ * The entries follow it. Having it inside the image is what makes the image
+ * self-describing: the counts used to live in the master segment table, next
+ * to the free list's lock, where a versioned data area has no business keeping
+ * them - the published area and the copy an update is open on have different
+ * capacities for as long as the update lasts, and there was only one entry to
+ * describe both. The table has since gone entirely.
+ *
+ * Both counts are in entries, not bytes.
+ */
+struct FreeListHeader
+{
+  /// Entries the image has room for.
+  uint32_t capacity;
+  /** Entries in use. The used entries are not a prefix of the array: releasing
+      a range zeroes its entry in place and leaves the hole for the next
+      allocation to find, so this is a population count and not an extent. */
+  uint32_t currentSize;
+};
+
+static_assert(sizeof(FreeListHeader) % alignof(InlineLBIDRange) == 0,
+              "the free list entries must land aligned immediately after the header");
+
+/// The entries of a free list image, which follow its header.
+inline InlineLBIDRange* freeListEntriesOf(FreeListHeader* header)
+{
+  return reinterpret_cast<InlineLBIDRange*>(header + 1);
+}
+
+/// How large an image holding capacity entries has to be.
+inline off_t freeListImageSize(uint32_t capacity)
+{
+  return static_cast<off_t>(sizeof(FreeListHeader)) +
+         static_cast<off_t>(capacity) * static_cast<off_t>(sizeof(InlineLBIDRange));
+}
+
+/// How many entries an image of imageSize bytes has room for.
+inline uint32_t freeListCapacityFor(off_t imageSize)
+{
+  if (imageSize <= static_cast<off_t>(sizeof(FreeListHeader)))
+    return 0;
+
+  return static_cast<uint32_t>((imageSize - sizeof(FreeListHeader)) / sizeof(InlineLBIDRange));
+}
+
+/** @brief The extent map free list, held in a versioned shared memory segment.
+ *
+ * Same scheme as ExtentMapRBTreeImpl, over a raw image rather than a boost
+ * managed segment: a reader works off the data area the metadata area points at
+ * and holds it mapped with a pin, a writer copies that area, changes the copy
+ * and publishes it. See BRMVersionedShmImplT.
+ */
 class FreeListImpl
 {
  public:
-  ~FreeListImpl() {};
+  using DataAreaPin = BRMVersionedRawShmImpl::DataAreaPin;
 
-  static FreeListImpl* makeFreeListImpl(unsigned key, off_t size, bool readOnly = false);
+  ~FreeListImpl() = default;
 
-  static void refreshShmWithLock()
+  static FreeListImpl* makeFreeListImpl(unsigned keyBase, off_t size, bool readOnly = false);
+
+  /// The id of the published data area, 0 if nothing has been published yet.
+  inline uint64_t currentId() const
   {
-    boost::mutex::scoped_lock lk(fInstanceMutex);
-    return refreshShm();
+    return fFreeList.currentId();
+  }
+  inline bool refresh()
+  {
+    return fFreeList.refresh();
+  }
+  /// Keeps the published data area mapped for as long as the pin is held.
+  inline DataAreaPin pin()
+  {
+    return fFreeList.pin();
+  }
+  /// The header inside a pinned area. Null for a null pin.
+  static inline FreeListHeader* headerIn(const DataAreaPin& area)
+  {
+    return static_cast<FreeListHeader*>(BRMVersionedRawShmImpl::imageIn(area));
   }
 
-  static void refreshShm()
+  // The write side. All of these need the free list write lock.
+  inline bool inUpdate() const
   {
-    if (fInstance)
-    {
-      delete fInstance;
-      fInstance = NULL;
-    }
+    return fFreeList.inUpdate();
   }
+  inline void beginUpdate(off_t minSize)
+  {
+    fFreeList.beginUpdate(minSize);
+  }
+  inline uint64_t publishUpdate()
+  {
+    return fFreeList.publishUpdate();
+  }
+  inline void discardUpdate()
+  {
+    fFreeList.discardUpdate();
+  }
+  /// Grows the copy an update is open on so it holds at least capacity entries.
+  void growUpdateTo(uint32_t capacity);
 
-  inline void grow(unsigned key, off_t size)
-#ifdef NDEBUG
-  {
-    fFreeList.grow(key, size);
-  }
-#else
-  {
-    int rc = fFreeList.grow(key, size);
-    idbassert(rc == 0);
-  }
-#endif
   inline void makeReadOnly()
   {
     fFreeList.setReadOnly();
-  }
-  inline void clear(unsigned key, off_t size)
-  {
-    fFreeList.clear(key, size);
-  }
-  inline void swapout(BRMShmImpl& rhs)
-  {
-    fFreeList.swap(rhs);
-    rhs.destroy();
   }
   inline unsigned key() const
   {
     return fFreeList.key();
   }
 
-  inline InlineLBIDRange* get() const
+  /** @brief The header of the image being worked on.
+   *
+   * That is the copy while an update is open and the published area otherwise,
+   * which makes this the writer's accessor. A reader has to go through pin() and
+   * headerIn(): this one can move under it at any time.
+   */
+  inline FreeListHeader* get() const
   {
-    return reinterpret_cast<InlineLBIDRange*>(fFreeList.fMapreg.get_address());
+    return static_cast<FreeListHeader*>(fFreeList.image());
+  }
+  /// The size of get()'s image in bytes, with the same caveats.
+  inline off_t imageSize() const
+  {
+    return fFreeList.imageSize();
   }
 
  private:
-  FreeListImpl(unsigned key, off_t size, bool readOnly = false);
+  FreeListImpl(unsigned keyBase, off_t size, bool readOnly = false);
   FreeListImpl(const FreeListImpl& rhs);
   FreeListImpl& operator=(const FreeListImpl& rhs);
 
-  BRMShmImpl fFreeList;
+  BRMVersionedRawShmImpl fFreeList;
 
   static boost::mutex fInstanceMutex;
   static FreeListImpl* fInstance;
 };
 
+/** @brief The extent map index, held in a versioned shared memory segment.
+ *
+ * Same scheme as ExtentMapRBTreeImpl: a reader works off the data area the
+ * metadata area points at and takes no lock, a writer changes a private copy
+ * and makes it current with a single atomic store. See BRMVersionedShmImpl.
+ */
 class ExtentMapIndexImpl
 {
  public:
-  ~ExtentMapIndexImpl() {};
+  /// A data area that stays mapped for as long as the handle is held.
+  using DataAreaPin = BRMVersionedShmImpl::DataAreaPin;
 
-  static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
-  static void refreshShm()
+  ~ExtentMapIndexImpl() = default;
+
+  static ExtentMapIndexImpl* makeExtentMapIndexImpl(unsigned keyBase, off_t size, bool readOnly = false);
+
+  // Reader side.
+  inline uint64_t currentId() const
   {
-    if (fInstance_)
-    {
-      // effectively unmaps a mapped managed shmem segment changing the segment VA address
-      // when mapped next time.
-      delete fInstance_;
-      fInstance_ = nullptr;
-    }
+    return fManagedShm.currentId();
+  }
+  inline uint64_t mappedId() const
+  {
+    return fManagedShm.mappedId();
+  }
+  inline bool refresh()
+  {
+    return fManagedShm.refresh();
+  }
+  /* Pins the published data area and returns it. This, rather than a lock on
+     the EM index table, is what a reader relies on: the area stays mapped for
+     as long as the pin is held, so references and iterators into it stay good
+     even after a writer has published a replacement. */
+  inline DataAreaPin pin()
+  {
+    return fManagedShm.pin();
   }
 
-  static void refreshShmWithLock()
+  /** @brief Freezes updates to this segment without making one.
+   *
+   * What save() holds while it pins a snapshot, in place of a read lock on a
+   * table nobody writes any more. Held for the length of a pin, not the length
+   * of a file write.
+   */
+  inline void lockUpdates()
   {
-    std::lock_guard lk(fInstanceMutex_);
-    return refreshShm();
+    fManagedShm.lockUpdates();
+  }
+  inline void unlockUpdates()
+  {
+    fManagedShm.unlockUpdates();
   }
 
-  // The multipliers and constants here are pure theoretical
-  // tested using customer's data.
-  static size_t estimateEMIndexSize(uint32_t numberOfExtents)
+  /* The index inside a pinned data area. Unlike get(), this never constructs
+     anything: an area is only ever published with the index already in it, so
+     a null return means the area was not properly published. Static because it
+     depends on nothing but the pin - in particular not on what this process has
+     mapped right now, which may already be a newer area. find_no_lock() for
+     the reason ExtentMapRBTreeImpl::treeIn() gives. */
+  static inline ExtentMapIndex* indexIn(const DataAreaPin& area)
   {
-    // These are just educated guess values to calculate initial
-    // managed shmem size.
-    constexpr const size_t tablesNumber_ = 100ULL;
-    constexpr const size_t columnsNumber_ = 200ULL;
-    constexpr const size_t dbRootsNumber_ = 3ULL;
-    constexpr const size_t filesInPartition_ = 4ULL;
-    constexpr const size_t extentsInPartition_ = filesInPartition_ * 2;
-    return numberOfExtents * emIdentUnitSize_ +
-           numberOfExtents / extentsInPartition_ * partitionContainerUnitSize_ +
-           dbRootsNumber_ * tablesNumber_ * columnsNumber_;
+    return area ? area->find_no_lock<ExtentMapIndex>(EmIndexObjectName).first : nullptr;
   }
 
+  // Writer side; all of these need the EM index write lock.
+  inline bool inUpdate() const
+  {
+    return fManagedShm.inUpdate();
+  }
+  inline void beginUpdate(off_t minSize)
+  {
+    fManagedShm.beginUpdate(minSize);
+  }
+  inline uint64_t publishUpdate()
+  {
+    return fManagedShm.publishUpdate();
+  }
+  inline void discardUpdate()
+  {
+    fManagedShm.discardUpdate();
+  }
+
+  /* Enlarges the unpublished copy if it cannot satisfy memoryNeeded. Returns
+     whether it did, because growing relocates the mapping and every reference
+     into it has to be taken again. */
   bool growIfNeeded(const size_t memoryNeeded);
 
-  inline void grow(off_t size)
-  {
-    int rc = fBRMManagedShmMemImpl_.grow(size);
-    idbassert(rc == 0);
-  }
-  // After this call one needs to refresh any refs or ptrs sourced
-  // from this shmem.
   inline void makeReadOnly()
   {
-    fBRMManagedShmMemImpl_.setReadOnly();
-  }
-
-  inline void swapout(BRMManagedShmImpl& rhs)
-  {
-    fBRMManagedShmMemImpl_.swap(rhs);
+    fManagedShm.setReadOnly();
   }
 
   inline unsigned key() const
   {
-    return fBRMManagedShmMemImpl_.key();
+    return fManagedShm.key();
   }
 
-  unsigned getShmemSize()
+  inline unsigned getShmemSize() const
   {
-    return fBRMManagedShmMemImpl_.getManagedSegment()->get_size();
+    auto* segment = fManagedShm.segment();
+    return segment ? segment->get_size() : 0;
   }
 
-  size_t getShmemFree()
+  inline size_t getShmemFree() const
   {
-    return fBRMManagedShmMemImpl_.getManagedSegment()->get_free_memory();
+    auto* segment = fManagedShm.segment();
+    return segment ? segment->get_free_memory() : 0;
   }
 
-  unsigned getShmemImplSize()
-  {
-    return fBRMManagedShmMemImpl_.size();
-  }
+  /* The index of the area currently being worked on: the copy while an update
+     is open, the published one otherwise. Writer side - it needs the EM index
+     write lock; a reader goes through pin() and indexIn(). The index is only
+     ever constructed in a copy, so finding nothing outside an update means
+     looking at a data area that was never properly published, which this says
+     rather than allocating in a segment other processes are reading. */
+  ExtentMapIndex* get() const;
 
-  void createExtentMapIndexIfNeeded();
-  ExtentMapIndex* get();
   InsertUpdateShmemKeyPair insert(const EMEntry& emEntry, const LBID_t lbid);
   InsertUpdateShmemKeyPair insert2ndLayerWrapper(OIDIndexContainerT& oids, const EMEntry& emEntry,
                                                  const LBID_t lbid, const bool aShmemHasGrown);
@@ -475,32 +676,42 @@ class ExtentMapIndexImpl
                                                 const LBID_t lbid, const bool aShmemHasGrown);
   InsertUpdateShmemKeyPair insert3dLayer(PartitionIndexContainerT& partitions, const EMEntry& emEntry,
                                          const LBID_t lbid, const bool aShmemHasGrown);
-  LBID_tFindResult find(const DBRootT dbroot, const OID_t oid, const PartitionNumberT partitionNumber);
-  LBID_tFindResult find(const DBRootT dbroot, const OID_t oid);
-  LBID_tFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid,
-                                  const PartitionNumberT partitionNumber);
-  LBID_tFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid);
-  LBID_tFindResult search3dLayer(PartitionIndexContainerT& partitions,
-                                 const PartitionNumberT partitionNumber);
-  bool isDBRootEmpty(const DBRootT dbroot);
-  void deleteDbRoot(const DBRootT dbroot);
-  void deleteOID(const DBRootT dbroot, const OID_t oid);
-  void deleteEMEntry(const EMEntry& emEntry, const LBID_t lbid);
+  InsertUpdateShmemKeyPair insert4thLayerWrapper(LBID_tVectorT& lbids, const EMEntry& emEntry,
+                                                 const LBID_t lbid, const bool aShmemHasGrown);
+  InsertUpdateShmemKeyPair insert4thLayer(LBID_tVectorT& lbids, const LBID_t lbid,
+                                          const bool aShmemHasGrown);
+
+  /* The lookups and the deletions take the index to work on rather than
+     finding it themselves, because which one is right depends on the caller:
+     a reader's is the one it pinned, a writer's is the copy its update is
+     open on. Both are held by ExtentMap for the span of a grab. */
+  static LBID_tFindResult find(ExtentMapIndex& emIndex, const DBRootT dbroot, const OID_t oid,
+                               const PartitionNumberT partitionNumber);
+  static LBID_tFindResult find(ExtentMapIndex& emIndex, const DBRootT dbroot, const OID_t oid);
+  static LBID_tFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid,
+                                         const PartitionNumberT partitionNumber);
+  static LBID_tFindResult search2ndLayer(OIDIndexContainerT& oids, const OID_t oid);
+  static LBID_tFindResult search3dLayer(PartitionIndexContainerT& partitions,
+                                        const PartitionNumberT partitionNumber);
+  static bool isDBRootEmpty(ExtentMapIndex& emIndex, const DBRootT dbroot);
+  static void deleteDbRoot(ExtentMapIndex& emIndex, const DBRootT dbroot);
+  static void deleteOID(ExtentMapIndex& emIndex, const DBRootT dbroot, const OID_t oid);
+  static void deleteEMEntry(ExtentMapIndex& emIndex, const EMEntry& emEntry, const LBID_t lbid);
 
  private:
-  BRMManagedShmImpl fBRMManagedShmMemImpl_;
-  ExtentMapIndexImpl(unsigned key, off_t size, bool readOnly = false);
+  BRMVersionedShmImpl fManagedShm;
+  ExtentMapIndexImpl(unsigned keyBase, off_t size, bool readOnly = false);
   ExtentMapIndexImpl(const ExtentMapIndexImpl& rhs);
   ExtentMapIndexImpl& operator=(const ExtentMapIndexImpl& rhs);
 
   static std::mutex fInstanceMutex_;
   static ExtentMapIndexImpl* fInstance_;
-  static const constexpr uint32_t dbRootContainerUnitSize_ = 64ULL;
-  static const constexpr uint32_t oidContainerUnitSize_ = 352ULL;        // 2 * map overhead
-  static const constexpr uint32_t partitionContainerUnitSize_ = 368ULL;  // single map overhead
-  static const constexpr uint32_t emIdentUnitSize_ = sizeof(uint64_t);
-  static const constexpr uint32_t extraUnits_ = 2;
-  static const constexpr size_t freeSpaceThreshold_ = 256 * 1024;
+  static constexpr uint32_t dbRootContainerUnitSize_ = 64ULL;
+  static constexpr uint32_t oidContainerUnitSize_ = 352ULL;        // 2 * map overhead
+  static constexpr uint32_t partitionContainerUnitSize_ = 368ULL;  // single map overhead
+  static constexpr uint32_t emIdentUnitSize_ = sizeof(uint64_t);
+  static constexpr uint32_t extraUnits_ = 2;
+  static constexpr size_t freeSpaceThreshold_ = 256 * 1024;
 };
 
 /** @brief This class encapsulates the extent map functionality of the system
@@ -511,7 +722,7 @@ class ExtentMapIndexImpl
  * The Extent Map shared data should be implemented in a more scalable
  * structure such as a tree or hash table.
  */
-class ExtentMap : public Undoable
+class ExtentMap
 {
  public:
   EXPORT ExtentMap();
@@ -1020,9 +1231,39 @@ class ExtentMap : public Undoable
 
   EXPORT void setReadOnly();
 
-  EXPORT virtual void undoChanges();
+  /** @brief Ends the write transaction across all three tables.
+   *
+   * undoChanges() throws away the copies the transaction was changing, so
+   * nothing it did becomes visible; confirmChanges() lets releaseEMEntryTable()
+   * and friends publish them. Either way finishChanges() gives the locks back.
+   */
+  EXPORT void undoChanges();
 
-  EXPORT virtual void confirmChanges();
+  EXPORT void confirmChanges();
+
+  /** @brief Whether a write transaction is still open on this structure.
+   *
+   * An open update holds the segment's update mutex, so one left behind by a
+   * transaction that was never confirmed or rolled back wedges every writer
+   * in the cluster. This is how the worker notices it has one.
+   */
+  EXPORT bool hasOpenUpdate() const;
+
+  /** @brief Pins what save() writes, holding nothing against writers.
+   *
+   * A pinned data area cannot change, so the pins are the snapshot: a lock is
+   * only needed to make the extent map, its index and its free list agree
+   * with each other while the pins are taken, which is microseconds rather
+   * than the length of a file write. save() calls this itself. A caller that
+   * has to snapshot the extent map together with the VBBM and the VSS calls
+   * it while it still holds those against writers, and can then let go of
+   * everything before writing anything.
+   *
+   * Nests: called inside a snapshot that is already held it counts onto those
+   * pins and takes no lock at all.
+   */
+  EXPORT void pinForSave();
+  EXPORT void unpinForSave();
 
   EXPORT int markInvalid(const LBID_t lbid, const execplan::CalpontSystemCatalog::ColDataType colDataType);
   EXPORT int markInvalid(const std::vector<LBID_t>& lbids,
@@ -1054,74 +1295,98 @@ class ExtentMap : public Undoable
   EXPORT void getCPMaxMin(const LBID_t lbidRange,
                           CPMaxMin& cpMaxMin); /** @brief Get whole record for untyped use. */
 
+  /** @brief Whether the extent map holds no extents at all.
+   *
+   * Asks the tree rather than the MST entry's currentSize counter. The counter
+   * says the same thing, but it lives outside the data area and so does not
+   * come back with it when a write transaction is rolled back, whereas the tree
+   * a pin hands out is always one some transaction published.
+   */
   inline bool empty()
   {
-    if (fEMRBTreeShminfo == nullptr)
+    grabEMEntryTable(BRM::ExtentMap::READ);
+
+    try
     {
-      grabEMEntryTable(BRM::ExtentMap::READ);
+      bool res = fExtentMapRBTree->empty();
       releaseEMEntryTable(BRM::ExtentMap::READ);
+      return res;
     }
-    // Initial size.
-    return (fEMRBTreeShminfo->currentSize == EM_RB_TREE_EMPTY_SIZE);
+    catch (...)
+    {
+      releaseEMEntryTable(BRM::ExtentMap::READ);
+      throw;
+    }
   }
 
   EXPORT std::vector<InlineLBIDRange> getFreeListEntries();
 
   EXPORT void dumpTo(std::ostream& os);
-  EXPORT const bool* getEMLockStatus();
-  EXPORT const bool* getEMFLLockStatus();
-  EXPORT const bool* getEMIndexLockStatus();
   size_t EMIndexShmemSize();
   size_t EMIndexShmemFree();
 
-#ifdef BRM_DEBUG
-  EXPORT void printEM() const;
-  EXPORT void printEM(const OID_t& oid) const;
-  EXPORT void printEM(const EMEntry& em) const;
-  EXPORT void printFL() const;
-#endif
-
  private:
-  enum class UndoRecordType
-  {
-    DEFAULT,
-    INSERT,
-    DELETE
-  };
-
-  static const constexpr size_t EM_INCREMENT_ROWS = 1000;
-  static const constexpr size_t EM_INITIAL_SIZE = EM_INCREMENT_ROWS * 10 * sizeof(EMEntry);
-  static const constexpr size_t EM_INCREMENT = EM_INCREMENT_ROWS * sizeof(EMEntry);
-  static const constexpr size_t EM_FREELIST_INITIAL_SIZE = 50 * sizeof(InlineLBIDRange);
-  static const constexpr size_t EM_FREELIST_INCREMENT = 50 * sizeof(InlineLBIDRange);
-  static const constexpr size_t EM_SAVE_NUM_PER_BATCH = 1000000;
+  static constexpr size_t EM_INCREMENT_ROWS = 1000;
+  static constexpr size_t EM_INITIAL_SIZE = EM_INCREMENT_ROWS * 10 * sizeof(EMEntry);
+  static constexpr size_t EM_INCREMENT = EM_INCREMENT_ROWS * sizeof(EMEntry);
+  static constexpr uint32_t EM_FREELIST_INITIAL_ENTRIES = 50;
+  static constexpr uint32_t EM_FREELIST_ENTRY_INCREMENT = 50;
+  static constexpr size_t EM_SAVE_NUM_PER_BATCH = 1000000;
   // RBTree constants.
-  static const size_t EM_RB_TREE_NODE_SIZE = sizeof(EMEntry) + 8 * sizeof(uint64_t);
-  static const size_t EM_RB_TREE_EMPTY_SIZE = 1024;
-  static const size_t EM_RB_TREE_INITIAL_SIZE = 16 * 1024 * 1024;
-  static const size_t EM_RB_TREE_INCREMENT = 16 * 1024 * 1024;
+  static constexpr size_t EM_RB_TREE_NODE_SIZE = sizeof(EMEntry) + 8 * sizeof(uint64_t);
+  static constexpr size_t EM_RB_TREE_EMPTY_SIZE = 1024;
+  /* The floor a data area is created at, not a cap: beginEMUpdate() asks for
+     max(what the map needs, this), and growEMShmseg() takes it further when
+     the map outgrows it. */
+  static constexpr size_t EM_RB_TREE_INITIAL_SIZE = 1024 * 1024;
+  static constexpr size_t EM_RB_TREE_INCREMENT = 16 * 1024 * 1024;
+  // EM index constants.
+  static constexpr size_t EM_INDEX_INITIAL_SIZE = 1024 * 1024;
 
   ExtentMap(const ExtentMap& em);
   ExtentMap& operator=(const ExtentMap& em);
 
-  ExtentMapRBTree* fExtentMapRBTree;
-  InlineLBIDRange* fFreeList;
+  // This view of the three data areas is per-thread, not per-object.
+  // A "grab" consists of a pin and a nesting depth, which must be strictly
+  // balanced by the caller. The pointers below are valid only while the pin is held.
+  // This state cannot be shared between threads. If two threads shared an ExtentMap,
+  // they would race on the nesting depth counters:
+  // A lost decrement keeps depth > 0 forever. The outermost grab never fires again,
+  // freezing the thread on a single stale data area until process exit.
+  // A lost increment drops the pin prematurely while another thread is still reading
+  // the data area.
+  static thread_local ExtentMapRBTree* fExtentMapRBTree;
+  static thread_local ExtentMapIndex* fEMIndex;
+  static thread_local FreeListHeader* fFLHeader;
+  static thread_local InlineLBIDRange* fFreeList;
 
-  key_t fCurrentEMShmkey;
-  key_t fCurrentFLShmkey;
+  /* That keeps fExtentMapRBTree pointing at mapped memory during a read, now
+     that a read takes no lock on the EM table. Held from this thread's
+     outermost grabEMEntryTable(READ) to the matching releaseEMEntryTable(READ);
+     a nested read keeps the outer one's pin, so however deeply a read nests it
+     sees one snapshot of the extent map throughout. */
+  static thread_local ExtentMapRBTreeImpl::DataAreaPin fEMDataAreaPin;
+  static thread_local uint32_t fEMReadDepth;
 
-  MSTEntry* fEMRBTreeShminfo;
-  MSTEntry* fFLShminfo;
-  MSTEntry* fEMIndexShminfo;
+  /* The same for fEMIndex, held from the outermost grabEMIndex(READ) to the
+     matching releaseEMIndex(READ). The index and the extent map are two
+     independent data areas with independent publish points, so pinning them
+     separately is all a reader gets: one grab of each does not see them as of
+     a single instant. */
+  static thread_local ExtentMapIndexImpl::DataAreaPin fEMIndexDataAreaPin;
+  static thread_local uint32_t fEMIndexReadDepth;
 
-  const MasterSegmentTable fMST;
+  /* The same again for fFLHeader and fFreeList, held from the outermost
+     grabFreeList(READ) to the matching releaseFreeList(READ). */
+  static thread_local FreeListImpl::DataAreaPin fFLDataAreaPin;
+  static thread_local uint32_t fFLReadDepth;
+
   bool r_only;
-  typedef std::tr1::unordered_map<int, oam::DBRootConfigList*> PmDbRootMap_t;
+  using PmDbRootMap_t = std::tr1::unordered_map<int, oam::DBRootConfigList*>;
   PmDbRootMap_t fPmDbRootMap;
   time_t fCacheTime;  // timestamp associated with config cache
 
   int numUndoRecords;
-  bool flLocked, emLocked, emIndexLocked;
 
   static boost::mutex mutex;  // @bug5355 - made mutex static
   static boost::mutex emIndexMutex;
@@ -1135,10 +1400,6 @@ class ExtentMap : public Undoable
   };
 
   OPS EMLock, FLLock;
-
-  LastIndEmptyIndEmptyInd _createExtentCommonSearch(const OID_t OID, const DBRootT dbRoot,
-                                                    const PartitionNumberT partitionNum,
-                                                    const SegmentT segmentNum);
 
   void logAndSetEMIndexReadOnly(const std::string& funcName);
 
@@ -1163,17 +1424,16 @@ class ExtentMap : public Undoable
   std::vector<EMEntry> getEmIdentsByLbids(const bi::vector<LBID_t>& lbids);
   std::vector<ExtentMapRBTree::iterator> getEmIteratorsByLbids(const bi::vector<LBID_t>& lbids);
 
-  // Choose keys.
-  key_t chooseEMShmkey();
-  key_t chooseFLShmkey();
-  key_t chooseEMIndexShmkey();
-
-  key_t getInitialEMIndexShmkey() const;
-  // see the code for how keys are segmented
-  key_t chooseShmkey(const MSTEntry* masterTableEntry, const uint32_t keyRangeBase) const;
+  /* The EM index table's read lock, on its own. save() holds it to order the
+     extent map pin it takes against writers, which hold the index write lock
+     across a change to the extent map; it does not read the index itself, and
+     grabEMIndex(READ) no longer takes a lock to give it. */
+  void lockEMIndexForSave();
+  void unlockEMIndexForSave();
 
   // Grab table.
   void grabEMEntryTable(OPS op);
+  void grabEMAndIndexForRead();
   void grabFreeList(OPS op);
   void grabEMIndex(OPS op);
 
@@ -1182,10 +1442,46 @@ class ExtentMap : public Undoable
   void releaseFreeList(OPS op);
   void releaseEMIndex(OPS op);
 
+  // Extent map data area versioning. All three need the EM write lock.
+  // Opens a write transaction: takes a private copy of the published data area.
+  void beginEMUpdate(size_t sizeNeeded = 0);
+  // Makes the copy the published data area. Called when the write lock is dropped.
+  void publishEMUpdate();
+  // Throws the copy away, which is how a write is rolled back.
+  void discardEMUpdate();
+  // Creates and publishes an empty data area if nothing has been published yet.
+  void createEMImplIfNeeded();
+  void ensureEMDataArea();
+  void ensureEMIndexDataArea();
+  void initEMDataAreaIfNeeded();
+
+  // The same for the EM index data area; all need the EM index write lock.
+  // There is no ensureEMDataArea() counterpart. That one exists for save(),
+  // which cannot bootstrap the extent map from inside its grab without asking
+  // for the EM write lock while already holding locks writers take after it;
+  // save() takes the index lock directly and never grabs the index, so the
+  // bootstrap inside grabEMIndex() is the only one needed. It asks for the EM
+  // index write lock, which is the order writers take it in anyway - after the
+  // extent map's, before the free list's - so no grab inverts on it.
+  void beginEMIndexUpdate();
+  void publishEMIndexUpdate();
+  void discardEMIndexUpdate();
+  void createEMIndexImplIfNeeded();
+  void initEMIndexDataAreaIfNeeded();
+
+  // And for the free list's, all needing the free list write lock. Its
+  // bootstrap is the one grabFreeList() does, for the same reason as the
+  // index's: the free list lock is the last of the three a writer takes, so
+  // asking for it from inside a grab cannot invert on anything.
+  void beginFLUpdate();
+  void publishFLUpdate();
+  void discardFLUpdate();
+  void createFreeListImplIfNeeded();
+  void initFLDataAreaIfNeeded();
+
   // Grow memory.
   void growEMShmseg(size_t nrows = 0);
   void growFLShmseg();
-  void growEMIndexShmseg(const size_t suggestedSize = 0);
   void growIfNeededOnExtentCreate();
 
   // Finish.
@@ -1199,10 +1495,6 @@ class ExtentMap : public Undoable
   void checkReloadConfig();
   ShmKeys fShmKeys;
 
-  void makeUndoRecordRBTree(UndoRecordType type, const EMEntry& emEntry);
-  void undoChangesRBTree();
-  void confirmChangesRBTree();
-
   bool fDebug;
 
   int _markInvalid(const LBID_t lbid, const execplan::CalpontSystemCatalog::ColDataType colDataType);
@@ -1214,9 +1506,6 @@ class ExtentMap : public Undoable
   void loadVersion4or5(T* in, bool upgradeV4ToV5);
 
   ExtentMapRBTree::iterator findByLBID(const LBID_t lbid);
-
-  using UndoRecordPair = std::pair<UndoRecordType, EMEntry>;
-  std::vector<UndoRecordPair> undoRecordsRBTree;
 
   ExtentMapRBTreeImpl* fPExtMapRBTreeImpl;
   FreeListImpl* fPFreeListImpl;
