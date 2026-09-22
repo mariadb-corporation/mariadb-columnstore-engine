@@ -10,6 +10,7 @@ SCRIPT_LOCATION=$(dirname "$0")
 COLUMNSTORE_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../)
 
 source "$SCRIPT_LOCATION"/utils.sh
+source "$SCRIPT_LOCATION"/cmapi_python_release.sh
 
 optparse.define short=d long=distro desc="distro" variable=OS
 source $(optparse.build)
@@ -75,17 +76,10 @@ install_deps() {
     retry_eval 5 "apt-get update -qq -o Dpkg::Use-Pty=0 && apt-get install -qq -o Dpkg::Use-Pty=0 wget zstd findutils gcc cmake make dpkg-dev lsb-release"
   fi
 
-  if [ "$(arch)" == "x86_64" ]; then
-    PYTHON_URL="https://github.com/astral-sh/python-build-standalone/releases/download/20260127/cpython-3.13.11+20260127-x86_64_v2-unknown-linux-gnu-pgo+lto-full.tar.zst"
-    PYTHON_SHA="b5d915b716609b9f60e17ab8654cdf0bd810f52f710b743d0fd75bb85db1cbac"
-  elif [[ "$(arch)" == "arm64" || "$(arch)" == "aarch64" ]]; then
-    PYTHON_URL="https://github.com/astral-sh/python-build-standalone/releases/download/20260127/cpython-3.13.11+20260127-aarch64-unknown-linux-gnu-pgo+lto-full.tar.zst"
-    PYTHON_SHA="c0065a0e7afe48bad9471b7f9daafe3331afa900e19051510ef7696926df759e"
-  else
-    echo "Unsupported architecture: $(arch)"
-    exit 1
-  fi
-  PYTHON_FILE=PYTHON_FILE="${PYTHON_URL##*/}"
+  cmapi_python_release_for_arch
+  PYTHON_URL="$PBS_URL"
+  PYTHON_SHA="$PBS_SHA"
+  PYTHON_FILE="${PYTHON_URL##*/}"
 
   rm -rf python pp
   wget -q "$PYTHON_URL" -O "${PYTHON_FILE}" || { echo "Download failed"; exit 1; }
