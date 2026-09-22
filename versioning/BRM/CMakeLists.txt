@@ -70,17 +70,6 @@ install(TARGETS dbrmctl DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engin
 
 ########### next target ###############
 
-set(reset_locks_SRCS reset_locks.cpp)
-
-add_executable(reset_locks ${reset_locks_SRCS})
-
-target_link_libraries(reset_locks ${ENGINE_LDFLAGS} ${ENGINE_OAM_LIBS} ${ENGINE_EXEC_LIBS} ${NETSNMP_LIBRARIES})
-
-install(TARGETS reset_locks DESTINATION ${ENGINE_BINDIR} COMPONENT columnstore-engine)
-
-
-########### next target ###############
-
 set(rollback_SRCS rollback.cpp)
 
 add_executable(rollback ${rollback_SRCS})

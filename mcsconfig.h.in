@@ -53,6 +53,12 @@
 /* Define to 1 if you have the `getpagesize' function. */
 #cmakedefine HAVE_GETPAGESIZE 1
 
+/* Define to 1 if you have the `gettid' function. */
+#cmakedefine HAVE_GETTID 1
+
+/* Define to 1 if you have the `SYS_gettid' macro. */
+#cmakedefine HAVE_GETTID_SYSCALL 1
+
 /* Define to 1 if you have the `gettimeofday' function. */
 #cmakedefine HAVE_GETTIMEOFDAY 1
 
@@ -228,6 +234,12 @@
 
 /* Define to 1 if you have <sys/wait.h> that is POSIX.1 compatible. */
 #cmakedefine HAVE_SYS_WAIT_H 1
+
+/* Define to 1 if you have the `tgkill' function. */
+#cmakedefine HAVE_TGKILL 1
+
+/* Define to 1 if you have the `SYS_tgkill' macro. */
+#cmakedefine HAVE_TGKILL_SYSCALL 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H 1
