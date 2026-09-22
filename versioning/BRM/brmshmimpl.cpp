@@ -33,6 +33,7 @@
 #include <ctime>
 #include <pthread.h>
 #include <signal.h>
+#include <unistd.h>
 using namespace std;
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
@@ -44,6 +45,40 @@ namespace bi = boost::interprocess;
 #include "shmkeys.h"
 #include "brmshmimpl.h"
 #include "brmtypes.h"
+
+#if !defined(HAVE_GETTID)
+#if defined(HAVE_GETTID_SYSCALL)
+#include <sys/syscall.h>
+
+namespace
+{
+
+pid_t gettid()
+{
+  return syscall(SYS_gettid);
+}
+
+}
+#else
+#error "gettid(2) is required"
+#endif // HAVE_GETTID_SYSCALL
+#endif // !HAVE_GETTID
+
+#if !defined(HAVE_TGKILL)
+#if defined(HAVE_TGKILL_SYSCALL)
+#include <sys/syscall.h>
+
+namespace
+{
+
+int tgkill(pid_t pid, pid_t tid, int sig)
+{
+  return syscall(SYS_tgkill, pid, tid, sig);
+}
+
+}
+#endif // HAVE_TGKILL_SYSCALL
+#endif // !HAVE_TGKILL
 
 namespace BRM
 {
@@ -462,7 +497,7 @@ void BRMVersionedShmBase::openOrCreateMetadataArea()
     for (uint32_t i = 0; i < ReaderSlots; ++i)
     {
       meta->readers[i].readingId.store(0, std::memory_order_relaxed);
-      meta->readers[i].pid.store(0, std::memory_order_relaxed);
+      meta->readers[i].owner.store(0, std::memory_order_relaxed);
     }
 
     meta->unannouncedReaders.store(0, std::memory_order_relaxed);
@@ -474,15 +509,17 @@ void BRMVersionedShmBase::openOrCreateMetadataArea()
     int rc = pthread_mutexattr_init(&attr);
 
     if (rc == 0)
+    {
       rc = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
 
-    if (rc == 0)
-      rc = pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST);
+      if (rc == 0)
+        rc = pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST);
 
-    if (rc == 0)
-      rc = pthread_mutex_init(&meta->updateMutex, &attr);
+      if (rc == 0)
+        rc = pthread_mutex_init(&meta->updateMutex, &attr);
 
-    pthread_mutexattr_destroy(&attr);
+      pthread_mutexattr_destroy(&attr);
+    }
 
     if (rc != 0)
     {
@@ -692,6 +729,27 @@ void BRMVersionedShmBase::releaseReadStateIndex(unsigned keyBase)
   gReadStateIndexes.erase(it);
 }
 
+uint64_t BRMVersionedShmBase::readerOwnerToken()
+{
+  uint64_t pid = static_cast<uint64_t>(getpid());
+  uint64_t tid = static_cast<uint64_t>(gettid());
+  return (pid << 32) | (tid & 0xffffffffULL);
+}
+
+bool BRMVersionedShmBase::readerOwnerIsGone(uint64_t token)
+{
+  if (token == 0)
+    return false;  // unclaimed, not abandoned
+
+  pid_t pid = static_cast<pid_t>(token >> 32);
+  pid_t tid = static_cast<pid_t>(token & 0xffffffffULL);
+
+  if (pid <= 0 || tid <= 0)
+    return false;
+
+  return tgkill(pid, tid, 0) < 0 && errno == ESRCH;
+}
+
 void BRMVersionedShmBase::announceRead(uint64_t id)
 {
   auto& me_ = fReadStates[fReadStateIndex];
@@ -719,14 +777,40 @@ void BRMVersionedShmBase::announceRead(uint64_t id)
   if (me_.slot < 0)
   {
     // First read this thread has ever done: take a slot of its own
-    auto me = static_cast<uint32_t>(getpid());
+    const uint64_t me = readerOwnerToken();
 
     for (uint32_t i = 0; i < ReaderSlots; ++i)
     {
-      uint32_t unclaimed = 0;
+      uint64_t unclaimed = 0;
 
-      if (meta->readers[i].pid.compare_exchange_strong(unclaimed, me, std::memory_order_acq_rel,
-                                                       std::memory_order_relaxed))
+      if (meta->readers[i].owner.compare_exchange_strong(unclaimed, me, std::memory_order_acq_rel,
+                                                         std::memory_order_relaxed))
+      {
+        me_.slot = static_cast<int32_t>(i);
+        break;
+      }
+    }
+  }
+
+  if (me_.slot < 0)
+  {
+    const uint64_t me = readerOwnerToken();
+
+    for (uint32_t i = 0; i < ReaderSlots; ++i)
+    {
+      const uint64_t held = meta->readers[i].owner.load(std::memory_order_acquire);
+
+      if (!readerOwnerIsGone(held))
+      {
+        // reader is alive
+        continue;
+      }
+
+      meta->readers[i].readingId.store(0, std::memory_order_release);
+
+      uint64_t expected = held;
+      if (meta->readers[i].owner.compare_exchange_strong(expected, me, std::memory_order_acq_rel,
+                                                         std::memory_order_relaxed))
       {
         me_.slot = static_cast<int32_t>(i);
         break;
@@ -794,16 +878,16 @@ bool BRMVersionedShmBase::slotIsQuiet(uint64_t slot) const
     if (meta->readers[i].readingId.load(std::memory_order_seq_cst) != occupant)
       continue;
 
-    // Somebody is in it, or was when they died. A pid that is gone will never
-    // withdraw its announcement, so take it back rather than let one crashed
-    // reader stop this slot ever being written into again
-    uint32_t owner = meta->readers[i].pid.load(std::memory_order_acquire);
+    // Somebody is in it, or was when they died. A thread that is gone will
+    // never withdraw its announcement, so take it back rather than let one
+    // crashed reader stop this slot ever being written into again
+    const uint64_t held = meta->readers[i].owner.load(std::memory_order_acquire);
 
-    if (owner == 0 || kill(static_cast<pid_t>(owner), 0) == 0 || errno != ESRCH)
+    if (!readerOwnerIsGone(held))
       return false;
 
     meta->readers[i].readingId.store(0, std::memory_order_release);
-    meta->readers[i].pid.store(0, std::memory_order_release);
+    meta->readers[i].owner.store(0, std::memory_order_release);
   }
 
   return true;
