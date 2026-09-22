@@ -92,6 +92,11 @@ if(WITH_UNITTESTS)
     target_link_libraries(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:comparators_tests COMMAND comparators_tests)
 
+    add_executable(brm_versioned_shm_tests brm-versioned-shm-tests.cpp)
+    add_dependencies(brm_versioned_shm_tests googletest)
+    columnstore_link(brm_versioned_shm_tests ${ENGINE_LDFLAGS} ${ENGINE_BRM_LIBS} ${GTEST_LIBRARIES})
+    gtest_add_tests(TARGET brm_versioned_shm_tests TEST_PREFIX columnstore:)
+
     # standalone EM routines test
     add_executable(brm_em_standalone brm-em-standalone.cpp)
     target_link_libraries(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
