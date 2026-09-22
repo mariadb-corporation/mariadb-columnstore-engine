@@ -116,6 +116,19 @@ check_cxx_symbol_exists(alloca alloca.h HAVE_ALLOCA)
 check_cxx_symbol_exists(strerror_r string.h HAVE_DECL_STRERROR_R)
 check_cxx_symbol_exists(tm sys/time.h TM_IN_SYS_TIME)
 
+check_cxx_symbol_exists(gettid unistd.h HAVE_GETTID)
+check_cxx_symbol_exists(tgkill signal.h HAVE_TGKILL)
+
+check_cxx_symbol_exists(SYS_gettid sys/syscall.h HAVE_GETTID_SYSCALL)
+if(NOT HAVE_GETTID AND NOT HAVE_GETTID_SYSCALL)
+    message(FATAL_ERROR "gettid(2) is required")
+endif()
+
+check_cxx_symbol_exists(SYS_tgkill sys/syscall.h HAVE_TGKILL_SYSCALL)
+if(NOT HAVE_TGKILL AND NOT HAVE_TGKILL_SYSCALL)
+    message(FATAL_ERROR "tgkill(2) is required")
+endif()
+
 # AC_TYPE_SIGNAL
 check_type_size(ptrdiff_t PTRDIFF_T)
 check_type_size(_Bool __BOOL)

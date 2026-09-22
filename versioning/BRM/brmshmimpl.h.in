@@ -184,13 +184,17 @@ struct ShmMetadata
   // they are in: a reader writes its own line and nobody else's, and a writer
   // reads the lot once per publication
   //
-  // pid is what the writer uses to tell an announcement that will never be
-  // withdrawn - the process holding it died - from one it has to respect
+  // owner is what the writer uses to tell an announcement that will never be
+  // withdrawn - the thread holding it is died - from one it has to respect
   struct ReaderSlot
   {
     std::atomic<uint64_t> readingId;  // 0 when this thread is not in an area
-    std::atomic<uint32_t> pid;        // 0 when the slot is unclaimed
-    char pad[ReaderSlotStride - sizeof(std::atomic<uint64_t>) - sizeof(std::atomic<uint32_t>)];
+    // The thread holding the slot: its pid in the high 32 bits and its
+    // tid in the low half, 0 when the slot is unclaimed. A single variable
+    // is used so atomic CAS can be used and locks can be avoided.
+    std::atomic<uint64_t> owner;
+
+    char pad[ReaderSlotStride - 2 * sizeof(std::atomic<uint64_t>)];
   };
 
   ReaderSlot readers[ReaderSlots];
@@ -286,6 +290,10 @@ class BRMVersionedShmBase : public BRMShmImplParent
   /// Whether the object in that slot can be written into again: nobody is
   /// announcing the version it holds, and nobody is reading unannounced.
   bool slotIsQuiet(uint64_t slot) const;
+
+  /// pid of reader in the high 32 bits, tid in the low 32 bits
+  static uint64_t readerOwnerToken();
+  static bool readerOwnerIsGone(uint64_t token);
 
   void openOrCreateMetadataArea();
   ShmMetadata* metadata() const;

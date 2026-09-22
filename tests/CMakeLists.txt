@@ -106,7 +106,7 @@ if(WITH_UNITTESTS)
 
     add_executable(brm_versioned_shm_tests brm-versioned-shm-tests.cpp)
     add_dependencies(brm_versioned_shm_tests googletest)
-    columnstore_link(brm_versioned_shm_tests ${ENGINE_LDFLAGS} ${ENGINE_BRM_LIBS} ${GTEST_LIBRARIES})
+    columnstore_link(brm_versioned_shm_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
     gtest_add_tests(TARGET brm_versioned_shm_tests TEST_PREFIX columnstore:)
 
     add_executable(rbo_tests rbo_hybrid.cpp)
