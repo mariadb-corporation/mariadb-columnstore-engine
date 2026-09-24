@@ -20,6 +20,7 @@
 #include <boost/filesystem.hpp>
 #include <cstdint>
 #include "branchpred.h"
+#include "messageobj.h"
 #include "rowgroup.h"
 #include <resourcemanager.h>
 #include <fcntl.h>
@@ -88,6 +89,24 @@ size_t findFirstSetBit(const uint64_t mask)
 {
   return __builtin_ffsll(mask);
 }
+
+#define throwIOError(filename, what, errNo) \
+    throwIOError_(__FILE__, __LINE__, (filename), (what), (errNo))
+
+void throwIOError_(const char* srcFile, int srcLine,
+                   const std::string& filename, const std::string& what, int errNo)
+{
+  logging::Message::Args args;
+  args.add(srcFile);
+  args.add(srcLine);
+  args.add(filename);
+  args.add(what);
+  args.add(errorString(errNo));
+  throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
+                            logging::ERR_DISKAGG_FILEIO_ERROR, args),
+                  logging::ERR_DISKAGG_FILEIO_ERROR);
+}
+
 }  // anonymous namespace
 
 namespace rowgroup
@@ -722,12 +741,11 @@ class RowGroupStorage
       }
       else
       {
-        auto r = rename(ofname.c_str(), makeRGFilename(rgid).c_str());
+        auto filename = makeRGFilename(rgid);
+        auto r = rename(ofname.c_str(), filename.c_str());
         if (UNLIKELY(r < 0))
         {
-          throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(
-                                       logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
-                                   logging::ERR_DISKAGG_FILEIO_ERROR);
+          throwIOError(filename, "rename " + ofname, errno);
         }
       }
       rgd.reset();
@@ -1124,9 +1142,7 @@ class RowGroupStorage
     int fd = open(fname.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (UNLIKELY(fd < 0))
     {
-      throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
-          logging::ERR_DISKAGG_FILEIO_ERROR);
+      throwIOError(fname, "create finalized info", errno);
     }
     uint64_t sz = fRGDatas.size();
     uint64_t finsz = fFinalizedRows.size();
@@ -1138,9 +1154,7 @@ class RowGroupStorage
     {
       close(fd);
       unlink(fname.c_str());
-      throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
-          logging::ERR_DISKAGG_FILEIO_ERROR);
+      throwIOError(fname, "write finalized info", errNo);
     }
     close(fd);
   }
@@ -1152,9 +1166,7 @@ class RowGroupStorage
     int fd = open(fname.c_str(), O_RDONLY);
     if (fd < 0)
     {
-      throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
-          logging::ERR_DISKAGG_FILEIO_ERROR);
+      throwIOError(fname, "open finalized info", errno);
     }
     uint64_t sz;
     uint64_t finsz;
@@ -1164,9 +1176,7 @@ class RowGroupStorage
     {
       close(fd);
       unlink(fname.c_str());
-      throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
-          logging::ERR_DISKAGG_FILEIO_ERROR);
+      throwIOError(fname, "read finalized info", errNo);
     }
     fRGDatas.resize(sz);
     fFinalizedRows.resize(finsz);
@@ -1174,9 +1184,7 @@ class RowGroupStorage
     {
       close(fd);
       unlink(fname.c_str());
-      throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
-          logging::ERR_DISKAGG_FILEIO_ERROR);
+      throwIOError(fname, "read finalized info", errNo);
     }
     close(fd);
   }
@@ -1195,7 +1203,9 @@ class RowGroupStorage
       {
         auto fname = makeRGFilename(i);
         if (access(fname.c_str(), F_OK) != 0)
-          ::abort();
+        {
+          throwIOError(fname, "check", errno);
+        }
       }
     }
     if (dumpFin)
@@ -1370,9 +1380,7 @@ class RowGroupStorage
     if ((errNo = fDumper->read(fname, data)) != 0)
     {
       unlink(fname.c_str());
-      throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
-          logging::ERR_DISKAGG_FILEIO_ERROR);
+      throwIOError(fname, "read", errNo);
     }
 
     messageqcpp::ByteStream bs(reinterpret_cast<uint8_t*>(data.data()), data.size());
@@ -1421,12 +1429,11 @@ class RowGroupStorage
     fRowGroupOut->setData(rgdata);
     rgdata->serialize(bs, fRowGroupOut->getDataSize());
 
+    auto fname = makeRGFilename(rgid);
     int errNo;
-    if ((errNo = fDumper->write(makeRGFilename(rgid), (char*)bs.buf(), bs.length())) != 0)
+    if ((errNo = fDumper->write(fname, (char*)bs.buf(), bs.length())) != 0)
     {
-      throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
-          logging::ERR_DISKAGG_FILEIO_ERROR);
+      throwIOError(fname, "write", errNo);
     }
   }
 
@@ -1611,11 +1618,10 @@ class RowPosHashStorage
   {
     int errNo;
     size_t sz = fPosHashes.size() * sizeof(decltype(fPosHashes)::value_type);
-    if ((errNo = fDumper->write(makeDumpName(), (char*)fPosHashes.data(), sz)) != 0)
+    auto fname = makeDumpName();
+    if ((errNo = fDumper->write(fname, (char*)fPosHashes.data(), sz)) != 0)
     {
-      throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
-          logging::ERR_DISKAGG_FILEIO_ERROR);
+      throwIOError(fname, "write dump", errNo);
     }
   }
 
@@ -1645,11 +1651,10 @@ class RowPosHashStorage
   {
     int errNo;
     std::vector<char> data;
-    if ((errNo = fDumper->read(makeDumpName(), data)) != 0)
+    auto fname = makeDumpName();
+    if ((errNo = fDumper->read(fname, data)) != 0)
     {
-      throw logging::IDBExcept(
-          logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
-          logging::ERR_DISKAGG_FILEIO_ERROR);
+      throwIOError(fname, "read dump", errNo);
     }
 
     fPosHashes.resize(data.size() / sizeof(decltype(fPosHashes)::value_type));
@@ -2239,21 +2244,18 @@ void RowAggStorage::dumpInternalData() const
   bs << fCurData->fInfoInc;
   bs << fCurData->fInfoHashShift;
   bs.append(fCurData->fInfo.get(), calcBytes(calcSizeWithBuffer(fCurData->fMask + 1, fCurData->fMaxSize)));
-  int fd = open(makeDumpFilename().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+  auto fname = makeDumpFilename();
+  int fd = open(fname.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
   if (fd < 0)
   {
-    throw logging::IDBExcept(
-        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
-        logging::ERR_DISKAGG_FILEIO_ERROR);
+    throwIOError(fname, "create internal dump", errno);
   }
 
   int errNo;
   if ((errNo = writeData(fd, (const char*)bs.buf(), bs.length())) != 0)
   {
     close(fd);
-    throw logging::IDBExcept(
-        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
-        logging::ERR_DISKAGG_FILEIO_ERROR);
+    throwIOError(fname, "write internal dump", errNo);
   }
   close(fd);
 }
@@ -2456,12 +2458,11 @@ void RowAggStorage::loadGeneration(uint16_t gen, size_t& size, size_t& mask, siz
                                    std::unique_ptr<uint8_t[]>& info)
 {
   messageqcpp::ByteStream bs;
-  int fd = open(makeDumpFilename(gen).c_str(), O_RDONLY);
+  auto fname = makeDumpFilename(gen);
+  int fd = open(fname.c_str(), O_RDONLY);
   if (fd < 0)
   {
-    throw logging::IDBExcept(
-        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errno)),
-        logging::ERR_DISKAGG_FILEIO_ERROR);
+    throwIOError(fname, "open gen", errno);
   }
   struct stat st
   {
@@ -2473,9 +2474,7 @@ void RowAggStorage::loadGeneration(uint16_t gen, size_t& size, size_t& mask, siz
   if ((errNo = readData(fd, (char*)bs.getInputPtr(), st.st_size)) != 0)
   {
     close(fd);
-    throw logging::IDBExcept(
-        logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
-        logging::ERR_DISKAGG_FILEIO_ERROR);
+    throwIOError(fname, "read gen", errNo);
   }
   close(fd);
   bs.advanceInputPtr(st.st_size);
