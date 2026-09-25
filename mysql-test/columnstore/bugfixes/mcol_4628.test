@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS t1;
 CREATE TABLE t1 (i INT, d DOUBLE) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (0, 1.5);
 UPDATE t1 SET i=d;
+--sorted_result
 SELECT * FROM t1;
 
 --disable_warnings
@@ -19,6 +20,7 @@ DROP TABLE IF EXISTS t1;
 CREATE TABLE t1 (i INT, d DOUBLE) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (0, 1.7);
 UPDATE t1 SET i=d;
+--sorted_result
 SELECT * FROM t1;
 
 --disable_warnings
@@ -27,6 +29,7 @@ DROP TABLE IF EXISTS t1;
 CREATE TABLE t1 (i INT, d DOUBLE) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (0, 1.4);
 UPDATE t1 SET i=d;
+--sorted_result
 SELECT * FROM t1;
 
 --disable_warnings
@@ -35,6 +38,7 @@ DROP TABLE IF EXISTS t1;
 CREATE TABLE t1 (i INT, d DOUBLE) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (0, -0.5);
 UPDATE t1 SET i=d;
+--sorted_result
 SELECT * FROM t1;
 
 --disable_warnings
@@ -43,6 +47,7 @@ DROP TABLE IF EXISTS t1;
 CREATE TABLE t1 (i INT UNSIGNED, d DOUBLE) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (0, 0.5);
 UPDATE t1 SET i=d;
+--sorted_result
 SELECT * FROM t1;
 
 --disable_warnings
@@ -51,6 +56,7 @@ DROP TABLE IF EXISTS t1;
 CREATE TABLE t1 (i INT UNSIGNED, d DOUBLE) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (0, 1.5);
 UPDATE t1 SET i=d;
+--sorted_result
 SELECT * FROM t1;
 
 --disable_warnings
@@ -59,6 +65,7 @@ DROP TABLE IF EXISTS t1;
 CREATE TABLE t1 (i INT UNSIGNED, d DOUBLE) ENGINE=ColumnStore;
 INSERT INTO t1 VALUES (0, 1.4);
 UPDATE t1 SET i=d;
+--sorted_result
 SELECT * FROM t1;
 
 --disable_warnings
@@ -69,6 +76,7 @@ INSERT INTO t1 VALUES (-762);
 INSERT INTO t1 VALUES  (-761);
 INSERT INTO t1 VALUES (761);
 INSERT INTO t1 VALUES (762);
+--sorted_result
 SELECT * FROM t1 WHERE i > -762.5;
 
 --disable_warnings
@@ -79,6 +87,7 @@ INSERT INTO t1 VALUES (-762);
 INSERT INTO t1 VALUES  (-761);
 INSERT INTO t1 VALUES (761);
 INSERT INTO t1 VALUES (762);
+--sorted_result
 SELECT * FROM t1 WHERE i > -762.2;
 
 --disable_warnings
