@@ -596,7 +596,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   bool aJobType = false;
 
   if (argc > 0)
-    fPrgmName = string(MCSBINDIR) + "/" + "cpimport.bin";  // argv[0] is splitter but we need cpimport
+    fPrgmName = getCpimportBinPath();  // argv[0] is splitter but we need cpimport
 
   while ((aCh = getopt(argc, argv, "d:j:w:s:v:l:r:b:e:B:f:q:ihm:E:C:P:I:n:p:c:ST:Ny:K:t:H:g:U:L:")) != EOF)
   {
