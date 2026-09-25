@@ -1050,6 +1050,102 @@ int ha_columnstore_select_handler::next_row()
 
   int rc = ha_mcs_impl_select_next(table->record[0], table, time_zone);
 
+  if (rc == 0 && !stored_func_cols.empty() && select_lex)
+  {
+    // Copy source table field values from tmp table so that
+    // Item_func_sp arguments (Item_field pointing to source tables) read correctly.
+    uint32_t field_idx = 0;
+    List_iterator_fast<Item> it(select_lex->item_list);
+    Item* item;
+    while ((item = it++))
+    {
+      if (item->type() == Item::FIELD_ITEM)
+      {
+        Item_field* item_field = static_cast<Item_field*>(item);
+        Field* src_field = item_field->field;
+        Field* tmp_field = table->field[field_idx];
+        if (src_field && tmp_field && src_field->table)
+        {
+          // Enable writing to source table field (needed for debug builds)
+          MY_BITMAP* old_map = dbug_tmp_use_all_columns(src_field->table,
+                                                        &src_field->table->write_set);
+          if (tmp_field->is_null())
+            src_field->set_null();
+          else
+          {
+            src_field->set_notnull();
+            // Copy value via string representation (type-safe)
+            StringBuffer<256> buf;
+            tmp_field->val_str(&buf);
+            src_field->store(buf.ptr(), buf.length(), buf.charset());
+          }
+          dbug_tmp_restore_column_map(&src_field->table->write_set, old_map);
+        }
+      }
+      field_idx++;
+    }
+
+    // Evaluate each stored function and write results to the tmp table.
+    for (const auto& sf : stored_func_cols)
+    {
+      Field* out_field = table->field[sf.output_field_idx];
+      switch (sf.sp_item->result_type())
+      {
+        case INT_RESULT:
+        {
+          longlong val = sf.sp_item->val_int();
+          if (sf.sp_item->null_value)
+            out_field->set_null();
+          else
+          {
+            out_field->set_notnull();
+            out_field->store(val, sf.sp_item->unsigned_flag);
+          }
+          break;
+        }
+        case REAL_RESULT:
+        {
+          double val = sf.sp_item->val_real();
+          if (sf.sp_item->null_value)
+            out_field->set_null();
+          else
+          {
+            out_field->set_notnull();
+            out_field->store(val);
+          }
+          break;
+        }
+        case DECIMAL_RESULT:
+        {
+          my_decimal val;
+          my_decimal* res = sf.sp_item->val_decimal(&val);
+          if (sf.sp_item->null_value || !res)
+            out_field->set_null();
+          else
+          {
+            out_field->set_notnull();
+            out_field->store_decimal(res);
+          }
+          break;
+        }
+        case STRING_RESULT:
+        default:
+        {
+          String val;
+          String* res = sf.sp_item->val_str(&val);
+          if (sf.sp_item->null_value || !res)
+            out_field->set_null();
+          else
+          {
+            out_field->set_notnull();
+            out_field->store(res->ptr(), res->length(), res->charset());
+          }
+          break;
+        }
+      }
+    }
+  }
+
   DBUG_RETURN(rc);
 }
 

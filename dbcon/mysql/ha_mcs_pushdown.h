@@ -26,6 +26,9 @@
 #include "ha_mcs_impl_if.h"
 #include "ha_mcs_opt_rewrites.h"
 
+#include <vector>
+#include <utility>
+
 void mutate_optimizer_flags(THD* thd_);
 void restore_optimizer_flags(THD* thd_);
 
@@ -135,6 +138,14 @@ class ha_columnstore_derived_handler : public derived_handler
  * next_row - get a row back from sm.
  * end_scan - finish and clean the things up.
  ***********************************************************/
+// Info about a stored function column in the SELECT list that needs
+// connector-side evaluation after ExeMgr returns rows.
+struct StoredFuncColumnInfo
+{
+  Item_func_sp* sp_item;   // The MariaDB stored function Item
+  uint32_t output_field_idx;  // Index in the result tmp table's field array
+};
+
 class ha_columnstore_select_handler : public select_handler
 {
  private:
@@ -145,6 +156,8 @@ class ha_columnstore_select_handler : public select_handler
  public:
   bool scan_initialized;
   int pushdown_init_rc;
+  // Stored function columns that need connector-side evaluation
+  std::vector<StoredFuncColumnInfo> stored_func_cols;
   // MCOL-4525 Store the original TABLE_LIST::outer_join value in a hash map.
   // This will be used to restore to the original state later in case
   // query execution fails using the select_handler.
