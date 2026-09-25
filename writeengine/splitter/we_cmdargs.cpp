@@ -634,7 +634,7 @@ void WECmdArgs::parseCmdLineArgs(int argc, char** argv)
   bool aJobType = false;
 
   if (argc > 0)
-    fPrgmName = string(MCSBINDIR) + "/" + "cpimport.bin";  // argv[0] is splitter but we need cpimport
+    fPrgmName = getCpimportBinPath();  // argv[0] is splitter but we need cpimport
 
   po::positional_options_description pos_opt;
   pos_opt.add("dbname", 1)
