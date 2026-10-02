@@ -679,8 +679,20 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
              ],
            },
            {
+             name: "cmapi sbom",
+             depends_on: ["cmapi build"],
+             image: img,
+             volumes: [pipeline._volumes.mdb],
+             environment: {
+               DEBIAN_FRONTEND: "noninteractive",
+             },
+             commands: [
+               get_build_command("generate_cmapi_sbom.sh") + " --distro " + platform,
+             ],
+           },
+           {
              name: "createrepo",
-             depends_on: ["build", "cmapi build"],
+             depends_on: ["build", "cmapi build", "cmapi sbom"],
              image: img,
              when: {
                status: ["success", "failure"],

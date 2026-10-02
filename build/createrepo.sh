@@ -61,6 +61,11 @@ else
   echo "Cmapi packages are not found!"
 fi
 
+CMAPI_SBOM_PATH="/mdb/${BUILDDIR}/storage/columnstore/columnstore/cmapi/mariadb-columnstore-cmapi-*.cdx.json"
+if compgen -G "$CMAPI_SBOM_PATH" >/dev/null; then
+  mv -v $CMAPI_SBOM_PATH "./${RESULT}/"
+fi
+
 if [[ $(compgen -G "./${RESULT}/*.rpm") ]]; then
   retry_eval 5 "dnf install -q -y createrepo"
   createrepo "./${RESULT}"
