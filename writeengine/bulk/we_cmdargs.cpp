@@ -134,6 +134,8 @@ WECmdArgs::WECmdArgs(int argc, char** argv)
         "Directory for the output .err and .bad files")
       ("job-uuid,u", po::value<string>(&fUUID), "import job UUID")
       ("username,U", po::value<string>(&fUsername), "Username of the files owner.")
+      ("target-partition,a", po::value<string>(&fTargetPartitionTriple),
+        "Target partition triple in format Directory.Segment.DBRoot ")
       ("dbname", po::value<string>(), "Name of the database to load")
       ("table", po::value<string>(), "Name of table to load")
       ("load-file", po::value<string>(),
@@ -186,7 +188,7 @@ void WECmdArgs::usage() const
        << "    [-E encloseChar] [-C escapeChar] [-I binaryOpt] [-S] "
           "[-d debugLevel] [-i] "
        << endl
-       << "     [-D] [-N] [-L rejectDir] [-T timeZone]" << endl
+       << "     [-D] [-N] [-L rejectDir] [-T timeZone] [-a Directory.Segment.DBRoot]" << endl
        << "    [-U username]" << endl
        << endl;
 
@@ -201,7 +203,7 @@ void WECmdArgs::usage() const
           "[-d debugLevel] [-i] "
        << endl
        << "    [-p path] [-l loadFile]" << endl
-       << "     [-D] [-N] [-L rejectDir] [-T timeZone]" << endl
+       << "     [-D] [-N] [-L rejectDir] [-T timeZone] [-a Directory.Segment.DBRoot]" << endl
        << "    [-U username]" << endl
        << endl;
 
@@ -212,7 +214,9 @@ void WECmdArgs::usage() const
        << "    Example2: Some column values are enclosed within double quotes." << endl
        << "        " << fPrgmName << " -j 3000 -E '\"'" << endl
        << "    Example3: Import a nation table without a Job XML file" << endl
-       << "        " << fPrgmName << " -j 301 tpch nation nation.tbl" << endl;
+       << "        " << fPrgmName << " -j 301 tpch nation nation.tbl" << endl
+       << "    Example4: Import to specific partition (maintenance tasks)" << endl
+       << "        " << fPrgmName << " -j 302 -a 100.0.1 tpch nation nation.tbl" << endl;
 
   exit(1);
 }
@@ -410,6 +414,12 @@ void WECmdArgs::fillParams(BulkLoad& curJob, std::string& sJobIdStr, std::string
     curJob.setUsername(fUsername);
   }
   curJob.setSkipRows(fSkipRows);
+  
+  // Set target partition if specified
+  if (!fTargetPartitionTriple.empty())
+  {
+    curJob.setTargetPartitionTriple(fTargetPartitionTriple);
+  }
 
   curJob.setDefaultJobUUID();
 
