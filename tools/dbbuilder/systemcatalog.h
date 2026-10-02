@@ -31,12 +31,24 @@ using OidTypeT = std::pair<execplan::CalpontSystemCatalog::ColDataType, int>;
 class SystemCatalog
 {
  public:
+  enum class UpgradeState
+  {
+    Done,          // published and correct
+    Needed,        // no extents and no file
+    Leftover,      // only unpublished extents (and maybe a file) from a failed attempt
+    Inconsistent,  // published extents that don't match the file or the reference column
+    Error          // the ExtentMap could not be read, or the reference column has no extents
+  };
+
   void build();
   void remove();
   int upgrade(const std::unordered_map<int, std::pair<int, bool>>&,
               std::unordered_map<int, OidTypeT>,
               std::unordered_map<int, std::string>);
 
+  static UpgradeState checkUpgradeCandidate(int oid, int refOid, std::string& detail);
+
  private:
+  static int removeUpgradeLeftovers(int oid, std::string& detail);
   WriteEngine::WriteEngineWrapper fWriteEngine;
 };

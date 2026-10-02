@@ -18,6 +18,8 @@
 //  $Id: systemcatalog.cpp 2101 2013-01-21 14:12:52Z rdempsey $
 
 #include <iostream>
+#include <algorithm>
+#include <map>
 #include <assert.h>
 #include <sys/time.h>
 using namespace std;
@@ -33,6 +35,49 @@ using namespace WriteEngine;
 using namespace joblist;
 
 #include "dbbuilder.h"
+
+namespace
+{
+
+// The position of the Extent. Upgrade copies these positions from the reference column
+struct ExtentPos
+{
+  uint16_t dbRoot;
+  uint32_t partNum;
+  uint16_t segNum;
+  uint32_t blockOff;
+
+  auto operator<=>(const ExtentPos&) const = default;
+};
+
+ExtentPos extentPos(const BRM::EMEntry& e)
+{
+  return ExtentPos{
+    e.dbRoot,
+    e.partitionNum,
+    e.segmentNum,
+    e.blockOffset
+  };
+}
+
+std::string describeExtents(const std::vector<BRM::EMEntry>& extents)
+{
+  std::ostringstream oss;
+
+  for (const auto& e : extents)
+  {
+    oss << " [dbroot " << e.dbRoot << ", part " << e.partitionNum << ", seg " << e.segmentNum << ", fbo "
+        << e.blockOffset << ", hwm " << e.HWM << ", "
+        << (e.status == BRM::EXTENTAVAILABLE     ? "avail"
+            : e.status == BRM::EXTENTUNAVAILABLE ? "unavail"
+                                                 : "outOfSrv")
+        << "]";
+  }
+
+  return oss.str();
+}
+
+}  // namespace
 
 void SystemCatalog::build()
 {
@@ -617,10 +662,138 @@ void SystemCatalog::remove()
     colOp.deleteFile(d);
 }
 
-int SystemCatalog::upgrade(const std::unordered_map<int,
-                             std::pair<int, bool>>& upgradeOidMap,
-                           std::unordered_map<int, OidTypeT> upgradeOidTypeMap,
-                           std::unordered_map<int, std::string> upgradeOidDefaultValStrMap)
+SystemCatalog::UpgradeState SystemCatalog::checkUpgradeCandidate(int oid, int refOid, string& detail)
+{
+  BRMWrapper* brm = BRMWrapper::getInstance();
+  vector<BRM::EMEntry> extents;
+  vector<BRM::EMEntry> refExtents;
+  const string prefix = "OID " + to_string(oid) + ": ";
+
+  if (brm->getExtents(oid, extents, true, false, true) != NO_ERROR ||
+      brm->getExtents(refOid, refExtents, true, false, true) != NO_ERROR)
+  {
+    detail = prefix + "cannot read the Extent Map";
+    return UpgradeState::Error;
+  }
+
+  if (refExtents.empty())
+  {
+    detail = prefix + "the reference OID " + to_string(refOid) + " has no extents";
+    return UpgradeState::Error;
+  }
+
+  FileOp fileOp;
+  const bool fileExists = fileOp.existsDefaultFile(oid);
+
+  if (extents.empty())
+  {
+    if (!fileExists)
+    {
+      detail = prefix + "no extents and no segment file";
+      return UpgradeState::Needed;
+    }
+
+    detail = prefix + "the segment file exists but the Extent Map has no extents for it";
+    return UpgradeState::Inconsistent;
+  }
+
+  // setLocalHWM() marks an extent available, so an OID whose extents are all
+  // unavailable never got to the end of a fill: nothing in it was published
+  bool published = any_of(extents.begin(), extents.end(), [](const auto& e)
+                          { return e.status != BRM::EXTENTUNAVAILABLE; });
+
+  if (!published)
+  {
+    detail = prefix + "unpublished extents left by a failed upgrade (" +
+             (fileExists ? "segment file present" : "no segment file") + "):" + describeExtents(extents);
+    return UpgradeState::Leftover;
+  }
+
+  if (!fileExists)
+  {
+    detail = prefix + "published extents but no segment file:" + describeExtents(extents);
+    return UpgradeState::Inconsistent;
+  }
+
+  // The upgrade copies the reference column's extent layout, and every later
+  // catalog write changes both columns together, so they have to match. A
+  // scan needs the same extent count for all of the table's columns.
+  map<ExtentPos, int16_t> refStatus;
+
+  for (const auto& e : refExtents)
+  {
+    refStatus[extentPos(e)] = e.status;
+  }
+
+  bool matches = (extents.size() == refExtents.size());
+
+  for (const auto& e : extents)
+  {
+    auto it = refStatus.find(extentPos(e));
+
+    if (it == refStatus.end() || (e.status == BRM::EXTENTUNAVAILABLE && it->second != BRM::EXTENTUNAVAILABLE))
+    {
+      matches = false;
+    }
+  }
+
+  if (!matches)
+  {
+    detail = prefix + "extent layout differs from the reference OID " + to_string(refOid) + ":" +
+             describeExtents(extents) + "; reference:" + describeExtents(refExtents);
+    return UpgradeState::Inconsistent;
+  }
+
+  detail = prefix + "already upgraded";
+  return UpgradeState::Done;
+}
+
+// Removes what failed upgrade attempt may have left for this OID. The files
+// first: if removing them fails, the unpublished extents are still there and
+// the next run recognizes them as leftovers
+int SystemCatalog::removeUpgradeLeftovers(int oid, string& detail)
+{
+  WErrorCodes ec;
+  int rc;
+
+  try
+  {
+    FileOp fileOp;
+    rc = fileOp.deleteFiles(vector<int32_t>{oid});
+  }
+  catch (const exception& ex)
+  {
+    detail = string("cannot remove the segment files: ") + ex.what();
+    return ERR_FILE_DELETE;
+  }
+
+  if (rc != NO_ERROR)
+  {
+    detail = "cannot remove the segment files: " + ec.errorString(rc);
+    return rc;
+  }
+
+  vector<BRM::EMEntry> extents;
+
+  if (BRMWrapper::getInstance()->getExtents(oid, extents, false, false, true) != NO_ERROR)
+  {
+    detail = "cannot read the Extent Map";
+    return ERR_BRM_DEL_OID;
+  }
+
+  if (!extents.empty() && (rc = BRMWrapper::getInstance()->deleteOid(oid)) != NO_ERROR)
+  {
+    detail = "cannot remove the extents: " + ec.errorString(rc);
+    return rc;
+  }
+
+  detail = "removed " + to_string(extents.size()) + " extent(s) and the segment files";
+  return NO_ERROR;
+}
+
+int SystemCatalog::upgrade(const unordered_map<int, pair<int, bool>>& upgradeOidMap,
+                           unordered_map<int, OidTypeT> upgradeOidTypeMap,
+                           unordered_map<int, string> upgradeOidDefaultValStrMap)
 {
   TxnID txnID = 0;
   int rc = 0;
@@ -638,26 +811,61 @@ int SystemCatalog::upgrade(const std::unordered_map<int,
       msg << "  Creating column OID: " << iter->first;
       cout << msg.str() << endl;
 
+      // Failed attempt can leave unpublished extents and files.
+      // Building on top of them stacks another extent at the next FBO
+      string detail;
+
+      if (removeUpgradeLeftovers(iter->first, detail) != NO_ERROR)
+      {
+        throw runtime_error(msg.str() + ": cannot clean up an earlier attempt: " + detail);
+      }
+
+      cout << "  Before the upgrade: " << detail << endl;
+
       execplan::CalpontSystemCatalog::ColType colType;
       colType.colDataType = upgradeOidTypeMap[iter->first].first;
       colType.colWidth = upgradeOidTypeMap[iter->first].second;
 
       ColTuple defaultVal;
-      std::string defaultValStr = upgradeOidDefaultValStrMap[iter->first];
+      string defaultValStr = upgradeOidDefaultValStrMap[iter->first];
       bool pushWarning = false;
       bool isNULL = false;
       long timeZone = 0;
       defaultVal.data = colType.convertColumnData(defaultValStr, pushWarning, timeZone, isNULL, false, false);
 
-      rc = fWriteEngine.fillColumn(txnID, iter->first, colType, defaultVal,
-                                   (iter->second).first,
-                                   upgradeOidTypeMap[iter->first].first,
-                                   upgradeOidTypeMap[iter->first].second, compressionType,
-                                   isNULL, compressionType, defaultValStr, 0, false);
+      string failure;
 
-      if (rc)
+      try
       {
-        throw runtime_error(msg.str() + ec.errorString(rc));
+        rc = fWriteEngine.fillColumn(txnID, iter->first, colType, defaultVal, (iter->second).first,
+                                     upgradeOidTypeMap[iter->first].first,
+                                     upgradeOidTypeMap[iter->first].second, compressionType, isNULL,
+                                     compressionType, defaultValStr, 0, false);
+
+        if (rc)
+        {
+          failure = ec.errorString(rc);
+        }
+      }
+      catch (const exception& ex)
+      {
+        failure = ex.what();
+      }
+
+      // The fill can return success over a layout that doesn't match the
+      // reference column; check what it actually produced.
+      if (failure.empty() &&
+          checkUpgradeCandidate(iter->first, (iter->second).first, detail) != UpgradeState::Done)
+      {
+        failure = "the result does not match the reference column: " + detail;
+      }
+
+      if (!failure.empty())
+      {
+        string cleanup;
+        rc = removeUpgradeLeftovers(iter->first, cleanup);
+        throw runtime_error(msg.str() + " failed: " + failure +
+                            "; cleanup: " + (rc == NO_ERROR ? cleanup : "FAILED, " + cleanup));
       }
     }
   }
