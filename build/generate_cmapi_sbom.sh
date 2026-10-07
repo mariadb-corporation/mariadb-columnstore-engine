@@ -271,6 +271,7 @@ merge_parts() {
     --arg distro   "$OS" \
     --arg version  "$CMAPI_VERSION" \
     --arg revision "${DRONE_COMMIT:-${CMAPI_GIT_REVISION:-unknown}}" \
+    --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     '
     ((.[0].components   // []) + (.[1].components   // [])) as $all_components |
     ((.[0].dependencies // []) + (.[1].dependencies // [])) as $all_deps |
@@ -280,11 +281,13 @@ merge_parts() {
       bomFormat:    "CycloneDX",
       specVersion:  "1.6",
       metadata: {
+        timestamp: $timestamp,
         component: {
           type:      "application",
           "bom-ref": "mariadb-columnstore-cmapi",
           name:      "mariadb-columnstore-cmapi",
-          version:   $version
+          version:   $version,
+          supplier:  { name: "MariaDB Plc" }
         },
         properties: [
           { name: "cmapi:arch",         value: $arch     },
@@ -326,6 +329,12 @@ validate_final() {
          else empty end),
       (if (dangling | length) > 0
          then "dependency edges reference unknown bom-refs: \(dangling | join(", "))"
+         else empty end),
+      (if (.metadata.timestamp // "") == ""
+         then "metadata.timestamp missing (NTIA minimum field)"
+         else empty end),
+      (if (.metadata.component.supplier.name // "") != "MariaDB Plc"
+         then "root component supplier must be \"MariaDB Plc\", found \"\(.metadata.component.supplier.name // "")\""
          else empty end)
     ] | map(select(length > 0)) | join("\n")
   '
