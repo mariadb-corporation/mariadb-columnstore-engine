@@ -12,6 +12,8 @@ require {
     class file { getattr map open read write };
     class filesystem associate;
     class tcp_socket { name_connect bind listen };
+    type unconfined_service_t;
+    class process signull;
 }
 
 # Define new types for ColumnStore
@@ -46,6 +48,8 @@ allow mysqld_t user_home_t:file { read open };
 allow mysqld_t columnstore_db_t:file { read open };
 
 allow mysqld_t fs_t:filesystem associate;
+
+allow mysqld_t unconfined_service_t:process signull;
 
 
 # MariaDB to ColumnStore network access
