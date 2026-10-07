@@ -26,6 +26,7 @@ from cmapi_server.controllers.api_clients import (
     UpgradeAgentClient,
 )
 from cmapi_server.exceptions import CMAPIBasicError
+from cmapi_server.helpers import validate_cej_credentials
 
 
 # install_es constants
@@ -91,6 +92,44 @@ def validate_es_token_and_version(
         raise typer.Exit(code=1)
 
     return target_version
+
+
+def validate_cej_preupgrade(console: Console) -> None:
+    """Pre-upgrade check for Cross-Engine Join (CEJ) credentials.
+
+    Newer Columnstore/CMAPI versions refuse to START the cluster when CEJ
+    credentials are missing or cannot be decrypted (previously such issues
+    were only logged and the cluster kept working). A customer whose cluster
+    currently works despite broken/empty CEJ credentials would therefore end
+    up with a cluster that fails to start right after the upgrade.
+
+    This check runs BEFORE anything is changed so such a customer is warned and
+    can fix the credentials first. It handles both encrypted and
+    unencrypted CEJ passwords, guaranteeing parity with the validation done at
+    cluster start.
+
+    :param console: Rich console used to print the error message.
+    :raises typer.Exit: Exits with code 1 when CEJ credentials are invalid.
+    """
+    logger = logging.getLogger('mcs_cli')
+    try:
+        validate_cej_credentials()
+    except CMAPIBasicError as exc:
+        logger.error('Pre-upgrade CEJ credentials check failed: %s', exc.message)
+        console.print(
+            '[red]ERROR:[/red] Cross-Engine Join (CEJ) credentials check failed.'
+        )
+        console.print(f'[red]{exc.message}[/red]')
+        console.print(
+            '[yellow]After the upgrade Columnstore will refuse to start the '
+            'cluster while the CEJ credentials are invalid.\n'
+            'Nothing has been changed yet. Please fix the CrossEngineSupport '
+            'credentials in Columnstore.xml (and the .secrets file if the '
+            'password is encrypted) and retry. Check '
+            '[link=https://mariadb.com/docs/server/architecture/topologies/htap/step-3-start-and-configure-mariadb-enterprise-server#create-the-utility-user]the documentation[/link] '
+            'for details.[/yellow]'
+        )
+        raise typer.Exit(code=1)
 
 
 def get_current_versions(
@@ -396,11 +435,84 @@ def stop_upgrade_agents_on_cluster(
         try:
             client.shutdown()
             results[node] = True
+            logger.info('Upgrade agent stopped on %s (%d/%d).', node, i, len(nodes))
         except requests.RequestException as e:
             logger.warning(f'Failed to stop upgrade agent on {node}: {e}')
             results[node] = False
 
     return results
+
+
+def build_node_client(node: str, request_timeout: float = None) -> NodeControllerClient:
+    """Build a ``NodeControllerClient`` targeting a specific node.
+
+    :param node: Node hostname/IP. ``localhost``/``127.0.0.1`` target the
+        current node's CMAPI directly.
+    :param request_timeout: Optional per-request timeout (seconds).
+    :return: A configured ``NodeControllerClient``.
+    :rtype: NodeControllerClient
+    """
+    if node in ('localhost', '127.0.0.1'):
+        return NodeControllerClient(request_timeout=request_timeout)
+    return NodeControllerClient(
+        base_url=f'https://{node}:{CMAPI_PORT}',
+        request_timeout=request_timeout,
+    )
+
+
+def run_node_step_on_cluster(
+    active_nodes: list[str],
+    method_name: str,
+    action_label: str,
+    progress: Progress,
+    task_id,
+    request_timeout: float = None,
+    fail_fast: bool = True,
+    **method_kwargs,
+) -> tuple[dict[str, dict], dict[str, str]]:
+    """Run a ``NodeControllerClient`` method on each node one by one.
+
+    Unlike calling the cluster-wide endpoint (which blocks for the whole
+    cluster with no visible progress), this iterates node by node so the
+    progress bar can show exactly which node is currently being processed.
+    Each node's step is also logged to the upgrade log.
+
+    :param active_nodes: Nodes to run the step on, in order.
+    :param method_name: ``NodeControllerClient`` method to invoke per node.
+    :param action_label: Human-readable action name for progress/log messages
+        (e.g. ``'Upgrading MariaDB and Columnstore'``).
+    :param progress: Rich ``Progress`` instance to update.
+    :param task_id: Progress task ID to update.
+    :param request_timeout: Optional per-request timeout (seconds).
+    :param fail_fast: If ``True``, stop at the first failing node.
+    :param method_kwargs: Extra keyword args forwarded to the method.
+    :return: Tuple ``(results, errors)`` mapping node -> response / error text.
+    :rtype: tuple[dict[str, dict], dict[str, str]]
+    """
+    logger = logging.getLogger('mcs_cli')
+    results: dict[str, dict] = {}
+    errors: dict[str, str] = {}
+    total = len(active_nodes)
+
+    for i, node in enumerate(active_nodes, start=1):
+        progress.update(
+            task_id,
+            description=f'{action_label} on {node} ({i}/{total})...',
+            completed=None,
+        )
+        logger.info('%s on %s (%d/%d)...', action_label, node, i, total)
+        client = build_node_client(node, request_timeout=request_timeout)
+        try:
+            method = getattr(client, method_name)
+            results[node] = method(**method_kwargs)
+            logger.info('%s completed on %s (%d/%d).', action_label, node, i, total)
+        except CMAPIBasicError as exc:
+            errors[node] = exc.message
+            logger.error('%s failed on %s: %s', action_label, node, exc.message)
+            if fail_fast:
+                break
+
+    return results, errors
 
 
 def call_upgrade_agents_on_all_nodes(
@@ -436,6 +548,7 @@ def call_upgrade_agents_on_all_nodes(
         try:
             method = getattr(client, method_name)
             results[node] = method()
+            logger.info('%s completed on %s (%d/%d).', method_name, node, i, len(nodes))
         except requests.RequestException as e:
             logger.error(f'Failed to call {method_name} on {node}: {e}')
             results[node] = {

@@ -39,7 +39,6 @@
 #include "objectidmanager.h"
 using namespace execplan;
 
-#include "mastersegmenttable.h"
 #include "extentmap.h"
 #include "dbrm.h"
 #include "brmtypes.h"
@@ -330,7 +329,6 @@ void partitionByValue_common(UDF_ARGS* args,                              // inp
                              string functionName)                         // input
 {
   // identify partitions by the range
-  BRM::DBRM::refreshShmWithLock();
   DBRM em;
   vector<struct EMEntry> entries;
   vector<struct EMEntry>::iterator iter;
@@ -575,7 +573,6 @@ extern "C"
   const char* calshowpartitions(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                 char* /*is_null*/, char* /*error*/)
   {
-    BRM::DBRM::refreshShmWithLock();
     DBRM em;
     vector<struct EMEntry> entries;
     vector<struct EMEntry>::iterator iter;
@@ -1170,7 +1167,6 @@ extern "C"
   const char* calshowpartitionsbyvalue(UDF_INIT* initid, UDF_ARGS* args, char* result, unsigned long* length,
                                        char* /*is_null*/, char* /*error*/)
   {
-    BRM::DBRM::refreshShmWithLock();
     DBRM em;
     vector<struct EMEntry> entries;
     vector<struct EMEntry>::iterator iter;

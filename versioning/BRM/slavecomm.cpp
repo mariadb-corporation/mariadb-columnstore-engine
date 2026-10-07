@@ -263,6 +263,10 @@ void SlaveComm::run()
       }
     }
 
+    /* The link to the controller is gone, so the confirmation for whatever
+       was in flight is never coming. */
+    rollBackUnfinishedUpdate("the connection to the controller closed");
+
     release = false;
     master.close();
   }
@@ -288,6 +292,14 @@ void SlaveComm::processCommand(ByteStream& msg)
 #ifdef BRM_VERBOSE
   cerr << "WorkerComm: command " << (int)cmd << endl;
 #endif
+
+  /* Nothing should be open here: the controller serializes commands and ends
+     each one before sending the next. Something open means the end of the
+     last one never arrived - the controller was restarted mid-command, say -
+     and it has to go before this command opens one of its own, which would
+     otherwise assert on an update already being open. */
+  if (cmd != CONFIRM && cmd != BRM_UNDO)
+    rollBackUnfinishedUpdate("a new command arrived while the last one was still open");
 
   switch (cmd)
   {
@@ -1883,6 +1895,20 @@ void SlaveComm::do_vbCommit(ByteStream& msg)
   doSaveDelta = true;
 }
 
+void SlaveComm::rollBackUnfinishedUpdate(const char* why)
+{
+  if (printOnly || !slave || !slave->hasOpenUpdate())
+    return;
+
+  ostringstream os;
+  os << "WorkerComm: rolling back a write transaction the controller never finished (" << why
+     << "). The changes it made were never published, so nothing is lost by dropping them; leaving them "
+        "open would hold the shared memory's update mutex against every writer in the cluster.";
+  log(os.str());
+
+  slave->undoChanges();
+}
+
 void SlaveComm::do_undo()
 {
 #ifdef BRM_VERBOSE
@@ -1919,6 +1945,18 @@ void SlaveComm::do_confirm()
   }
 
   slave->confirmChanges();
+
+  /* The changes this command built are published now, so the master may let
+     the client go. Answered here and not at the end of this function: what a
+     client must not be able to outrun is the publication, and the snapshot
+     below is not that. In the versioned schema changes are not visible until
+     they are published, so we need to inform master for the sync */
+  if (!standalone)
+  {
+    ByteStream confirmReply;
+    confirmReply << (uint8_t)ERR_OK;
+    master.write(confirmReply);
+  }
 
   string tmp = savefile + "_current";
 

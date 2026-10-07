@@ -1,6 +1,7 @@
 import logging
 import os
 import secrets
+import shlex
 import sys
 import time
 from datetime import datetime, timedelta
@@ -28,7 +29,7 @@ from cmapi_server.controllers.api_clients import (
 )
 from cmapi_server.exceptions import CEJError
 from cmapi_server.handlers.cej import CEJPasswordHandler
-from cmapi_server.helpers import get_active_nodes, get_config_parser, get_current_key
+from cmapi_server.helpers import get_active_nodes, get_cej_info, get_config_parser, get_current_key
 from cmapi_server.managers.transaction import TransactionManager
 from cmapi_server.managers.upgrade.utils import ComparableVersion
 from cmapi_server.process_dispatchers.base import BaseDispatcher
@@ -41,8 +42,10 @@ from mcs_cluster_tool.install_es_helpers import (
     build_node_status_table,
     call_upgrade_agents_on_all_nodes,
     get_current_versions,
+    run_node_step_on_cluster,
     setup_install_es_logging,
     stop_upgrade_agents_on_cluster,
+    validate_cej_preupgrade,
     validate_es_token_and_version,
     wait_for_cmapi_ready,
     wait_for_upgrade_agents_ready,
@@ -536,6 +539,106 @@ def healthcheck():
     raise typer.Exit(code=0)
 
 
+def precheck_replication(active_nodes: list, console: Console) -> bool:
+    """Check MariaDB replication status on non-primary nodes before install_es.
+
+    Returns True if the precheck passed or was skipped (single-node cluster).
+    Returns False if replication issues are detected on any replica node.
+    """
+    from mcs_node_control.models.node_config import NodeConfig
+
+    if len(active_nodes) <= 1:
+        console.print(
+            '[yellow]Single-node cluster detected. Skipping replication precheck.[/yellow]'
+        )
+        return True
+
+    nc = NodeConfig()
+    root = nc.get_current_config_root()
+    primary_node_el = root.find('./PrimaryNode')
+    primary_node = primary_node_el.text if primary_node_el is not None else None
+
+    try:
+        _, port, username, password = get_cej_info(root)
+    except CEJError as exc:
+        console.print(
+            f'[yellow]Replication precheck skipped: cannot read CEJ credentials: {exc.message}[/yellow]'
+        )
+        return True
+
+    non_primary_nodes = [n for n in active_nodes if n != primary_node]
+    if not non_primary_nodes:
+        console.print(
+            '[yellow]No non-primary nodes identified for replication precheck.[/yellow]'
+        )
+        return True
+
+    console.print('Checking replication status on non-primary nodes...')
+    issues = []
+    for node in non_primary_nodes:
+        cmd = (
+            f'MYSQL_PWD={shlex.quote(password)} /usr/bin/mariadb -h {shlex.quote(node)}'
+            f' -P {shlex.quote(str(port))}'
+            f' -u {shlex.quote(username)}'
+            f' --password={shlex.quote(password)}'
+            f' -sN -e "SHOW REPLICA STATUS\\G;"'
+        )
+        success, output = BaseDispatcher.exec_command(cmd)
+
+        if not success:
+            issues.append(f'Node {node}: failed to connect or run SHOW REPLICA STATUS')
+            continue
+
+        if not output.strip():
+            console.print(
+                f'[yellow]  Node {node}: replication not configured (empty replica status)[/yellow]'
+            )
+            continue
+
+        # Parse vertical output lines of the form "             Field: Value"
+        fields: dict = {}
+        for line in output.splitlines():
+            if ':' in line:
+                key, _, val = line.partition(':')
+                fields[key.strip()] = val.strip()
+
+        io_running = fields.get('Replica_IO_Running') or fields.get('Slave_IO_Running', '')
+        sql_running = fields.get('Replica_SQL_Running') or fields.get('Slave_SQL_Running', '')
+        last_io_error = fields.get('Last_IO_Error', '')
+        last_sql_error = fields.get('Last_SQL_Error', '')
+        seconds_behind = (
+            fields.get('Seconds_Behind_Master') or fields.get('Seconds_Behind_Source', '')
+        )
+
+        node_issues = []
+        if io_running.lower() != 'yes':
+            node_issues.append(f'IO thread not running (status: {io_running!r})')
+        if sql_running.lower() != 'yes':
+            node_issues.append(f'SQL thread not running (status: {sql_running!r})')
+        if last_io_error:
+            node_issues.append(f'IO error: {last_io_error}')
+        if last_sql_error:
+            node_issues.append(f'SQL error: {last_sql_error}')
+        if seconds_behind and seconds_behind not in ('NULL', '0'):
+            node_issues.append(f'Replication lag: {seconds_behind}s behind source')
+
+        if node_issues:
+            issues.append(f'Node {node}: ' + '; '.join(node_issues))
+        else:
+            console.print(
+                f'[green]  Node {node}: replication OK '
+                f'(IO: {io_running}, SQL: {sql_running})[/green]'
+            )
+
+    if issues:
+        console.print('[yellow]Replication precheck warnings:[/yellow]')
+        for issue in issues:
+            console.print(f'[yellow]  - {issue}[/yellow]')
+        return False
+
+    return True
+
+
 @handle_output
 def install_es(
     token: Annotated[
@@ -624,6 +727,12 @@ def install_es(
         else:
             post_output.append(msg)
 
+    # Pre-upgrade check: make sure CEJ (Cross-Engine Join) credentials are
+    # valid before touching anything. Newer versions refuse to start the
+    # cluster with broken/empty CEJ credentials, so a currently-working
+    # installation with invalid credentials must be fixed before upgrading.
+    validate_cej_preupgrade(console)
+
     # Validate token and resolve target version
     target_version = validate_es_token_and_version(
         node_api_client, token, target_version, console
@@ -641,6 +750,18 @@ def install_es(
     table = Table('ES version', 'Columnstore version', 'CMAPI version')
     table.add_row(mdb_curr_ver, mcs_curr_ver, cmapi_curr_ver)
     console.print(table)
+
+    replication_ok = precheck_replication(active_nodes, console)
+    if not replication_ok:
+        proceed = typer.confirm(
+            'Replication issues detected on one or more nodes. '
+            'Proceeding may cause data loss or a broken cluster. Continue anyway?',
+            prompt_suffix=' ',
+            default=False,
+        )
+        if not proceed:
+            raise typer.Exit(code=1)
+
     is_downgrade = False
     if mdb_curr_ver_comp == mdb_target_ver_comp:
         console.print('[green]The target MariaDB ES version is already installed.[/green]')
@@ -692,6 +813,16 @@ def install_es(
         post_print('No active nodes found, used localhost.', 'yellow')
         active_nodes.append('localhost')
 
+    logger.info(
+        'Starting install_es: %s -> %s (%s) on %d node(s): %s | '
+        'cmapi_upgrade=%s, ignore_mismatch=%s, skip_cmapi=%s, '
+        'allow_cmapi_downgrade=%s',
+        mdb_curr_ver, target_version,
+        'downgrade' if is_downgrade else 'upgrade',
+        len(active_nodes), ', '.join(active_nodes),
+        should_upgrade_cmapi, ignore_mismatch, skip_cmapi, allow_cmapi_downgrade,
+    )
+
     with Progress(
         SpinnerColumn(),
         '[progress.description]{task.description}',
@@ -700,10 +831,12 @@ def install_es(
         console=console,
     ) as progress:
         step1_stop_cluster = progress.add_task('Stopping MCS cluster...', total=None)
+        logger.info('Stopping MCS cluster...')
         with TransactionManager(
             timeout=INSTALL_ES_LONG_TRANSACTION_TIMEOUT, handle_signals=True
         ):
             cluster_api_client.shutdown_cluster({'in_transaction': True})
+        logger.info('MCS cluster stopped.')
         progress.update(
             step1_stop_cluster, description='[green]MCS Cluster stopped ✓', total=100,
             completed=True
@@ -759,8 +892,10 @@ def install_es(
         progress.stop_task(step1_5_start_agents)
 
         step2_stop_mariadb = progress.add_task('Stopping MariaDB server...', total=None)
+        logger.info('Stopping MariaDB server on all nodes...')
         # TODO: put MaxScale into maintainance mode
         cluster_api_client.stop_mariadb({'in_transaction': True})
+        logger.info('MariaDB server stopped on all nodes.')
         progress.update(
             step2_stop_mariadb, description='[green]MariaDB server stopped ✓', total=100,
             completed=True
@@ -768,12 +903,34 @@ def install_es(
         progress.stop_task(step2_stop_mariadb)
 
         step3_install_es_repo = progress.add_task(
-            'Installing MariaDB ES repository...', total=None
+            'Installing MariaDB ES repository on each node...', total=None
         )
-        cluster_api_client.install_repo(token=token, mariadb_version=target_version)
+        _, repo_errors = run_node_step_on_cluster(
+            active_nodes,
+            method_name='install_repo',
+            action_label='Installing ES repository',
+            progress=progress,
+            task_id=step3_install_es_repo,
+            token=token,
+            mariadb_version=target_version,
+        )
+        if repo_errors:
+            failed_node = next(iter(repo_errors))
+            progress.update(
+                step3_install_es_repo,
+                description=f'[red]Repository installation failed on {failed_node} ✗',
+                total=100, completed=True
+            )
+            progress.stop_task(step3_install_es_repo)
+            progress.stop()
+            console.print(f'[red]ERROR:[/red] Repository installation failed on {failed_node}.')
+            console.print(f'[red]{repo_errors[failed_node]}[/red]')
+            console.print('[yellow]Nothing was upgraded yet. Fix the issue and retry.[/yellow]')
+            raise typer.Exit(code=1)
         progress.update(
-            step3_install_es_repo, description='[green]Repository installed ✓', total=100,
-            completed=True
+            step3_install_es_repo,
+            description=f'[green]Repository installed on {len(active_nodes)} node(s) ✓',
+            total=100, completed=True
         )
         progress.stop_task(step3_install_es_repo)
 
@@ -835,9 +992,35 @@ def install_es(
         step4_preupgrade_backup = progress.add_task(
             'Starting pre-upgrade backup DBRM and configs on each node...', total=None
         )
-        cluster_api_client.preupgrade_backup()
+        # Iterate node by node so the progress bar shows exactly which node is
+        # being backed up instead of blocking until the whole cluster is done.
+        _, backup_errors = run_node_step_on_cluster(
+            active_nodes,
+            method_name='preupgrade_backup',
+            action_label='Backing up DBRM and configs',
+            progress=progress,
+            task_id=step4_preupgrade_backup,
+        )
+        if backup_errors:
+            failed_node = next(iter(backup_errors))
+            progress.update(
+                step4_preupgrade_backup,
+                description=f'[red]Pre-upgrade backup failed on {failed_node} ✗',
+                total=100, completed=True
+            )
+            progress.stop_task(step4_preupgrade_backup)
+            progress.stop()
+            console.print(
+                f'[red]ERROR:[/red] Pre-upgrade backup failed on {failed_node}.'
+            )
+            console.print(f'[red]{backup_errors[failed_node]}[/red]')
+            console.print(
+                '[yellow]Nothing was upgraded yet. Fix the issue and retry.[/yellow]'
+            )
+            raise typer.Exit(code=1)
         progress.update(
-            step4_preupgrade_backup, description='[green]PreUpgrade Backup completed ✓',
+            step4_preupgrade_backup,
+            description=f'[green]PreUpgrade Backup completed on {len(active_nodes)} node(s) ✓',
             total=100, completed=True
         )
         progress.stop_task(step4_preupgrade_backup)
@@ -845,9 +1028,35 @@ def install_es(
         step5_upgrade_mdb_mcs = progress.add_task(
             'Upgrading MariaDB and Columnstore on each node...', total=None
         )
-        cluster_api_client.upgrade_mdb_mcs(
-            mariadb_version=mdb_target_ver, columnstore_version=mcs_target_ver
+        # Iterate node by node so long-running package upgrades report which
+        # node is currently being upgraded (a single node can take minutes).
+        _, upgrade_errors = run_node_step_on_cluster(
+            active_nodes,
+            method_name='upgrade_mdb_mcs',
+            action_label='Upgrading MariaDB and Columnstore',
+            progress=progress,
+            task_id=step5_upgrade_mdb_mcs,
+            mariadb_version=mdb_target_ver,
+            columnstore_version=mcs_target_ver,
         )
+        if upgrade_errors:
+            failed_node = next(iter(upgrade_errors))
+            progress.update(
+                step5_upgrade_mdb_mcs,
+                description=f'[red]Upgrade failed on {failed_node} ✗',
+                total=100, completed=True
+            )
+            progress.stop_task(step5_upgrade_mdb_mcs)
+            progress.stop()
+            console.print(
+                f'[red]ERROR:[/red] MariaDB/Columnstore upgrade failed on {failed_node}.'
+            )
+            console.print(f'[red]{upgrade_errors[failed_node]}[/red]')
+            console.print(
+                '[yellow]The cluster may be in a partially upgraded state. '
+                'Check the upgrade log for details.[/yellow]'
+            )
+            raise typer.Exit(code=1)
         progress.update(
             step5_upgrade_mdb_mcs,
             description=f'[green]Upgraded to MariaDB {mdb_target_ver} and Columnstore {mcs_target_ver} ✓',
@@ -913,7 +1122,9 @@ def install_es(
             step5_5_start_mariadb = progress.add_task(
                 'Starting MariaDB server before CMAPI downgrade...', total=None
             )
+            logger.info('Starting MariaDB server on all nodes (pre-CMAPI downgrade)...')
             cluster_api_client.start_mariadb({'in_transaction': True})
+            logger.info('MariaDB server started on all nodes (pre-CMAPI downgrade).')
             progress.update(
                 step5_5_start_mariadb,
                 description='[green]MariaDB server started (pre-CMAPI downgrade) ✓',
@@ -923,6 +1134,7 @@ def install_es(
 
         if should_upgrade_cmapi:
             step6_install_cmapi = progress.add_task('Upgrading CMAPI on each node...', total=None)
+            logger.info('Upgrading CMAPI to %s on all nodes...', cmapi_target_ver)
             try:
                 cluster_api_client.upgrade_cmapi(version=cmapi_target_ver)
                 # cmapi_updater service has 5 s timeout to give CMAPI time to handle response,
@@ -1043,8 +1255,10 @@ def install_es(
             post_output.append(note_panel)
         else:
             step7_start_mariadb = progress.add_task('Starting MariaDB server...', total=None)
+            logger.info('Starting MariaDB server on all nodes...')
             # TODO: put MaxScale from maintainance into working mode
             cluster_api_client.start_mariadb({'in_transaction': True})
+            logger.info('MariaDB server started on all nodes.')
             progress.update(
                 step7_start_mariadb, description='[green]MariaDB server started ✓', completed=True
             )
@@ -1132,14 +1346,20 @@ def install_es(
         # Start the cluster for both upgrades and downgrades (skip only on failure)
         if not failures:
             step8_start_cluster = progress.add_task('Starting MCS cluster...', total=None)
+            logger.info('Starting MCS cluster...')
             with TransactionManager(
                 timeout=INSTALL_ES_LONG_TRANSACTION_TIMEOUT, handle_signals=True
             ):
                 cluster_api_client.start_cluster({'in_transaction': True})
+            logger.info('MCS cluster started.')
             progress.update(
                 step8_start_cluster, description='[green]MCS Cluster started ✓', completed=True
             )
             progress.stop_task(step8_start_cluster)
+            logger.info(
+                'install_es completed successfully: %s -> %s.',
+                mdb_curr_ver, target_version,
+            )
             post_print('Upgrade completed and services restarted successfully.', 'green')
 
     # Render any deferred output now that the progress bar is complete

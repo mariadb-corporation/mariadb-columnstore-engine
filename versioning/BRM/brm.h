@@ -25,7 +25,6 @@
  */
 
 #include "calpontsystemcatalog.h"
-#include "mastersegmenttable.h"
 #include "extentmap.h"
 #include "copylocks.h"
 #include "vss.h"

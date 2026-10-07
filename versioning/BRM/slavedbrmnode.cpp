@@ -28,15 +28,16 @@
 #endif
 #include <sstream>
 #include <limits>
+#include <functional>
 
 #include "brmtypes.h"
 #include "rwlock.h"
-#include "mastersegmenttable.h"
 #include "extentmap.h"
 #include "copylocks.h"
 #include "vss.h"
 #include "vbbm.h"
 #include "exceptclasses.h"
+#include "scopeexit.h"
 #define SLAVEDBRMNODE_DLLEXPORT
 #include "slavedbrmnode.h"
 #undef SLAVEDBRMNODE_DLLEXPORT
@@ -851,6 +852,11 @@ int SlaveDBRMNode::vbRollback(VER_t transID, const vector<LBID_t>& lbidList, boo
   }
 }
 
+bool SlaveDBRMNode::hasOpenUpdate() const
+{
+  return em.hasOpenUpdate() || vbbm.hasOpenUpdate() || vss.hasOpenUpdate() || copylocks.hasOpenUpdate();
+}
+
 void SlaveDBRMNode::confirmChanges() throw()
 {
   try
@@ -886,34 +892,52 @@ void SlaveDBRMNode::confirmChanges() throw()
 
 void SlaveDBRMNode::undoChanges() throw()
 {
-  try
+  /* Each structure is rolled back and unlocked whatever happened to the ones
+     before it. One try block around the lot is not enough: em.undoChanges() can
+     throw - a rollback re-reads the published data area - and the handler would
+     then be reached with the VBBM, the VSS and the copy locks still write-locked
+     and their locked[] flags still set, which wedges every writer in the
+     cluster for good. There is nothing this can do about a failure but log it;
+     what it must not do is stop. */
+  auto attempt = [](const std::function<void()>& step)
   {
-    em.undoChanges();
-
-    if (locked[0])
+    try
     {
-      vbbm.undoChanges();
-      vbbm.release(VBBM::WRITE);
-      locked[0] = false;
+      step();
     }
-
-    if (locked[1])
+    catch (exception& e)
     {
-      vss.undoChanges();
-      vss.release(VSS::WRITE);
-      locked[1] = false;
+      cerr << e.what() << endl;
     }
-
-    if (locked[2])
+    catch (...)
     {
-      copylocks.undoChanges();
-      copylocks.release(CopyLocks::WRITE);
-      locked[2] = false;
+      cerr << "SlaveDBRMNode::undoChanges(): caught an exception" << endl;
     }
+  };
+
+  attempt([this] { em.undoChanges(); });
+
+  if (locked[0])
+  {
+    attempt([this] { vbbm.undoChanges(); });
+    // A no-op publish: the copy is already gone, which is what undoChanges()
+    // above did. The point of this call is the write lock.
+    attempt([this] { vbbm.release(VBBM::WRITE); });
+    locked[0] = false;
   }
-  catch (exception& e)
+
+  if (locked[1])
   {
-    cerr << e.what() << endl;
+    attempt([this] { vss.undoChanges(); });
+    attempt([this] { vss.release(VSS::WRITE); });
+    locked[1] = false;
+  }
+
+  if (locked[2])
+  {
+    attempt([this] { copylocks.undoChanges(); });
+    attempt([this] { copylocks.release(CopyLocks::WRITE); });
+    locked[2] = false;
   }
 }
 
@@ -1012,32 +1036,54 @@ int SlaveDBRMNode::saveState(string filename) throw()
   string emFilename = filename + "_em";
   string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
-  bool locked[2] = {false, false};
 
+  /* The three files have to agree with each other, and lock(READ) no longer
+     makes that happen - it is a pin, and a pin says nothing about which
+     published version it caught. The read locks writers do exclude are what
+     orders them, and they are needed only while the pins are being taken: a
+     pinned area cannot change, so once everything is pinned the snapshot is
+     fixed and the locks go back before any file is written. See
+     DBRM::saveState(), which does the same and carries the ordering argument
+     in full. */
   try
   {
+    vbbm.ensureDataArea();
+    vss.ensureDataArea();
+    copylocks.ensureDataArea();
+
+    vbbm.lockForSave();
+    ScopeExit unlockVBBM([this] { vbbm.unlockForSave(); });
+    vss.lockForSave();
+    ScopeExit unlockVSS([this] { vss.unlockForSave(); });
+    copylocks.lockForSave();
+    ScopeExit unlockCL([this] { copylocks.unlockForSave(); });
+
     vbbm.lock(VBBM::READ);
-    locked[0] = true;
+    ScopeExit releaseVBBM([this] { vbbm.release(VBBM::READ); });
     vss.lock(VSS::READ);
-    locked[1] = true;
+    ScopeExit releaseVSS([this] { vss.release(VSS::READ); });
+    em.pinForSave();
+    ScopeExit unpinEM([this] { em.unpinForSave(); });
+
+    // Everything is pinned; the writers can have the locks back now.
+    unlockCL.releaseNow();
+    unlockVSS.releaseNow();
+    unlockVBBM.releaseNow();
 
     saveExtentMap(emFilename);
     vbbm.save(vbbmFilename);
     vss.save(vssFilename);
-
-    vss.release(VSS::READ);
-    locked[1] = false;
-    vbbm.release(VBBM::READ);
-    locked[0] = false;
   }
   catch (exception& e)
   {
-    if (locked[1])
-      vss.release(VSS::READ);
-
-    if (locked[0])
-      vbbm.release(VBBM::READ);
-
+    // Said out loud: a save that quietly returns -1 is how a stale BRM image
+    // ends up being the one that gets loaded.
+    cerr << "SlaveDBRMNode::saveState(): " << e.what() << endl;
+    return -1;
+  }
+  catch (...)
+  {
+    cerr << "SlaveDBRMNode::saveState(): caught an exception" << endl;
     return -1;
   }
 
@@ -1470,31 +1516,6 @@ int SlaveDBRMNode::dmlReleaseLBIDRanges(const vector<LBIDRange>& ranges)
     cerr << e.what() << endl;
     return -1;
   }
-}
-
-const std::atomic<bool>* SlaveDBRMNode::getEMFLLockStatus()
-{
-  return em.getEMFLLockStatus();
-}
-
-const std::atomic<bool>* SlaveDBRMNode::getEMLockStatus()
-{
-  return em.getEMLockStatus();
-}
-
-const std::atomic<bool> *SlaveDBRMNode::getEMIndexLockStatus()
-{
-  return em.getEMIndexLockStatus();
-}
-
-const std::atomic<bool>* SlaveDBRMNode::getVBBMLockStatus()
-{
-  return &locked[0];
-}
-
-const std::atomic<bool>* SlaveDBRMNode::getVSSLockStatus()
-{
-  return &locked[1];
 }
 
 }  // namespace BRM

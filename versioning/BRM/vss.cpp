@@ -32,10 +32,8 @@
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
 
-
 #include "rwlock.h"
 #include "brmtypes.h"
-#include "mastersegmenttable.h"
 #include "vbbm.h"
 #include "extentmap.h"
 #include "cacheutils.h"
@@ -65,45 +63,51 @@ VSSEntry::VSSEntry()
 
 /*static*/
 boost::mutex VSSImpl::fInstanceMutex;
+/* This thread's view of the data area; see the declarations for why it is per
+   thread. Zero-initialized as every thread starts, so a thread that has never
+   locked anything looks like one that has released everything. */
+thread_local struct VSSShmsegHeader* VSS::vss = nullptr;
+thread_local int* VSS::hashBuckets = nullptr;
+thread_local VSSEntry* VSS::storage = nullptr;
+thread_local VSSImpl::DataAreaPin VSS::fDataAreaPin;
+thread_local uint32_t VSS::fReadDepth = 0;
+
 boost::mutex VSS::mutex;
 
 /*static*/
 VSSImpl* VSSImpl::fInstance = 0;
 
 /*static*/
-VSSImpl* VSSImpl::makeVSSImpl(unsigned key, off_t size, bool readOnly)
+VSSImpl* VSSImpl::makeVSSImpl(unsigned keyBase, off_t size, bool readOnly)
 {
   boost::mutex::scoped_lock lk(fInstanceMutex);
 
-  if (fInstance)
-  {
-    if (key != fInstance->fVSS.key())
-    {
-      BRMShmImpl newShm(key, size);
-      fInstance->swapout(newShm);
-    }
-
-    idbassert(key == fInstance->fVSS.key());
-    return fInstance;
-  }
-
-  fInstance = new VSSImpl(key, size, readOnly);
+  // The metadata area is at a fixed key and never moves, so the instance is
+  // created once. Which data area it looks at is decided by refresh(), not here.
+  if (!fInstance)
+    fInstance = new VSSImpl(keyBase, size, readOnly);
 
   return fInstance;
 }
 
-VSSImpl::VSSImpl(unsigned key, off_t size, bool readOnly) : fVSS(key, size, readOnly)
+VSSImpl::VSSImpl(unsigned keyBase, off_t size, bool readOnly) : fVSS(keyBase, size, readOnly)
 {
+}
+
+void VSSImpl::growUpdateTo(off_t size)
+{
+  off_t have = fVSS.imageSize();
+
+  if (size > have)
+    fVSS.growUpdate(size - have);
 }
 
 VSS::VSS()
 {
-  vss = 0;
-  hashBuckets = 0;
-  storage = 0;
-  currentVSSShmkey = -1;
-  vssShmid = 0;
-  vssShminfo = NULL;
+  /* vss, hashBuckets, storage, the pin and the depth are deliberately not
+     touched here: they belong to the calling thread rather than to this object,
+     so clearing them would cut the ground from under a read lock that thread
+     already holds on another VSS. A thread starts with them zeroed anyway. */
   r_only = false;
   fPVSSImpl = 0;
 }
@@ -112,181 +116,281 @@ VSS::~VSS()
 {
 }
 
-// ported from ExtentMap
-void VSS::lock(OPS op)
+/* Points the two array members at the arrays of the image header describes.
+   Every change to numHashBuckets moves the storage array behind it, so this has
+   to run again after any of them. */
+void VSS::setPointers(VSSShmsegHeader* header)
 {
-  char* shmseg;
+  const VSSLayout layout = vssLayoutOf(header);
 
-  if (op == READ)
+  vss = header;
+  hashBuckets = layout.hashBuckets;
+  storage = layout.storage;
+}
+
+/* Maps the metadata area. The impl is a process-wide singleton, hence the mutex. */
+void VSS::createImplIfNeeded()
+{
+  boost::mutex::scoped_lock lk(mutex);
+
+  if (fPVSSImpl)
+    return;
+
+  fPVSSImpl = VSSImpl::makeVSSImpl(
+      fShmKeys.KEYRANGE_VSS_BASE,
+      vssImageSize(VSSTABLE_INITIAL_SIZE / sizeof(int), VSSSTORAGE_INITIAL_SIZE / sizeof(VSSEntry)), r_only);
+  idbassert(fPVSSImpl);
+
+  if (r_only)
+    fPVSSImpl->makeReadOnly();
+}
+
+/* The first process to look at the VSS finds no data area at all, the metadata
+   area holding id 0. Publish an initialized, empty one so that a reader has
+   something to map. A no-op from the first VSS access of the cluster's life
+   onwards, which is why it is the read path that carries it. */
+void VSS::initDataAreaIfNeeded()
+{
+  if (fPVSSImpl->currentId() != 0)
+    return;
+
+  /* The caller is already making the first one - nothing to do, and taking
+     the exclusion below would be taking it twice. */
+  if (fPVSSImpl->inUpdate())
+    return;
+
+  /* beginUpdate() takes the segment's update mutex, and that is the whole of
+     the exclusion now. So the re-check goes under it rather than before it:
+     another process may have published while we waited, in which case what
+     beginUpdate() copied is theirs and there is nothing left to publish. */
+  beginUpdate();
+
+  try
   {
-    vssShminfo = mst.getTable_read(MasterSegmentTable::VSSSegment);
-    mutex.lock();
-  }
-  else
-    vssShminfo = mst.getTable_write(MasterSegmentTable::VSSSegment);
-
-  // this means that either the VSS isn't attached or that it was resized
-  if (!fPVSSImpl || fPVSSImpl->key() != (unsigned)vssShminfo->tableShmkey)
-  {
-    if (vssShminfo->allocdSize == 0)
-    {
-      if (op == READ)
-      {
-        mutex.unlock();
-        mst.getTable_upgrade(MasterSegmentTable::VSSSegment);
-
-        try
-        {
-          growVSS();
-        }
-        catch (...)
-        {
-          release(WRITE);
-          throw;
-        }
-
-        mst.getTable_downgrade(MasterSegmentTable::VSSSegment);
-      }
-      else
-      {
-        try
-        {
-          growVSS();
-        }
-        catch (...)
-        {
-          release(WRITE);
-          throw;
-        }
-      }
-    }
+    if (fPVSSImpl->currentId() == 0)
+      publishUpdate();
     else
-    {
-      fPVSSImpl = VSSImpl::makeVSSImpl(vssShminfo->tableShmkey, 0);
-      idbassert(fPVSSImpl);
-
-      if (r_only)
-        fPVSSImpl->makeReadOnly();
-
-      vss = fPVSSImpl->get();
-      shmseg = reinterpret_cast<char*>(vss);
-      hashBuckets = reinterpret_cast<int*>(&shmseg[sizeof(VSSShmsegHeader)]);
-      storage =
-          reinterpret_cast<VSSEntry*>(&shmseg[sizeof(VSSShmsegHeader) + vss->numHashBuckets * sizeof(int)]);
-
-      if (op == READ)
-        mutex.unlock();
-    }
+      discardUpdate();
   }
-  else
+  catch (...)
   {
-    vss = fPVSSImpl->get();
-    shmseg = reinterpret_cast<char*>(vss);
-    hashBuckets = reinterpret_cast<int*>(&shmseg[sizeof(VSSShmsegHeader)]);
-    storage =
-        reinterpret_cast<VSSEntry*>(&shmseg[sizeof(VSSShmsegHeader) + vss->numHashBuckets * sizeof(int)]);
-
-    if (op == READ)
-      mutex.unlock();
+    discardUpdate();
+    throw;
   }
 }
 
-// ported from ExtentMap
+/* Takes the copy the write transaction works on. Idempotent: a nested grab of
+   the VSS write lock keeps working on the copy that is already open. */
+void VSS::beginUpdate()
+{
+  bool alreadyOpen = fPVSSImpl->inUpdate();
+
+  if (!alreadyOpen)
+    fPVSSImpl->beginUpdate(
+        vssImageSize(VSSTABLE_INITIAL_SIZE / sizeof(int), VSSSTORAGE_INITIAL_SIZE / sizeof(VSSEntry)));
+
+  /* Whether the copy came from nothing and so needs laying out. Only the call
+     that opened the update can tell: it returns with the update mutex held, so
+     the published id it reads back is exactly the one it copied from. */
+  bool firstEver = !alreadyOpen && fPVSSImpl->currentId() == 0;
+
+  setPointers(fPVSSImpl->get());
+
+  if (firstEver)
+    initShmseg();
+}
+
+/* Makes the copy the current data area. This is the only point at which the
+   changes of a write transaction become visible, and it is a single atomic
+   store, so a reader sees either all of them or none. */
+void VSS::publishUpdate()
+{
+  if (!fPVSSImpl || !fPVSSImpl->inUpdate())
+    return;
+
+  fPVSSImpl->publishUpdate();
+  setPointers(fPVSSImpl->get());
+}
+
+/* Rolls the write transaction back by dropping the copy; the published data
+   area was never touched. */
+void VSS::discardUpdate()
+{
+  if (!fPVSSImpl || !fPVSSImpl->inUpdate())
+    return;
+
+  fPVSSImpl->discardUpdate();
+  // Back to whatever is published.
+  fPVSSImpl->refresh();
+  setPointers(fPVSSImpl->get());
+}
+
+/* Nothing to do: the changes are in a copy nobody else can see, and it is
+   release(WRITE) that publishes it. Kept because SlaveDBRMNode names the two
+   ends of a transaction explicitly. */
+bool VSS::hasOpenUpdate() const
+{
+  return fPVSSImpl && fPVSSImpl->inUpdate();
+}
+
+void VSS::confirmChanges()
+{
+}
+
+void VSS::undoChanges()
+{
+  discardUpdate();
+}
+
+/* The bootstrap on its own, for a caller that is about to take this table's
+   read lock and so cannot let lock(READ) reach for the write lock. A no-op once
+   anything has ever been published, which is from the first access of the
+   cluster's life onwards. */
+void VSS::ensureDataArea()
+{
+  createImplIfNeeded();
+  initDataAreaIfNeeded();
+}
+
+/* The read lock on its own. A read of this class takes no lock - the pin is
+   what keeps it safe - so nothing orders one read against another, let alone a
+   read of this class against a read of a different one. This is what does, for
+   the one caller that needs it; see DBRM::saveState(). */
+/* The update mutex, not a read lock on the master segment table. It is the
+   same exclusion a writer takes and it is held only while save() pins its
+   snapshot, so the mutex's timeout is nowhere near it. createImplIfNeeded()
+   because a caller reaches this before anything else has touched the VSS. */
+void VSS::lockForSave()
+{
+  createImplIfNeeded();
+  fPVSSImpl->lockUpdates();
+}
+
+void VSS::unlockForSave()
+{
+  fPVSSImpl->unlockUpdates();
+}
+
+/* Returns with the VSS mapped, holding the VSS write lock for a write op and no
+   lock at all for a read: a writer publishes a replacement data area rather
+   than changing the one a reader is walking, so a reader needs the area to stay
+   mapped, not to be excluded from it. The pin below is what gives it that. */
+void VSS::lock(OPS op)
+{
+  createImplIfNeeded();
+
+  if (op == WRITE)
+  {
+    /* The update mutex beginUpdate() takes is the write lock: it is held for
+       the same span the table's used to be, from here to release(WRITE), and
+       it is the one a writer in another process contends on. beginUpdate()
+       gives it back itself if it throws. */
+    beginUpdate();
+    return;
+  }
+
+  initDataAreaIfNeeded();
+
+  if (fReadDepth == 0)
+    fDataAreaPin = fPVSSImpl->pin();
+
+  VSSShmsegHeader* header = VSSImpl::headerIn(fDataAreaPin);
+
+  if (header == nullptr)
+  {
+    if (fReadDepth == 0)
+      fDataAreaPin.reset();
+
+    throw runtime_error("VSS::lock(): there is no VSS data area to read");
+  }
+
+  setPointers(header);
+  ++fReadDepth;
+}
+
 void VSS::release(OPS op)
 {
   if (op == READ)
-    mst.releaseTable_read(MasterSegmentTable::VSSSegment);
-  else
-    mst.releaseTable_write(MasterSegmentTable::VSSSegment);
+  {
+    /* No lock was taken, so there is none to give back. Dropping the pin is
+       what lets a data area that has since been replaced be unmapped, and it is
+       also what makes the members stale, so nothing may use them past here. */
+    if (fReadDepth > 0 && --fReadDepth == 0)
+    {
+      fDataAreaPin.reset();
+      vss = NULL;
+      hashBuckets = NULL;
+      storage = NULL;
+    }
+
+    return;
+  }
+
+  /* The changes went into a copy nobody else can see yet; publish it here,
+     while the write lock is still held. undoChanges() has already dropped the
+     copy if the transaction is being rolled back, which leaves this a no-op. */
+  publishUpdate();
 }
 
+/* Lays out an empty VSS at the initial size in the copy the write transaction
+   works on. */
 void VSS::initShmseg()
 {
-  int i;
-  char* newshmseg;
-  int* buckets;
-  VSSEntry* stor;
-
   vss->capacity = VSSSTORAGE_INITIAL_SIZE / sizeof(VSSEntry);
   vss->currentSize = 0;
   vss->lockedEntryCount = 0;
   vss->LWM = 0;
   vss->numHashBuckets = VSSTABLE_INITIAL_SIZE / sizeof(int);
-  newshmseg = reinterpret_cast<char*>(vss);
+  setPointers(vss);
 
-  buckets = reinterpret_cast<int*>(&newshmseg[sizeof(VSSShmsegHeader)]);
-  stor = reinterpret_cast<VSSEntry*>(&newshmseg[sizeof(VSSShmsegHeader) + vss->numHashBuckets * sizeof(int)]);
+  for (int i = 0; i < vss->numHashBuckets; i++)
+    hashBuckets[i] = -1;
 
-  for (i = 0; i < vss->numHashBuckets; i++)
-    buckets[i] = -1;
-
-  for (i = 0; i < vss->capacity; i++)
-    stor[i].lbid = -1;
+  for (int i = 0; i < vss->capacity; i++)
+    storage[i].lbid = -1;
 }
 
-// assumes write lock is held
+/* Makes room in the copy the write transaction works on for another
+   increment's worth of entries.
+
+   Assumes the write lock is held. */
 void VSS::growVSS()
 {
-  int allocSize;
-  key_t newshmkey;
-  char* newshmseg;
+  const int oldCapacity = vss->capacity;
+  const int newBuckets = vss->numHashBuckets + VSSTABLE_INCREMENT / sizeof(int);
+  const int newCapacity = oldCapacity + VSSSTORAGE_INCREMENT / sizeof(VSSEntry);
 
-  if (vssShminfo->allocdSize == 0)
-    allocSize = VSS_INITIAL_SIZE;
-  else
-    allocSize = vssShminfo->allocdSize + VSS_INCREMENT;
+  fPVSSImpl->growUpdateTo(vssImageSize(newBuckets, newCapacity));
 
-  newshmkey = chooseShmkey();
-  idbassert((allocSize == VSS_INITIAL_SIZE && !fPVSSImpl) || fPVSSImpl);
-
-  if (fPVSSImpl)
-  {
-    BRMShmImpl newShm(newshmkey, allocSize);
-    newshmseg = static_cast<char*>(newShm.fMapreg.get_address());
-    memset(newshmseg, 0, allocSize);
-    idbassert(vss);
-    VSSShmsegHeader* tmp = reinterpret_cast<VSSShmsegHeader*>(newshmseg);
-    tmp->capacity = vss->capacity + VSSSTORAGE_INCREMENT / sizeof(VSSEntry);
-    tmp->numHashBuckets = vss->numHashBuckets + VSSTABLE_INCREMENT / sizeof(int);
-    tmp->LWM = 0;
-    copyVSS(tmp);
-    fPVSSImpl->swapout(newShm);
-  }
-  else
-  {
-    fPVSSImpl = VSSImpl::makeVSSImpl(newshmkey, allocSize);
-    newshmseg = reinterpret_cast<char*>(fPVSSImpl->get());
-    memset(newshmseg, 0, allocSize);
-  }
-
+  /* Growing can remap the copy, so nothing derived from the old mapping
+     survives it. The header still describes the old layout, which is what
+     locates the entries that have to be carried over. */
   vss = fPVSSImpl->get();
+  VSSEntry* oldStorage = vssLayoutOf(vss).storage;
 
-  if (allocSize == VSS_INITIAL_SIZE)
-    initShmseg();
+  vss->numHashBuckets = newBuckets;
+  vss->capacity = newCapacity;
+  setPointers(vss);
 
-  vssShminfo->tableShmkey = newshmkey;
-  vssShminfo->allocdSize = allocSize;
+  /* The entries sit behind the hash table that just grew, so they slide up by
+     however much it grew by. The two regions overlap by construction, hence
+     memmove. */
+  memmove(storage, oldStorage, oldCapacity * sizeof(VSSEntry));
 
-  if (r_only)
-  {
-    fPVSSImpl->makeReadOnly();
-    vss = fPVSSImpl->get();
-  }
+  for (int i = oldCapacity; i < newCapacity; i++)
+    storage[i].lbid = -1;
 
-  newshmseg = reinterpret_cast<char*>(vss);
-  hashBuckets = reinterpret_cast<int*>(&newshmseg[sizeof(VSSShmsegHeader)]);
-  storage =
-      reinterpret_cast<VSSEntry*>(&newshmseg[sizeof(VSSShmsegHeader) + vss->numHashBuckets * sizeof(int)]);
+  /* The hash table moved too, and a changed bucket count invalidates every
+     chain in it anyway, so rebuild it rather than move it. */
+  rehash();
 }
 
-// assumes write lock is held
+/* Sizes the copy for a load of elementCount entries and empties it. The caller
+   is about to insert the entries it read out of the save file.
+
+   Assumes the write lock is held. */
 void VSS::growForLoad(int elementCount)
 {
-  int allocSize;
-  key_t newshmkey;
-  char* newshmseg;
-  int i;
-
   if (elementCount < VSSSTORAGE_INITIAL_COUNT)
     elementCount = VSSSTORAGE_INITIAL_COUNT;
 
@@ -294,91 +398,68 @@ void VSS::growForLoad(int elementCount)
   if (elementCount % VSSSTORAGE_INCREMENT_COUNT)
     elementCount = ((elementCount / VSSSTORAGE_INCREMENT_COUNT) + 1) * VSSSTORAGE_INCREMENT_COUNT;
 
-  allocSize = VSS_SIZE(elementCount);
+  const int numHashBuckets = elementCount / 4;
 
-  newshmkey = chooseShmkey();
-
-  if (fPVSSImpl)
-  {
-    // isn't this the same as makeVSSImpl()?
-    BRMShmImpl newShm(newshmkey, allocSize);
-    fPVSSImpl->swapout(newShm);
-  }
-  else
-  {
-    fPVSSImpl = VSSImpl::makeVSSImpl(newshmkey, allocSize);
-  }
+  fPVSSImpl->growUpdateTo(vssImageSize(numHashBuckets, elementCount));
 
   vss = fPVSSImpl->get();
   vss->capacity = elementCount;
+  vss->numHashBuckets = numHashBuckets;
   vss->currentSize = 0;
   vss->LWM = 0;
-  vss->numHashBuckets = elementCount / 4;
   vss->lockedEntryCount = 0;
-  undoRecords.clear();
-  newshmseg = reinterpret_cast<char*>(vss);
-  hashBuckets = reinterpret_cast<int*>(&newshmseg[sizeof(VSSShmsegHeader)]);
-  storage =
-      reinterpret_cast<VSSEntry*>(&newshmseg[sizeof(VSSShmsegHeader) + vss->numHashBuckets * sizeof(int)]);
+  setPointers(vss);
 
-  for (i = 0; i < vss->capacity; i++)
-    storage[i].lbid = -1;
-
-  for (i = 0; i < vss->numHashBuckets; i++)
+  for (int i = 0; i < vss->numHashBuckets; i++)
     hashBuckets[i] = -1;
 
-  vssShminfo->tableShmkey = newshmkey;
-  vssShminfo->allocdSize = allocSize;
+  for (int i = 0; i < vss->capacity; i++)
+    storage[i].lbid = -1;
 }
 
-// assumes write lock is held and the src is vbbm
-// and that dest->{numHashBuckets, capacity, LWM} have been set.
-void VSS::copyVSS(VSSShmsegHeader* dest)
+/* Rebuilds the hash table from the entries in storage, leaving each of them
+   where it is: only the bucket heads and the chain links change.
+
+   Also recounts the entries and the locked ones among them. That is how
+   growVSS() gets away with moving the array and throwing the old table away,
+   and it repairs currentSize and lockedEntryCount if either has drifted from
+   what it is defined as. */
+void VSS::rehash()
 {
-  int i;
-  int* newHashtable;
-  VSSEntry* newStorage;
-  char* cDest = reinterpret_cast<char*>(dest);
+  for (int i = 0; i < vss->numHashBuckets; i++)
+    hashBuckets[i] = -1;
 
-  // copy metadata
-  dest->currentSize = vss->currentSize;
-  dest->lockedEntryCount = vss->lockedEntryCount;
+  int used = 0;
+  int locked = 0;
 
-  newHashtable = reinterpret_cast<int*>(&cDest[sizeof(VSSShmsegHeader)]);
-  newStorage =
-      reinterpret_cast<VSSEntry*>(&cDest[sizeof(VSSShmsegHeader) + dest->numHashBuckets * sizeof(int)]);
+  for (int i = 0; i < vss->capacity; i++)
+  {
+    if (storage[i].lbid == -1)
+      continue;
 
-  // initialize new storage & hash
-  for (i = 0; i < dest->numHashBuckets; i++)
-    newHashtable[i] = -1;
+    int bucket = hashIndexOf(storage[i].lbid);
+    storage[i].next = hashBuckets[bucket];
+    hashBuckets[bucket] = i;
+    ++used;
 
-  for (i = 0; i < dest->capacity; i++)
-    newStorage[i].lbid = -1;
+    if (storage[i].locked)
+      ++locked;
+  }
 
-  // walk the storage & re-hash all entries;
-  for (i = 0; i < vss->currentSize; i++)
-    if (storage[i].lbid != -1)
-    {
-      _insert(storage[i], dest, newHashtable, newStorage, true);
-      // confirmChanges();
-    }
+  vss->currentSize = used;
+  vss->lockedEntryCount = locked;
+  /* _insert() scans up from the low water mark for a free slot, so the mark has
+     to sit below the first hole; the bottom is the cheapest correct choice. */
+  vss->LWM = 0;
 }
 
-key_t VSS::chooseShmkey() const
+/// Which hash bucket an entry for that LBID belongs in.
+int VSS::hashIndexOf(LBID_t lbid) const
 {
-  int fixedKeys = 1;
-  key_t ret;
-
-  if (vssShminfo->tableShmkey + 1 == (key_t)(fShmKeys.KEYRANGE_VSS_BASE + fShmKeys.KEYRANGE_SIZE - 1) ||
-      (unsigned)vssShminfo->tableShmkey < fShmKeys.KEYRANGE_VSS_BASE)
-    ret = fShmKeys.KEYRANGE_VSS_BASE + fixedKeys;
-  else
-    ret = vssShminfo->tableShmkey + 1;
-
-  return ret;
+  return hasher(reinterpret_cast<const char*>(&lbid), sizeof(lbid)) % vss->numHashBuckets;
 }
 
-void VSS::insert(LBID_t lbid, VER_t verID, bool vbFlag, bool locked, bool loading)
+void VSS::insert(LBID_t lbid, VER_t verID, bool vbFlag, bool locked)
 {
   VSSEntry entry;
 
@@ -409,10 +490,7 @@ void VSS::insert(LBID_t lbid, VER_t verID, bool vbFlag, bool locked, bool loadin
   if (vss->currentSize == vss->capacity)
     growVSS();
 
-  _insert(entry, vss, hashBuckets, storage, loading);
-
-  if (!loading)
-    makeUndoRecord(&vss->currentSize, sizeof(vss->currentSize));
+  _insert(entry);
 
   vss->currentSize++;
 
@@ -422,20 +500,17 @@ void VSS::insert(LBID_t lbid, VER_t verID, bool vbFlag, bool locked, bool loadin
 
 // assumes write lock is held and that it is properly sized already
 // metadata is modified by the caller
-void VSS::_insert(VSSEntry& e, VSSShmsegHeader* dest, int* destHash, VSSEntry* destStorage, bool loading)
+void VSS::_insert(VSSEntry& e)
 {
-  int hashIndex, insertIndex;
+  int hashIndex = hashIndexOf(e.lbid);
+  int insertIndex = vss->LWM;
 
-  hashIndex = hasher((char*)&e.lbid, sizeof(e.lbid)) % dest->numHashBuckets;
-
-  insertIndex = dest->LWM;
-
-  while (destStorage[insertIndex].lbid != -1)
+  while (storage[insertIndex].lbid != -1)
   {
     insertIndex++;
 #ifdef BRM_DEBUG
 
-    if (insertIndex == dest->capacity)
+    if (insertIndex == vss->capacity)
     {
       log("VSS:_insert(): There are no empty entries. Check resize condition.", logging::LOG_TYPE_DEBUG);
       throw logic_error("VSS:_insert(): There are no empty entries. Check resize condition.");
@@ -444,20 +519,11 @@ void VSS::_insert(VSSEntry& e, VSSShmsegHeader* dest, int* destHash, VSSEntry* d
 #endif
   }
 
-  if (!loading)
-    makeUndoRecord(dest, sizeof(VSSShmsegHeader));
+  vss->LWM = insertIndex + 1;
 
-  dest->LWM = insertIndex + 1;
-
-  if (!loading)
-  {
-    makeUndoRecord(&destStorage[insertIndex], sizeof(VSSEntry));
-    makeUndoRecord(&destHash[hashIndex], sizeof(int));
-  }
-
-  e.next = destHash[hashIndex];
-  destStorage[insertIndex] = e;
-  destHash[hashIndex] = insertIndex;
+  e.next = hashBuckets[hashIndex];
+  storage[insertIndex] = e;
+  hashBuckets[hashIndex] = insertIndex;
 }
 
 // assumes read lock is held
@@ -489,7 +555,7 @@ int VSS::lookup(LBID_t lbid, const QueryContext_vss& verInfo, VER_t txnID, VER_t
 
 #endif
 
-  hashIndex = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+  hashIndex = hashIndexOf(lbid);
 
   currentIndex = hashBuckets[hashIndex];
 
@@ -554,7 +620,7 @@ VER_t VSS::getCurrentVersion(LBID_t lbid, bool* isLocked) const
   int hashIndex, currentIndex;
   VSSEntry* listEntry;
 
-  hashIndex = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+  hashIndex = hashIndexOf(lbid);
   currentIndex = hashBuckets[hashIndex];
 
   while (currentIndex != -1)
@@ -584,7 +650,7 @@ VER_t VSS::getHighestVerInVB(LBID_t lbid, VER_t max) const
   VER_t ret = -1;
   VSSEntry* listEntry;
 
-  hashIndex = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+  hashIndex = hashIndexOf(lbid);
   currentIndex = hashBuckets[hashIndex];
 
   while (currentIndex != -1)
@@ -605,7 +671,7 @@ bool VSS::isVersioned(LBID_t lbid, VER_t version) const
   int hashIndex, currentIndex;
   VSSEntry* listEntry;
 
-  hashIndex = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+  hashIndex = hashIndexOf(lbid);
   currentIndex = hashBuckets[hashIndex];
 
   while (currentIndex != -1)
@@ -629,7 +695,7 @@ bool VSS::isLocked(const LBIDRange& range, VER_t transID) const
 
   for (currentBlock = range.start; currentBlock < range.start + range.size; currentBlock++)
   {
-    hashIndex = hasher((char*)&currentBlock, sizeof(currentBlock)) % vss->numHashBuckets;
+    hashIndex = hashIndexOf(currentBlock);
 
     currentIndex = hashBuckets[hashIndex];
 
@@ -688,21 +754,17 @@ void VSS::removeEntry(LBID_t lbid, VER_t verID, vector<LBID_t>* flushList)
 #endif
   }
 
-  makeUndoRecord(&storage[index], sizeof(VSSEntry));
   storage[index].lbid = -1;
 
   if (prev != -1)
   {
-    makeUndoRecord(&storage[prev], sizeof(VSSEntry));
     storage[prev].next = storage[index].next;
   }
   else
   {
-    makeUndoRecord(&hashBuckets[bucket], sizeof(int));
     hashBuckets[bucket] = storage[index].next;
   }
 
-  makeUndoRecord(vss, sizeof(VSSShmsegHeader));
   vss->currentSize--;
 
   if (storage[index].locked && (vss->lockedEntryCount > 0))
@@ -723,17 +785,14 @@ void VSS::removeEntry(LBID_t lbid, VER_t verID, vector<LBID_t>* flushList)
   {
     if (storage[index].lbid == lbid)
     {
-      makeUndoRecord(&storage[index], sizeof(VSSEntry));
       storage[index].lbid = -1;
 
       if (prev == -1)
       {
-        makeUndoRecord(&hashBuckets[bucket], sizeof(int));
         hashBuckets[bucket] = storage[index].next;
       }
       else
       {
-        makeUndoRecord(&storage[prev], sizeof(VSSEntry));
         storage[prev].next = storage[index].next;
       }
 
@@ -758,7 +817,7 @@ bool VSS::isTooOld(LBID_t lbid, VER_t verID) const
   VER_t minVer = 0;
   VSSEntry* listEntry;
 
-  bucket = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+  bucket = hashIndexOf(lbid);
 
   index = hashBuckets[bucket];
 
@@ -820,7 +879,7 @@ bool VSS::isEntryLocked(LBID_t lbid, VER_t verID) const
   bool hasALockedEntry = false;
   VER_t rollbackVersion = 0;
 
-  bucket = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+  bucket = hashIndexOf(lbid);
 
   index = hashBuckets[bucket];
 
@@ -849,7 +908,7 @@ int VSS::getIndex(LBID_t lbid, VER_t verID, int& prev, int& bucket) const
   VSSEntry* listEntry;
 
   prev = -1;
-  bucket = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+  bucket = hashIndexOf(lbid);
 
   currentIndex = hashBuckets[bucket];
 
@@ -899,7 +958,6 @@ void VSS::setVBFlag(LBID_t lbid, VER_t verID, bool vbFlag)
     throw logic_error(ostr.str());
   }
 
-  makeUndoRecord(&storage[index], sizeof(VSSEntry));
   storage[index].vbFlag = vbFlag;
 }
 
@@ -932,7 +990,6 @@ void VSS::commit(VER_t txnID)
       }
 
 #endif
-      makeUndoRecord(&storage[i], sizeof(VSSEntry));
       storage[i].locked = false;
 
       // @ bug 1426 fix. Decrease the counter when an entry releases its lock.
@@ -1021,13 +1078,11 @@ void VSS::removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm)
 
 #endif
 
-  makeUndoRecord(vss, sizeof(VSSShmsegHeader));
-
   lastLBID = range.start + range.size - 1;
 
   for (lbid = range.start; lbid <= lastLBID; lbid++)
   {
-    bucket = hasher((char*)&lbid, sizeof(lbid)) % vss->numHashBuckets;
+    bucket = hashIndexOf(lbid);
 
     for (prev = -1, index = hashBuckets[bucket]; index != -1; index = storage[index].next)
     {
@@ -1036,17 +1091,14 @@ void VSS::removeEntriesFromDB(const LBIDRange& range, VBBM& vbbm, bool use_vbbm)
         if (storage[index].vbFlag && use_vbbm)
           vbbm.removeEntry(storage[index].lbid, storage[index].verID);
 
-        makeUndoRecord(&storage[index], sizeof(VSSEntry));
         storage[index].lbid = -1;
 
         if (prev == -1)
         {
-          makeUndoRecord(&hashBuckets[bucket], sizeof(int));
           hashBuckets[bucket] = storage[index].next;
         }
         else
         {
-          makeUndoRecord(&storage[prev], sizeof(VSSEntry));
           storage[prev].next = storage[index].next;
         }
 
@@ -1096,34 +1148,17 @@ bool VSS::hashEmpty() const
   return true;
 }
 
+/* Empties the copy the write transaction works on.
+
+   Assumes the write lock is held. The image is not shrunk back to the initial
+   size: it is a copy, so there is nothing to recreate smaller, and whatever the
+   VSS once grew to stays allocated. */
 void VSS::clear()
 {
-  int allocSize;
-  key_t newshmkey;
-  char* newshmseg;
-
-  allocSize = VSS_INITIAL_SIZE;
-
-  newshmkey = chooseShmkey();
-
-  idbassert(fPVSSImpl);
-  idbassert(fPVSSImpl->key() != (unsigned)newshmkey);
-  fPVSSImpl->clear(newshmkey, allocSize);
-  vssShminfo->tableShmkey = newshmkey;
-  vssShminfo->allocdSize = allocSize;
-  vss = fPVSSImpl->get();
+  fPVSSImpl->growUpdateTo(
+      vssImageSize(VSSTABLE_INITIAL_SIZE / sizeof(int), VSSSTORAGE_INITIAL_SIZE / sizeof(VSSEntry)));
+  setPointers(fPVSSImpl->get());
   initShmseg();
-
-  if (r_only)
-  {
-    fPVSSImpl->makeReadOnly();
-    vss = fPVSSImpl->get();
-  }
-
-  newshmseg = reinterpret_cast<char*>(vss);
-  hashBuckets = reinterpret_cast<int*>(&newshmseg[sizeof(VSSShmsegHeader)]);
-  storage =
-      reinterpret_cast<VSSEntry*>(&newshmseg[sizeof(VSSShmsegHeader) + vss->numHashBuckets * sizeof(int)]);
 }
 
 // read lock
@@ -1227,6 +1262,11 @@ int VSS::checkConsistency(const VBBM& vbbm, ExtentMap& /*em*/) const
 void VSS::setReadOnly()
 {
   r_only = true;
+
+  // Both callers do this straight after construction, before the impl exists;
+  // handle the other order anyway rather than silently staying writable.
+  if (fPVSSImpl)
+    fPVSSImpl->makeReadOnly();
 }
 
 void VSS::getCurrentTxnIDs(set<VER_t>& list) const
@@ -1319,34 +1359,18 @@ void VSS::save(string filename)
   }
 }
 
-// Ideally, we;d like to get in and out of this fcn as quickly as possible.
-bool VSS::isEmpty(bool useLock)
+/* Takes no lock: the count lives in the published data area, and a pin is all
+   it takes to read it. Racy by nature - the answer is a snapshot, and the
+   callers use it only to skip a lookup that would have missed anyway. */
+bool VSS::isEmpty()
 {
-#if 0
+  createImplIfNeeded();
+  initDataAreaIfNeeded();
 
-    if (fPVSSImpl == 0 || fPVSSImpl->key() != (unsigned)mst.getVSSShmkey())
-    {
-        lock(READ);
-        release(READ);
-    }
+  const VSSImpl::DataAreaPin area = fPVSSImpl->pin();
+  const VSSShmsegHeader* header = VSSImpl::headerIn(area);
 
-    //this really should be done under a read lock. There's a small chance that between the release()
-    // above and now that the underlying SHM could be changed. This would be exacerbated during
-    // high DML/query activity.
-    return (fPVSSImpl->get()->currentSize == 0);
-#endif
-  // Should be race-free, but takes along time...
-  bool rc;
-
-  if (useLock)
-    lock(READ);
-
-  rc = (fPVSSImpl->get()->currentSize == 0);
-
-  if (useLock)
-    release(READ);
-
-  return rc;
+  return header == nullptr || header->currentSize == 0;
 }
 
 //#include "boost/date_time/posix_time/posix_time.hpp"
@@ -1423,20 +1447,11 @@ void VSS::load(string filename)
 
   VSSEntry* loadedEntries = reinterpret_cast<VSSEntry*>(readBuf.get());
   for (i = 0; i < header.entries; i++)
-    insert(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbFlag, loadedEntries[i].locked,
-           true);
+    insert(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbFlag, loadedEntries[i].locked);
 
   // time2 = microsec_clock::local_time();
   // cout << "done loading " << time2 << " duration: " << time2-time1 << endl;
 }
-
-#ifdef BRM_DEBUG
-// read lock
-int VSS::getShmid() const
-{
-  return vssShmid;
-}
-#endif
 
 QueryContext_vss::QueryContext_vss(const QueryContext& qc) : currentScn(qc.currentScn)
 {

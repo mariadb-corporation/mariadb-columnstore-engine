@@ -22,7 +22,7 @@ COLUMSNTORE_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../)
 
 DEFAULT_MARIA_BUILD_PATH=$(realpath "$MDB_SOURCE_PATH"/../BuildOf_$(basename "$MDB_SOURCE_PATH"))
 
-BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo")
+BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo" "Release")
 DISTRO_OPTIONS=("ubuntu:22.04" "ubuntu:24.04" "debian:12" "debian:13" "rockylinux:8" "rockylinux:9" "rocky:10")
 
 GCC_VERSION="11"
@@ -393,6 +393,15 @@ construct_cmake_flags() {
         -DWITH_SYSTEMD=yes
         -DWITH_WSREP=NO
     )
+
+    if [[ "$MCS_BUILD_TYPE" == "Release" ]]; then
+      if [[ "$(arch)" == "x86_64" ]]; then
+        message "Require SSE4.2 for release builds"
+        MDB_CMAKE_FLAGS+=(-DCMAKE_CXX_FLAGS="-msse4.2")
+      else
+        message "aarch64 does not need to modify CMake flags for Release builds"
+      fi
+    fi
 
     if [[ $BUILD_PACKAGES = true ]]; then
         MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_PACKAGES_BUILD=YES)

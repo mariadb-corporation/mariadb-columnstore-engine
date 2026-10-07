@@ -63,6 +63,7 @@ using namespace messageqcpp;
 #include "we_cleartablelockcmd.h"
 #include "we_dataloader.h"
 #include "we_readthread.h"
+#include "splitter/we_cmdargs.h"
 
 #include "installdir.h"
 
@@ -248,6 +249,8 @@ bool WEDataLoader::setupCpimport()  // fork the cpimport
       i++;
     }
 
+    if (!v2.empty())
+      v2[0] = WECmdArgs::getCpimportBinPath(); // overwrite bin path
     for (unsigned int j = 0; j < i; ++j)
     {
       Cmds.push_back(const_cast<char*>(v2[j].c_str()));

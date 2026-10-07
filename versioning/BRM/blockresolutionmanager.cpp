@@ -31,7 +31,6 @@
 
 #include "brmtypes.h"
 #include "rwlock.h"
-#include "mastersegmenttable.h"
 #include "extentmap.h"
 #include "copylocks.h"
 #include "vss.h"
@@ -41,6 +40,7 @@
 #define BLOCKRESOLUTIONMANAGER_DLLEXPORT
 #include "blockresolutionmanager.h"
 #undef BLOCKRESOLUTIONMANAGER_DLLEXPORT
+#include "scopeexit.h"
 #include "IDBDataFile.h"
 #include "IDBPolicy.h"
 
@@ -84,14 +84,38 @@ int BlockResolutionManager::saveState(string filename) throw()
   string vbbmFilename = filename + "_vbbm";
   string journalFilename = filename + "_journal";
 
-  bool locked[2] = {false, false};
-
+  /* The three files have to agree with each other, and lock(READ) no longer
+     makes that happen - it is a pin, and a pin says nothing about which
+     published version it caught. The read locks writers do exclude are what
+     orders them, and they are needed only while the pins are being taken: a
+     pinned area cannot change, so once everything is pinned the snapshot is
+     fixed and the locks go back before any file is written. See
+     DBRM::saveState(), which does the same and carries the ordering argument
+     in full. */
   try
   {
+    vbbm.ensureDataArea();
+    vss.ensureDataArea();
+    copylocks.ensureDataArea();
+
+    vbbm.lockForSave();
+    ScopeExit unlockVBBM([this] { vbbm.unlockForSave(); });
+    vss.lockForSave();
+    ScopeExit unlockVSS([this] { vss.unlockForSave(); });
+    copylocks.lockForSave();
+    ScopeExit unlockCL([this] { copylocks.unlockForSave(); });
+
     vbbm.lock(VBBM::READ);
-    locked[0] = true;
+    ScopeExit releaseVBBM([this] { vbbm.release(VBBM::READ); });
     vss.lock(VSS::READ);
-    locked[1] = true;
+    ScopeExit releaseVSS([this] { vss.release(VSS::READ); });
+    em.pinForSave();
+    ScopeExit unpinEM([this] { em.unpinForSave(); });
+
+    // Everything is pinned; the writers can have the locks back now.
+    unlockCL.releaseNow();
+    unlockVSS.releaseNow();
+    unlockVBBM.releaseNow();
 
     saveExtentMap(emFilename);
 
@@ -104,21 +128,15 @@ int BlockResolutionManager::saveState(string filename) throw()
 
     vbbm.save(vbbmFilename);
     vss.save(vssFilename);
-
-    vss.release(VSS::READ);
-    locked[1] = false;
-    vbbm.release(VBBM::READ);
-    locked[0] = false;
   }
   catch (exception& e)
   {
-    if (locked[1])
-      vss.release(VSS::READ);
-
-    if (locked[0])
-      vbbm.release(VBBM::READ);
-
     cout << e.what() << endl;
+    return -1;
+  }
+  catch (...)
+  {
+    cout << "BlockResolutionManager::saveState(): caught an exception" << endl;
     return -1;
   }
 

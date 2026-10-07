@@ -39,13 +39,18 @@ std::string getShmemLocksList()
   return oss.str();
 }
 
+/* The BRM has no rwlocks any more. Readers take no lock at all, and a writer
+   holds the update mutex of the segment it is changing - which is robust, so a
+   writer that dies hands the next one EOWNERDEAD and recovery rather than a
+   lock nobody can open.
+
+   So there is nothing here to report or to force. The tool stays, and keeps
+   saying so in the shape it always did, because cmapi runs it while stopping a
+   cluster, parses the per-lock counts and unlocks whatever it finds held. It
+   now finds nothing held, which is the truth. Retire it and its callers
+   together. */
 int resetAllLocks()
 {
-  for (size_t i = 0; i < RWLockNames.size(); ++i)
-  {
-    auto rwlock = RWLock(0x10000 * i);
-    rwlock.reset();
-  }
   return 0;
 }
 
@@ -56,41 +61,19 @@ int viewLock(uint8_t lockId)
 
   for (size_t i = minLockId; i <= maxLockId; ++i)
   {
-    auto rwlock = RWLock(0x10000 * i);
-    auto state = rwlock.getLockState();
-
     cout << RWLockNames[i] << " RWLock" << std::endl
-         << "   readers = " << state.reading << std::endl
-         << "   writers = " << state.writing << std::endl
-         << "   readers waiting = " << state.readerswaiting << std::endl
-         << "   writers waiting = " << state.writerswaiting << std::endl
-         << "   mutex locked = " << (int)state.mutexLocked << std::endl;
+         << "   readers = 0" << std::endl
+         << "   writers = 0" << std::endl
+         << "   readers waiting = 0" << std::endl
+         << "   writers waiting = 0" << std::endl
+         << "   mutex locked = 0" << std::endl;
   }
   return 0;
 }
 
-int lockOp(size_t minLockId, size_t maxLockId, bool lock, bool read)
+int lockOp(size_t /*minLockId*/, size_t /*maxLockId*/, bool /*lock*/, bool /*read*/)
 {
-  for (size_t i = minLockId; i <= maxLockId; ++i)
-  {
-    auto rwlock = RWLock(0x10000 * i);
-
-    if (read)
-    {
-      if (lock)
-        rwlock.read_lock();
-      else
-        rwlock.read_unlock();
-    }
-    else if (lock)
-    {
-      rwlock.write_lock();
-    }
-    else
-    {
-      rwlock.write_unlock();
-    }
-  }
+  // Nothing to lock or unlock; see resetAllLocks().
   return 0;
 }
 

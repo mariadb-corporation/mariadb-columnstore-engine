@@ -40,7 +40,6 @@
 #include "blocksize.h"
 #include "rwlock.h"
 #include "brmtypes.h"
-#include "mastersegmenttable.h"
 #include "vss.h"
 #include "configcpp.h"
 #include "exceptclasses.h"
@@ -74,43 +73,52 @@ VBBMEntry::VBBMEntry()
 
 /*static*/
 boost::mutex VBBMImpl::fInstanceMutex;
+/* This thread's view of the data area; see the declarations for why it is per
+   thread. Zero-initialized as every thread starts, so a thread that has never
+   locked anything looks like one that has released everything. */
+thread_local VBShmsegHeader* VBBM::vbbm = nullptr;
+thread_local VBFileMetadata* VBBM::files = nullptr;
+thread_local int* VBBM::hashBuckets = nullptr;
+thread_local VBBMEntry* VBBM::storage = nullptr;
+thread_local VBBMImpl::DataAreaPin VBBM::fDataAreaPin;
+thread_local uint32_t VBBM::fReadDepth = 0;
+
 boost::mutex VBBM::mutex;
 
 /*static*/
 VBBMImpl* VBBMImpl::fInstance = 0;
 
 /*static*/
-VBBMImpl* VBBMImpl::makeVBBMImpl(unsigned key, off_t size, bool readOnly)
+VBBMImpl* VBBMImpl::makeVBBMImpl(unsigned keyBase, off_t size, bool readOnly)
 {
   boost::mutex::scoped_lock lk(fInstanceMutex);
 
-  if (fInstance)
-  {
-    if (key != fInstance->fVBBM.key())
-    {
-      BRMShmImpl newShm(key, size);
-      fInstance->swapout(newShm);
-    }
-
-    idbassert(key == fInstance->fVBBM.key());
-    return fInstance;
-  }
-
-  fInstance = new VBBMImpl(key, size, readOnly);
+  // The metadata area is at a fixed key and never moves, so the instance is
+  // created once. Which data area it looks at is decided by refresh(), not here.
+  if (!fInstance)
+    fInstance = new VBBMImpl(keyBase, size, readOnly);
 
   return fInstance;
 }
 
-VBBMImpl::VBBMImpl(unsigned key, off_t size, bool readOnly) : fVBBM(key, size, readOnly)
+VBBMImpl::VBBMImpl(unsigned keyBase, off_t size, bool readOnly) : fVBBM(keyBase, size, readOnly)
 {
+}
+
+void VBBMImpl::growUpdateTo(off_t size)
+{
+  off_t have = fVBBM.imageSize();
+
+  if (size > have)
+    fVBBM.growUpdate(size - have);
 }
 
 VBBM::VBBM()
 {
-  vbbm = NULL;
-  currentVBBMShmkey = -1;
-  vbbmShmid = 0;
-  vbbmShminfo = NULL;
+  /* vbbm, files, hashBuckets, storage, the pin and the depth are deliberately
+     not touched here: they belong to the calling thread rather than to this
+     object, so clearing them would cut the ground from under a read lock that
+     thread already holds on another VBBM. A thread starts with them zeroed. */
   r_only = false;
   fPVBBMImpl = 0;
   currentFileSize = 0;
@@ -120,220 +128,314 @@ VBBM::~VBBM()
 {
 }
 
+/* Points the three array members at the arrays of the image header describes.
+   Every change to nFiles or numHashBuckets moves the arrays behind it, so this
+   has to run again after any of them. */
+void VBBM::setPointers(VBShmsegHeader* header)
+{
+  const VBBMLayout layout = vbbmLayoutOf(header);
+
+  vbbm = header;
+  files = layout.files;
+  hashBuckets = layout.hashBuckets;
+  storage = layout.storage;
+}
+
+/* Lays an empty VBBM out in the image currently being worked on: the given
+   number of version buffer files, an empty hash table and an empty entry array,
+   both at their initial sizes. The files array itself is left alone - it sits
+   ahead of the other two, so it survives this in place.
+
+   The caller is responsible for the image being big enough to hold all three. */
 void VBBM::initShmseg(int nFiles)
 {
-  //	VBFileMetadata *newfiles;
-  int* newBuckets;
-  VBBMEntry* newStorage;
-  int i;
-  char* shmseg;
-
+  vbbm->nFiles = nFiles;
   vbbm->vbCapacity = VBSTORAGE_INITIAL_SIZE / sizeof(VBBMEntry);
   vbbm->vbCurrentSize = 0;
   vbbm->vbLWM = 0;
   vbbm->numHashBuckets = VBTABLE_INITIAL_SIZE / sizeof(int);
-  shmseg = reinterpret_cast<char*>(vbbm);
-  //	newfiles = reinterpret_cast<VBFileMetadata*>
-  //			(&shmseg[sizeof(VBShmsegHeader)]);
-  newBuckets = reinterpret_cast<int*>(&shmseg[sizeof(VBShmsegHeader) + nFiles * sizeof(VBFileMetadata)]);
-  newStorage = reinterpret_cast<VBBMEntry*>(
-      &shmseg[sizeof(VBShmsegHeader) + nFiles * sizeof(VBFileMetadata) + vbbm->numHashBuckets * sizeof(int)]);
-  setCurrentFileSize();
-  vbbm->nFiles = nFiles;
+  setPointers(vbbm);
 
-  for (i = 0; i < vbbm->numHashBuckets; i++)
-    newBuckets[i] = -1;
+  for (int i = 0; i < vbbm->numHashBuckets; i++)
+    hashBuckets[i] = -1;
 
-  for (i = 0; i < vbbm->vbCapacity; i++)
-    newStorage[i].lbid = -1;
+  for (int i = 0; i < vbbm->vbCapacity; i++)
+    storage[i].lbid = -1;
 }
 
-// ported from ExtentMap
-void VBBM::lock(OPS op)
+/* Maps the metadata area. The impl is a process-wide singleton, hence the mutex. */
+void VBBM::createImplIfNeeded()
 {
-  char* shmseg;
-
-  if (op == READ)
-  {
-    vbbmShminfo = mst.getTable_read(MasterSegmentTable::VBBMSegment);
-    mutex.lock();
-  }
-  else
-    vbbmShminfo = mst.getTable_write(MasterSegmentTable::VBBMSegment);
-
-  // this means that either the VBBM isn't attached or that it was resized
-  if (currentVBBMShmkey != vbbmShminfo->tableShmkey)
-  {
-    if (vbbm != NULL)
-    {
-      vbbm = NULL;
-    }
-
-    if (vbbmShminfo->allocdSize == 0)
-    {
-      if (op == READ)
-      {
-        mutex.unlock();
-        mst.getTable_upgrade(MasterSegmentTable::VBBMSegment);
-
-        if (vbbmShminfo->allocdSize == 0)
-        {
-          try
-          {
-            growVBBM();
-          }
-          catch (...)
-          {
-            release(WRITE);
-            throw;
-          }
-        }
-
-        mst.getTable_downgrade(MasterSegmentTable::VBBMSegment);
-      }
-      else
-      {
-        try
-        {
-          growVBBM();
-        }
-        catch (...)
-        {
-          release(WRITE);
-          throw;
-        }
-      }
-    }
-    else
-    {
-      currentVBBMShmkey = vbbmShminfo->tableShmkey;
-      fPVBBMImpl = VBBMImpl::makeVBBMImpl(currentVBBMShmkey, 0);
-      idbassert(fPVBBMImpl);
-
-      if (r_only)
-        fPVBBMImpl->makeReadOnly();
-
-      vbbm = fPVBBMImpl->get();
-      shmseg = reinterpret_cast<char*>(vbbm);
-      files = reinterpret_cast<VBFileMetadata*>(&shmseg[sizeof(VBShmsegHeader)]);
-      hashBuckets =
-          reinterpret_cast<int*>(&shmseg[sizeof(VBShmsegHeader) + vbbm->nFiles * sizeof(VBFileMetadata)]);
-      storage = reinterpret_cast<VBBMEntry*>(
-          &shmseg[sizeof(VBShmsegHeader) + vbbm->nFiles * sizeof(VBFileMetadata) +
-                  vbbm->numHashBuckets * sizeof(int)]);
-
-      if (op == READ)
-        mutex.unlock();
-    }
-  }
-  else if (op == READ)
-    mutex.unlock();
-}
-
-// ported from ExtentMap
-void VBBM::release(OPS op)
-{
-  if (op == READ)
-    mst.releaseTable_read(MasterSegmentTable::VBBMSegment);
-  else
-    mst.releaseTable_write(MasterSegmentTable::VBBMSegment);
-}
-
-// assumes write lock is held
-// Right now, adding a file and growing are mutually exclusive ops.
-void VBBM::growVBBM(bool addAFile)
-{
-  int allocSize;
-  int nFiles = -1;
-  key_t newshmkey;
-  char* newshmseg;
-
-  if (vbbmShminfo->allocdSize == 0)
-  {
-    if (addAFile)
-      nFiles = 1;
-    else
-      nFiles = 0;
-
-    allocSize = (sizeof(VBShmsegHeader) + (nFiles * sizeof(VBFileMetadata)) + VBSTORAGE_INITIAL_SIZE +
-                 VBTABLE_INITIAL_SIZE);
-  }
-  else
-  {
-    if (!addAFile)
-      allocSize = vbbmShminfo->allocdSize + VBBM_INCREMENT;
-    else
-    {
-      vbbm->nFiles++;
-      allocSize = vbbmShminfo->allocdSize + sizeof(VBFileMetadata);
-    }
-  }
-
-  newshmkey = chooseShmkey();
+  boost::mutex::scoped_lock lk(mutex);
 
   if (fPVBBMImpl)
-  {
-    BRMShmImpl newShm(newshmkey, allocSize);
-    newshmseg = static_cast<char*>(newShm.fMapreg.get_address());
-    memset(newshmseg, 0, allocSize);
+    return;
 
-    if (vbbm != NULL)
-    {
-      VBShmsegHeader* tmp = reinterpret_cast<VBShmsegHeader*>(newshmseg);
-      tmp->vbCapacity = vbbm->vbCapacity;
-      tmp->numHashBuckets = vbbm->numHashBuckets;
-
-      if (!addAFile)
-      {
-        tmp->vbCapacity += VBSTORAGE_INCREMENT / sizeof(VBBMEntry);
-        tmp->numHashBuckets += VBTABLE_INCREMENT / sizeof(int);
-      }
-
-      tmp->vbLWM = 0;
-      copyVBBM(tmp);
-    }
-
-    undoRecords.clear();
-    fPVBBMImpl->swapout(newShm);
-  }
-  else
-  {
-    fPVBBMImpl = VBBMImpl::makeVBBMImpl(newshmkey, allocSize);
-    newshmseg = reinterpret_cast<char*>(fPVBBMImpl->get());
-    memset(newshmseg, 0, allocSize);
-  }
-
-  vbbm = fPVBBMImpl->get();
-
-  if (vbbmShminfo->allocdSize == 0)  // this means the shmseg was created by this call
-    initShmseg(nFiles);
-
-  vbbmShminfo->tableShmkey = currentVBBMShmkey = newshmkey;
-  vbbmShminfo->allocdSize = allocSize;
+  fPVBBMImpl = VBBMImpl::makeVBBMImpl(
+      fShmKeys.KEYRANGE_VBBM_BASE,
+      vbbmImageSize(0, VBTABLE_INITIAL_SIZE / sizeof(int), VBSTORAGE_INITIAL_SIZE / sizeof(VBBMEntry)),
+      r_only);
+  idbassert(fPVBBMImpl);
 
   if (r_only)
     fPVBBMImpl->makeReadOnly();
-
-  files = reinterpret_cast<VBFileMetadata*>(&newshmseg[sizeof(VBShmsegHeader)]);
-  hashBuckets =
-      reinterpret_cast<int*>(&newshmseg[sizeof(VBShmsegHeader) + vbbm->nFiles * sizeof(VBFileMetadata)]);
-  storage =
-      reinterpret_cast<VBBMEntry*>(&newshmseg[sizeof(VBShmsegHeader) + vbbm->nFiles * sizeof(VBFileMetadata) +
-                                              vbbm->numHashBuckets * sizeof(int)]);
 }
 
+/* The first process to look at the VBBM finds no data area at all, the metadata
+   area holding id 0. Publish an initialized, empty one so that a reader has
+   something to map. A no-op from the first VBBM access of the cluster's life
+   onwards, which is why it is the read path that carries it. */
+void VBBM::initDataAreaIfNeeded()
+{
+  if (fPVBBMImpl->currentId() != 0)
+    return;
+
+  /* The caller is already making the first one - nothing to do, and taking
+     the exclusion below would be taking it twice. */
+  if (fPVBBMImpl->inUpdate())
+    return;
+
+  /* beginUpdate() takes the segment's update mutex, and that is the whole of
+     the exclusion now. So the re-check goes under it rather than before it:
+     another process may have published while we waited, in which case what
+     beginUpdate() copied is theirs and there is nothing left to publish. */
+  beginUpdate();
+
+  try
+  {
+    if (fPVBBMImpl->currentId() == 0)
+      publishUpdate();
+    else
+      discardUpdate();
+  }
+  catch (...)
+  {
+    discardUpdate();
+    throw;
+  }
+}
+
+/* Takes the copy the write transaction works on. Idempotent: a nested grab of
+   the VBBM write lock keeps working on the copy that is already open. */
+void VBBM::beginUpdate()
+{
+  bool alreadyOpen = fPVBBMImpl->inUpdate();
+
+  if (!alreadyOpen)
+    fPVBBMImpl->beginUpdate(
+        vbbmImageSize(0, VBTABLE_INITIAL_SIZE / sizeof(int), VBSTORAGE_INITIAL_SIZE / sizeof(VBBMEntry)));
+
+  /* Whether the copy came from nothing and so needs laying out. Only the call
+     that opened the update can tell: it returns with the update mutex held, so
+     the published id it reads back is exactly the one it copied from. */
+  bool firstEver = !alreadyOpen && fPVBBMImpl->currentId() == 0;
+
+  setPointers(fPVBBMImpl->get());
+
+  if (firstEver)
+    initShmseg(0);
+}
+
+/* Makes the copy the current data area. This is the only point at which the
+   changes of a write transaction become visible, and it is a single atomic
+   store, so a reader sees either all of them or none. */
+void VBBM::publishUpdate()
+{
+  if (!fPVBBMImpl || !fPVBBMImpl->inUpdate())
+    return;
+
+  fPVBBMImpl->publishUpdate();
+  setPointers(fPVBBMImpl->get());
+}
+
+/* Rollback the write transaction by dropping the copy; the published data
+   area was never touched. */
+void VBBM::discardUpdate()
+{
+  if (!fPVBBMImpl || !fPVBBMImpl->inUpdate())
+    return;
+
+  fPVBBMImpl->discardUpdate();
+  // Back to whatever is published.
+  fPVBBMImpl->refresh();
+  setPointers(fPVBBMImpl->get());
+}
+
+/* Nothing to do: the changes are in a copy nobody else can see, and it is
+   release(WRITE) that publishes it. Kept because SlaveDBRMNode names the two
+   ends of a transaction explicitly. */
+bool VBBM::hasOpenUpdate() const
+{
+  return fPVBBMImpl && fPVBBMImpl->inUpdate();
+}
+
+void VBBM::confirmChanges()
+{
+}
+
+void VBBM::undoChanges()
+{
+  discardUpdate();
+}
+
+/* The bootstrap on its own, for a caller that is about to take this table's
+   read lock and so cannot let lock(READ) reach for the write lock. A no-op once
+   anything has ever been published, which is from the first access of the
+   cluster's life onwards. */
+void VBBM::ensureDataArea()
+{
+  createImplIfNeeded();
+  initDataAreaIfNeeded();
+}
+
+/* The read lock on its own. A read of this class takes no lock - the pin is
+   what keeps it safe - so nothing orders one read against another, let alone a
+   read of this class against a read of a different one. This is what does, for
+   the one caller that needs it; see DBRM::saveState(). */
+/* The update mutex, not a read lock on the master segment table. It is the
+   same exclusion a writer takes and it is held only while save() pins its
+   snapshot, so the mutex's timeout is nowhere near it. createImplIfNeeded()
+   because a caller reaches this before anything else has touched the VBBM. */
+void VBBM::lockForSave()
+{
+  createImplIfNeeded();
+  fPVBBMImpl->lockUpdates();
+}
+
+void VBBM::unlockForSave()
+{
+  fPVBBMImpl->unlockUpdates();
+}
+
+/* Returns with the VBBM mapped, holding the VBBM write lock for a write op and
+   no lock at all for a read: a writer publishes a replacement data area rather
+   than changing the one a reader is walking, so a reader needs the area to stay
+   mapped, not to be excluded from it. The pin below is what gives it that.
+
+   A read op inside a write op would point the members at the published area
+   while the transaction's copy is the one being changed, and nothing stops it
+   any more now that the two do not contend for the same lock. No caller does
+   it, and the pair was mutually exclusive before this, so none can have. */
+void VBBM::lock(OPS op)
+{
+  createImplIfNeeded();
+
+  if (op == WRITE)
+  {
+    /* The update mutex beginUpdate() takes is the write lock: it is held for
+       the same span the table's used to be, from here to release(WRITE), and
+       it is the one a writer in another process contends on. beginUpdate()
+       gives it back itself if it throws. */
+    beginUpdate();
+    return;
+  }
+
+  initDataAreaIfNeeded();
+
+  if (fReadDepth == 0)
+    fDataAreaPin = fPVBBMImpl->pin();
+
+  VBShmsegHeader* header = VBBMImpl::headerIn(fDataAreaPin);
+
+  if (header == nullptr)
+  {
+    if (fReadDepth == 0)
+      fDataAreaPin.reset();
+
+    throw runtime_error("VBBM::lock(): there is no VBBM data area to read");
+  }
+
+  setPointers(header);
+  ++fReadDepth;
+}
+
+void VBBM::release(OPS op)
+{
+  if (op == READ)
+  {
+    /* No lock was taken, so there is none to give back. Dropping the pin is
+       what lets a data area that has since been replaced be unmapped, and it is
+       also what makes the members stale, so nothing may use them past here. */
+    if (fReadDepth > 0 && --fReadDepth == 0)
+    {
+      fDataAreaPin.reset();
+      vbbm = NULL;
+      files = NULL;
+      hashBuckets = NULL;
+      storage = NULL;
+    }
+
+    return;
+  }
+
+  /* The changes went into a copy nobody else can see yet; publish it here,
+     while the write lock is still held. undoChanges() has already dropped the
+     copy if the transaction is being rolled back, which leaves this a no-op. */
+  publishUpdate();
+}
+
+/* Makes room in the copy the write transaction works on, for either one more
+   version buffer file or another increment's worth of entries - the two are
+   mutually exclusive, as they were before.
+
+   Assumes the write lock is held. */
+void VBBM::growVBBM(bool addAFile)
+{
+  int oldFiles = vbbm->nFiles;
+  int oldCapacity = vbbm->vbCapacity;
+
+  int newFiles = oldFiles;
+  int newBuckets = vbbm->numHashBuckets;
+  int newCapacity = oldCapacity;
+
+  if (addAFile)
+    newFiles++;
+  else
+  {
+    newBuckets += VBTABLE_INCREMENT / sizeof(int);
+    newCapacity += VBSTORAGE_INCREMENT / sizeof(VBBMEntry);
+  }
+
+  fPVBBMImpl->growUpdateTo(vbbmImageSize(newFiles, newBuckets, newCapacity));
+
+  /* Growing can remap the copy, so nothing derived from the old mapping
+     survives it. The header still describes the old layout, which is what
+     locates the entries that have to be carried over. */
+  vbbm = fPVBBMImpl->get();
+  VBBMEntry* oldStorage = vbbmLayoutOf(vbbm).storage;
+
+  vbbm->nFiles = newFiles;
+  vbbm->numHashBuckets = newBuckets;
+  vbbm->vbCapacity = newCapacity;
+  setPointers(vbbm);
+
+  /* The entries sit behind both arrays that just grew, so they slide up by
+     however much those grew by. The two regions overlap by construction, hence
+     memmove. */
+  memmove(storage, oldStorage, oldCapacity * sizeof(VBBMEntry));
+
+  for (int i = oldFiles; i < newFiles; i++)
+  {
+    files[i].OID = 0;
+    files[i].fileSize = 0;
+    files[i].nextOffset = 0;
+  }
+
+  for (int i = oldCapacity; i < newCapacity; i++)
+    storage[i].lbid = -1;
+
+  /* The hash table moved too, and a changed bucket count invalidates every
+     chain in it anyway, so rebuild it rather than move it. */
+  rehash();
+}
+
+/* Sizes the copy for a load of count entries and empties it. The caller is
+   about to insert the entries it read out of the save file.
+
+   Assumes the write lock is held. */
 void VBBM::growForLoad(int count)
 {
-  int allocSize;
-  int nFiles;
-  key_t newshmkey;
-  char* newshmseg;
-  int i;
-
-  if (vbbm)
-    nFiles = vbbm->nFiles;
-  else
-    nFiles = 0;
+  int nFiles = vbbm->nFiles;
 
   if (count < VBSTORAGE_INITIAL_COUNT)
     count = VBSTORAGE_INITIAL_COUNT;
@@ -342,103 +444,72 @@ void VBBM::growForLoad(int count)
   if (count % VBSTORAGE_INCREMENT_COUNT)
     count = ((count / VBSTORAGE_INCREMENT_COUNT) + 1) * VBSTORAGE_INCREMENT_COUNT;
 
-  allocSize = VBBM_SIZE(nFiles, count);
+  int numHashBuckets = count / 4;
 
-  newshmkey = chooseShmkey();
-
-  if (fPVBBMImpl)
-  {
-    BRMShmImpl newShm(newshmkey, allocSize);
-    newshmseg = static_cast<char*>(newShm.fMapreg.get_address());
-    // copy the file meta to the new segment
-    memcpy((char*)&newshmseg[sizeof(VBShmsegHeader)], files, sizeof(VBFileMetadata) * nFiles);
-    fPVBBMImpl->swapout(newShm);
-  }
-  else
-  {
-    fPVBBMImpl = VBBMImpl::makeVBBMImpl(newshmkey, allocSize);
-  }
+  fPVBBMImpl->growUpdateTo(vbbmImageSize(nFiles, numHashBuckets, count));
 
   vbbm = fPVBBMImpl->get();
-  vbbm->nFiles = nFiles;
   vbbm->vbCapacity = count;
+  vbbm->numHashBuckets = numHashBuckets;
   vbbm->vbLWM = 0;
-  vbbm->numHashBuckets = count / 4;
+  /* Explicitly, unlike every other field here: this used to come from a
+     freshly created and so zero-filled segment, and a copy carries the count
+     the VBBM had before the load over. */
+  vbbm->vbCurrentSize = 0;
+  setPointers(vbbm);
 
-  vbbmShminfo->tableShmkey = currentVBBMShmkey = newshmkey;
-  vbbmShminfo->allocdSize = allocSize;
-  newshmseg = (char*)vbbm;
-  files = reinterpret_cast<VBFileMetadata*>(&newshmseg[sizeof(VBShmsegHeader)]);
-  hashBuckets =
-      reinterpret_cast<int*>(&newshmseg[sizeof(VBShmsegHeader) + vbbm->nFiles * sizeof(VBFileMetadata)]);
-  storage =
-      reinterpret_cast<VBBMEntry*>(&newshmseg[sizeof(VBShmsegHeader) + vbbm->nFiles * sizeof(VBFileMetadata) +
-                                              vbbm->numHashBuckets * sizeof(int)]);
-
-  for (i = 0; i < vbbm->numHashBuckets; i++)
+  for (int i = 0; i < vbbm->numHashBuckets; i++)
     hashBuckets[i] = -1;
 
-  for (i = 0; i < vbbm->vbCapacity; i++)
+  for (int i = 0; i < vbbm->vbCapacity; i++)
     storage[i].lbid = -1;
-
-  undoRecords.clear();
 }
 
-// assumes write lock is held and the src is vbbm
-// and that dest->{numHashBuckets, vbCapacity, vbLWM} have been set.
-void VBBM::copyVBBM(VBShmsegHeader* dest)
+/* Rebuilds the hash table from the entries in storage, leaving each of them
+   where it is: only the bucket heads and the chain links change.
+
+   Also recounts the entries. That is how growVBBM() gets away with moving the
+   array and throwing the old table away, and it repairs vbCurrentSize if it has
+   drifted from the number of occupied slots, which is what it is defined as. */
+void VBBM::rehash()
 {
-  int i;
-  int* newHashtable;
-  VBBMEntry* newStorage;
-  VBFileMetadata* newFiles;
-  char* cDest = reinterpret_cast<char*>(dest);
+  for (int i = 0; i < vbbm->numHashBuckets; i++)
+    hashBuckets[i] = -1;
 
-  // copy metadata
-  dest->nFiles = vbbm->nFiles;
-  dest->vbCurrentSize = vbbm->vbCurrentSize;
+  int used = 0;
 
-  newFiles = reinterpret_cast<VBFileMetadata*>(&cDest[sizeof(VBShmsegHeader)]);
-  newHashtable =
-      reinterpret_cast<int*>(&cDest[sizeof(VBShmsegHeader) + dest->nFiles * sizeof(VBFileMetadata)]);
-  newStorage =
-      reinterpret_cast<VBBMEntry*>(&cDest[sizeof(VBShmsegHeader) + dest->nFiles * sizeof(VBFileMetadata) +
-                                          dest->numHashBuckets * sizeof(int)]);
+  for (int i = 0; i < vbbm->vbCapacity; i++)
+  {
+    if (storage[i].lbid == -1)
+      continue;
 
-  memcpy(newFiles, files, sizeof(VBFileMetadata) * vbbm->nFiles);
+    const int bucket = hashIndexOf(storage[i].lbid, storage[i].verID);
+    storage[i].next = hashBuckets[bucket];
+    hashBuckets[bucket] = i;
+    ++used;
+  }
 
-  // initialize new storage & hash
-  for (i = 0; i < dest->numHashBuckets; i++)
-    newHashtable[i] = -1;
-
-  for (i = 0; i < dest->vbCapacity; i++)
-    newStorage[i].lbid = -1;
-
-  // walk the storage & re-hash all entries;
-  for (i = 0; i < vbbm->vbCurrentSize; i++)
-    if (storage[i].lbid != -1)
-    {
-      _insert(storage[i], dest, newHashtable, newStorage, true);
-      // confirmChanges();
-    }
+  vbbm->vbCurrentSize = used;
+  /* _insert() scans up from the low water mark for a free slot, so the mark has
+     to sit below the first hole; the bottom is the cheapest correct choice. */
+  vbbm->vbLWM = 0;
 }
 
-key_t VBBM::chooseShmkey() const
+/// Which hash bucket an entry with that key belongs in.
+int VBBM::hashIndexOf(LBID_t lbid, VER_t verID) const
 {
-  int fixedKeys = 1;
-  key_t ret;
+  constexpr int cHashlen = sizeof(LBID_t) + sizeof(VER_t);
+  char cHash[cHashlen];
+  utils::Hasher hasher;
 
-  if (vbbmShminfo->tableShmkey + 1 == (key_t)(fShmKeys.KEYRANGE_VBBM_BASE + fShmKeys.KEYRANGE_SIZE - 1) ||
-      (unsigned)vbbmShminfo->tableShmkey < fShmKeys.KEYRANGE_VBBM_BASE)
-    ret = fShmKeys.KEYRANGE_VBBM_BASE + fixedKeys;
-  else
-    ret = vbbmShminfo->tableShmkey + 1;
+  memcpy(cHash, &lbid, sizeof(LBID_t));
+  memcpy(&cHash[sizeof(LBID_t)], &verID, sizeof(VER_t));
 
-  return ret;
+  return hasher(cHash, cHashlen) % vbbm->numHashBuckets;
 }
 
 // write lock
-void VBBM::insert(LBID_t lbid, VER_t verID, OID_t vbOID, uint32_t vbFBO, bool loading)
+void VBBM::insert(LBID_t lbid, VER_t verID, OID_t vbOID, uint32_t vbFBO)
 {
   VBBMEntry entry;
 
@@ -484,33 +555,22 @@ void VBBM::insert(LBID_t lbid, VER_t verID, OID_t vbOID, uint32_t vbFBO, bool lo
   if (vbbm->vbCurrentSize == vbbm->vbCapacity)
     growVBBM();
 
-  _insert(entry, vbbm, hashBuckets, storage, loading);
-
-  if (!loading)
-    makeUndoRecord(&vbbm->vbCurrentSize, sizeof(vbbm->vbCurrentSize));
-
+  _insert(entry);
   vbbm->vbCurrentSize++;
 }
 
 // assumes write lock is held and that it is properly sized already
-void VBBM::_insert(VBBMEntry& e, VBShmsegHeader* dest, int* destHash, VBBMEntry* destStorage, bool loading)
+void VBBM::_insert(VBBMEntry& e)
 {
-  int hashIndex, cHashlen = sizeof(LBID_t) + sizeof(VER_t), insertIndex;
-  char* cHash = (char*)alloca(cHashlen);
-  utils::Hasher hasher;
+  int hashIndex = hashIndexOf(e.lbid, e.verID);
+  int insertIndex = vbbm->vbLWM;
 
-  memcpy(cHash, &e.lbid, sizeof(LBID_t));
-  memcpy(&cHash[sizeof(LBID_t)], &e.verID, sizeof(VER_t));
-  hashIndex = hasher(cHash, cHashlen) % dest->numHashBuckets;
-
-  insertIndex = dest->vbLWM;
-
-  while (destStorage[insertIndex].lbid != -1)
+  while (storage[insertIndex].lbid != -1)
   {
     insertIndex++;
 #ifdef BRM_DEBUG
 
-    if (insertIndex == dest->vbCapacity)
+    if (insertIndex == vbbm->vbCapacity)
     {
       log("VBBM:_insert(): There are no empty entries. Possibly bad resize condition.",
           logging::LOG_TYPE_DEBUG);
@@ -520,18 +580,11 @@ void VBBM::_insert(VBBMEntry& e, VBShmsegHeader* dest, int* destHash, VBBMEntry*
 #endif
   }
 
-  if (!loading)
-  {
-    makeUndoRecord(dest, sizeof(VBShmsegHeader));
-    makeUndoRecord(&destStorage[insertIndex], sizeof(VBBMEntry));
-    makeUndoRecord(&destHash[hashIndex], sizeof(int));
-  }
+  vbbm->vbLWM = insertIndex;
 
-  dest->vbLWM = insertIndex;
-
-  e.next = destHash[hashIndex];
-  destStorage[insertIndex] = e;
-  destHash[hashIndex] = insertIndex;
+  e.next = hashBuckets[hashIndex];
+  storage[insertIndex] = e;
+  hashBuckets[hashIndex] = insertIndex;
 }
 
 // assumes read lock is held
@@ -607,7 +660,6 @@ void VBBM::getBlocks(int num, OID_t vbOID, vector<VBRange>& freeRanges, VSS& vss
     range.vbOID = files[fileIndex].OID;
     range.vbFBO = files[fileIndex].nextOffset / BLOCK_SIZE;
     range.size = (blocksLeftInFile >= blocksLeft ? blocksLeft : blocksLeftInFile);
-    makeUndoRecord(&files[fileIndex], sizeof(VBFileMetadata));
 
     if (range.size == (uint32_t)blocksLeftInFile)
       files[fileIndex].nextOffset = 0;
@@ -683,14 +735,10 @@ void VBBM::getBlocks(int num, OID_t vbOID, vector<VBRange>& freeRanges, VSS& vss
 // read lock
 int VBBM::getIndex(LBID_t lbid, VER_t verID, int& prev, int& bucket) const
 {
-  int cHashlen = sizeof(LBID_t) + sizeof(VER_t), currentIndex;
-  char* cHash = (char*)alloca(cHashlen);
+  int currentIndex;
   VBBMEntry* listEntry;
-  utils::Hasher hasher;
 
-  memcpy(cHash, &lbid, sizeof(LBID_t));
-  memcpy(&cHash[sizeof(LBID_t)], &verID, sizeof(VER_t));
-  bucket = hasher(cHash, cHashlen) % vbbm->numHashBuckets;
+  bucket = hashIndexOf(lbid, verID);
   prev = -1;
 
   if (hashBuckets[bucket] == -1)
@@ -747,21 +795,13 @@ void VBBM::removeEntry(LBID_t lbid, VER_t verID)
 #endif
   }
 
-  makeUndoRecord(&storage[index], sizeof(VBBMEntry));
   storage[index].lbid = -1;
 
   if (prev != -1)
-  {
-    makeUndoRecord(&storage[prev], sizeof(VBBMEntry));
     storage[prev].next = storage[index].next;
-  }
   else
-  {
-    makeUndoRecord(&hashBuckets[bucket], sizeof(int));
     hashBuckets[bucket] = storage[index].next;
-  }
 
-  makeUndoRecord(vbbm, sizeof(VBShmsegHeader));
   vbbm->vbCurrentSize--;
 
   if (vbbm->vbLWM > index)
@@ -806,46 +846,30 @@ bool VBBM::hashEmpty() const
   return true;
 }
 
-// write lock
+/* Empties the copy the write transaction works on, keeping the version buffer
+   files it knows about and rewinding each of them.
+
+   Assumes the write lock is held. The image is not shrunk back to the initial
+   size: it is a copy, so there is nothing to recreate smaller, and whatever the
+   VBBM once grew to stays allocated. */
 void VBBM::clear()
 {
-  int allocSize;
-  int newshmkey;
-  int nFiles = -1;
-  char* newshmseg;
-
-  // save vars we need after the clear()
-  boost::scoped_array<VBFileMetadata> newFiles(new VBFileMetadata[vbbm->nFiles]);
-  memcpy(&newFiles[0], files, vbbm->nFiles * sizeof(VBFileMetadata));
+  int nFiles = vbbm->nFiles;
 
   setCurrentFileSize();
 
-  for (int i = 0; i < vbbm->nFiles; i++)
-  {
-    newFiles[i].fileSize = currentFileSize;
-    newFiles[i].nextOffset = 0;
-  }
-
-  nFiles = vbbm->nFiles;
-
-  allocSize = (sizeof(VBShmsegHeader) + (nFiles * sizeof(VBFileMetadata)) + VBSTORAGE_INITIAL_SIZE +
-               VBTABLE_INITIAL_SIZE);
-  // cout << "clear:: allocSize = " << allocSize << endl;
-  newshmkey = chooseShmkey();
-  fPVBBMImpl->clear(newshmkey, allocSize);
-  vbbm = fPVBBMImpl->get();
-  newshmseg = reinterpret_cast<char*>(vbbm);
+  fPVBBMImpl->growUpdateTo(
+      vbbmImageSize(nFiles, VBTABLE_INITIAL_SIZE / sizeof(int), VBSTORAGE_INITIAL_SIZE / sizeof(VBBMEntry)));
+  setPointers(fPVBBMImpl->get());
   initShmseg(nFiles);
-  vbbmShminfo->tableShmkey = currentVBBMShmkey = newshmkey;
-  vbbmShminfo->allocdSize = allocSize;
 
-  files = reinterpret_cast<VBFileMetadata*>(&newshmseg[sizeof(VBShmsegHeader)]);
-  hashBuckets =
-      reinterpret_cast<int*>(&newshmseg[sizeof(VBShmsegHeader) + vbbm->nFiles * sizeof(VBFileMetadata)]);
-  storage =
-      reinterpret_cast<VBBMEntry*>(&newshmseg[sizeof(VBShmsegHeader) + vbbm->nFiles * sizeof(VBFileMetadata) +
-                                              vbbm->numHashBuckets * sizeof(int)]);
-  memcpy(files, &newFiles[0], vbbm->nFiles * sizeof(VBFileMetadata));
+  // The files array sits ahead of the two initShmseg() lays out, so it came
+  // through in place and only needs rewinding.
+  for (int i = 0; i < nFiles; i++)
+  {
+    files[i].fileSize = currentFileSize;
+    files[i].nextOffset = 0;
+  }
 }
 
 // read lock
@@ -922,6 +946,11 @@ int VBBM::checkConsistency() const
 void VBBM::setReadOnly()
 {
   r_only = true;
+
+  // Both callers do this straight after construction, before the impl exists;
+  // handle the other order anyway rather than silently staying writable.
+  if (fPVBBMImpl)
+    fPVBBMImpl->makeReadOnly();
 }
 
 /* File Format (V1)
@@ -1006,8 +1035,7 @@ void VBBM::loadVersion2(IDBDataFile* in)
 
   VBBMEntry* loadedEntries = reinterpret_cast<VBBMEntry*>(readBuf.get());
   for (i = 0; i < vbbmEntries; i++)
-    insert(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbOID, loadedEntries[i].vbFBO,
-           true);
+    insert(loadedEntries[i].lbid, loadedEntries[i].verID, loadedEntries[i].vbOID, loadedEntries[i].vbFBO);
 }
 
 // #include "boost/date_time/posix_time/posix_time.hpp"
@@ -1185,13 +1213,5 @@ void VBBM::setCurrentFileSize()
     currentFileSize = ltmp;
   }
 }
-
-#ifdef BRM_DEBUG
-// read lock
-int VBBM::getShmid() const
-{
-  return vbbmShmid;
-}
-#endif
 
 }  // namespace BRM

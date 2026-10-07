@@ -2497,7 +2497,10 @@ REENTER:
    */
   if (!ps->LEVEL && num_false > 0)
     {
+#ifndef NDEBUG  // NDEBUG disables assertion checks and variable become unused.
+		// Thus, define variable only if assertions checks are enabled,
       unsigned count_resolved = 1;
+#endif
 
       assert (ps->ahead == ps->added);
       assert (ps->rhead == ps->resolved);
@@ -2514,7 +2517,9 @@ REENTER:
 	  if (lit->val == FALSE)
 	    {
 	      add_antecedent (ps, v->reason);
+#ifndef NDEBUG
 	      count_resolved++;
+#endif
 	    }
 	  else
 	    add_lit (ps, lit);

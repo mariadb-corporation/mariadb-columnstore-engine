@@ -26,6 +26,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/nil_generator.hpp>
 
+#include "mcsconfig.h"
 #include "we_xmlgetter.h"
 #include "we_type.h"
 
@@ -285,6 +286,11 @@ class WECmdArgs
   std::string& getUsername();
   std::string PrepMode2ListOfFiles(std::string& FileName);  // Bug 4342
   void getColumnList(std::set<std::string>& columnList) const;
+
+  static std::string getCpimportBinPath()
+  {
+    return std::string(MCSBINDIR) + "/cpimport.bin";
+  }
 
  private:
   static void checkIntArg(const std::string& name, long min, long max, int value);

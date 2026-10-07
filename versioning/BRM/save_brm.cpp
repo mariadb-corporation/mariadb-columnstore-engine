@@ -34,7 +34,6 @@ using namespace std;
 
 #include "brmtypes.h"
 #include "rwlock.h"
-#include "mastersegmenttable.h"
 #include "extentmap.h"
 #include "copylocks.h"
 #include "vss.h"
