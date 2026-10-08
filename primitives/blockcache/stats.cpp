@@ -221,14 +221,12 @@ class StatMon
 
 namespace dbbc
 {
-Stats::Stats() : fMonitorp(0)
+Stats::Stats() : fMonitorp(nullptr)
 {
-  fMonitorp = new boost::thread(StatMon());
 }
 
-Stats::Stats(const char* name) : fMonitorp(0), fName(name)
+Stats::Stats(const char* name) : fMonitorp(nullptr), fName(name)
 {
-  fMonitorp = new boost::thread(StatMon());
   // fName << name;
 }
 
@@ -237,12 +235,20 @@ Stats::~Stats()
   delete fMonitorp;
 }
 
+void Stats::initMonitorIfNeeded()
+{
+  if (fMonitorp != nullptr)
+    return;
+  fMonitorp = new boost::thread(StatMon());
+}
+
 void Stats::touchedLBID(uint64_t lbid, pthread_t thdid, uint32_t session)
 {
   if (session == 0)
     return;
 
   std::lock_guard lk(traceFileMapMutex);
+  initMonitorIfNeeded();
   TraceFileMap_t::iterator iter = traceFileMap.find(session);
 
   if (iter == traceFileMap.end())
@@ -261,6 +267,7 @@ void Stats::markEvent(const uint64_t lbid, const pthread_t thdid, const uint32_t
     return;
 
   std::lock_guard lk(traceFileMapMutex);
+  initMonitorIfNeeded();
   TraceFileMap_t::iterator iter = traceFileMap.find(session);
 
   if (iter == traceFileMap.end())
