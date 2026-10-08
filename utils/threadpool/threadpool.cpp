@@ -135,6 +135,7 @@ void ThreadPool::stop()
     fPruneThreadEnd.notify_all();
     fPruneThread->join();
     delete fPruneThread;
+    fPruneThread = nullptr;
   }
   fNeedThread.notify_all();
   fThreads.join_all();
@@ -226,7 +227,7 @@ uint64_t ThreadPool::invoke(const Functor_T& threadfunc)
 {
   boost::mutex::scoped_lock lock1(fMutex);
 
-  if (fPruneThread == nullptr)
+  if (!fStop && fPruneThread == nullptr)
   {
     fPruneThread = new boost::thread(boost::bind(&ThreadPool::pruneThread, this));
   }
