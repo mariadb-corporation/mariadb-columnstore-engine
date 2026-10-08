@@ -2326,6 +2326,11 @@ uint32_t setAggOp(AggregateColumn* ac, Item_sum* isp)
   Item_sum::Sumfunctype agg_type = isp->sum_func();
   uint32_t rc = 0;
 
+#if MYSQL_VERSION_ID >= 130100
+  if (isp->filter_expr)
+    return ER_CHECK_NOT_IMPLEMENTED;
+#endif
+
   switch (agg_type)
   {
     case Item_sum::COUNT_FUNC: ac->aggOp(AggregateColumn::COUNT); return rc;
