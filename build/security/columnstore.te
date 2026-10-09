@@ -57,7 +57,7 @@ allow mysqld_t ipp_port_t:tcp_socket { name_connect bind listen };
 
 optional {
     require {
-        type unconfined_service_t;
+        type columnstore_t;
     }
-    allow mysqld_t unconfined_service_t:process signull;
+    allow mysqld_t columnstore_t:process signull;
 }
