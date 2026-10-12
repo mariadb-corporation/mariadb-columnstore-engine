@@ -15,7 +15,6 @@ mr_kot==0.9.2
 mr_kot_fs_validators==0.2.0
 psutil==7.0.0
 pydantic==2.11.7
-pyotp==2.9.0
 requests==2.32.3
 # required for CherryPy RoutesDispatcher,
 # but CherryPy itself has no such dependency
