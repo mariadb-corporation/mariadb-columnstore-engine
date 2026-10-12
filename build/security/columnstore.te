@@ -13,6 +13,8 @@ require {
     class filesystem associate;
     class tcp_socket { name_connect bind listen };
     class process signull;
+    type bin_t;
+    class file entrypoint;
 }
 
 # Define new types for ColumnStore
