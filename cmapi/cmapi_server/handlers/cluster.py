@@ -358,15 +358,13 @@ class ClusterHandler:
 
     @staticmethod
     def set_api_key(
-        api_key: str, verification_key: str,
+        new_api_key: str,
         config: str = DEFAULT_MCS_CONF_PATH,
     ) -> dict:
         """Method to set API key for each CMAPI node in cluster.
 
-        :param api_key: API key to set
-        :type api_key: str
-        :param verification_key: TOTP key to verify
-        :type verification_key: str
+        :param new_api_key: API key to set
+        :type new_api_key: str
         :param config: columnstore xml config file path,
                        defaults to DEFAULT_MCS_CONF_PATH
         :type config: str, optional
@@ -379,10 +377,10 @@ class ClusterHandler:
         logger.debug('Cluster set API key command called.')
 
         active_nodes = get_active_nodes(config)
-        body = {
-            'api_key': api_key,
-            'verification_key': verification_key
-        }
+        cmapi_cfg_parser = get_config_parser(CMAPI_CONF_PATH)
+        current_api_key = get_current_key(cmapi_cfg_parser)
+        headers = {'x-api-key': current_api_key}
+        body = {'api_key': new_api_key}
         response = {}
         # only for changing response object below
         active_nodes_count = len(active_nodes)
@@ -398,7 +396,7 @@ class ClusterHandler:
             logger.debug(f'Setting new api key to "{node}".')
             url = f'https://{node}:8640/cmapi/{get_version()}/node/apikey-set'
             try:
-                resp = get_traced_session().request('PUT', url, verify=False, json=body, headers={})
+                resp = get_traced_session().request('PUT', url, verify=False, json=body, headers=headers)
                 resp.raise_for_status()
                 r_json = resp.json()
                 if active_nodes_count > 0:
