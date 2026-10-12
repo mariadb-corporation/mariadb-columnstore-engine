@@ -53,7 +53,7 @@ allow mysqld_t fs_t:filesystem associate;
 allow mysqld_t unreserved_port_t:tcp_socket name_connect;
 
 allow mysqld_t ipp_port_t:tcp_socket { name_connect bind listen };
-
+allow mysqld_t bin_t:file entrypoint;
 
 optional {
     require {

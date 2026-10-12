@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=oneshot
+SELinuxContext=system_u:system_r:mysqld_t:s0
 
 # Execute a dummy program
 ExecStart=@ENGINE_BINDIR@/mariadb-columnstore-start.sh
