@@ -1278,7 +1278,7 @@ DDLPackageProcessor::DDLResult DDLPackageProcessor::processPackage(SqlStatement*
     std::cerr << "DDLPackageProcessor: NETWORK ERROR; attempt # " << tries << std::endl;
     joblist::ResourceManager* rm = joblist::ResourceManager::instance(true);
     joblist::DistributedEngineComm* fEc = joblist::DistributedEngineComm::instance(rm);
-    if (fEc->Setup())
+    if (fEc->reconnectIfDead())
       return result;
 
     result = processPackageInternal(sqlStmt);

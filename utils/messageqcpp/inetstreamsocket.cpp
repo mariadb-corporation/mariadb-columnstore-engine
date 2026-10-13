@@ -222,6 +222,7 @@ void InetStreamSocket::doCopy(const InetStreamSocket& rhs)
   fSocketParms = rhs.fSocketParms;
   fSa = rhs.fSa;
   fConnectionTimeout = rhs.fConnectionTimeout;
+  fTcpConnectTimeoutMs = rhs.fTcpConnectTimeoutMs;
   fSyncProto = rhs.fSyncProto;
 }
 
@@ -232,6 +233,7 @@ Socket* InetStreamSocket::clone() const
   iss->fSocketParms = fSocketParms;
   iss->fSa = fSa;
   iss->fConnectionTimeout = fConnectionTimeout;
+  iss->fTcpConnectTimeoutMs = fTcpConnectTimeoutMs;
   iss->fSyncProto = fSyncProto;
   return iss;
 }
@@ -798,13 +800,64 @@ const IOSocket InetStreamSocket::accept(const struct timespec* timeout)
   return ios;
 }
 
+int InetStreamSocket::connectSocket(const sockaddr* serv_addr)
+{
+  int sd = socketParms().sd();
+
+  if (fTcpConnectTimeoutMs <= 0)
+    return ::connect(sd, serv_addr, sizeof(sockaddr_in)) ? errno : 0;
+
+  int flags = fcntl(sd, F_GETFL, 0);
+
+  if (flags == -1 || fcntl(sd, F_SETFL, flags | O_NONBLOCK) == -1)
+    return errno;
+
+  int e = 0;
+
+  if (::connect(sd, serv_addr, sizeof(sockaddr_in)))
+  {
+    e = errno;
+
+    if (e == EINPROGRESS || e == EINTR)
+    {
+      struct pollfd pfd;
+      pfd.fd = sd;
+      pfd.events = POLLOUT;
+      pfd.revents = 0;
+      int ret;
+
+      do
+      {
+        ret = poll(&pfd, 1, fTcpConnectTimeoutMs);
+      } while (ret == -1 && errno == EINTR);
+
+      if (ret == 0)
+        e = ETIMEDOUT;
+      else if (ret == -1)
+        e = errno;
+      else
+      {
+        socklen_t len = sizeof(e);
+
+        if (getsockopt(sd, SOL_SOCKET, SO_ERROR, &e, &len) == -1)
+          e = errno;
+      }
+    }
+  }
+
+  // The rest of the code expects a blocking socket.
+  if (fcntl(sd, F_SETFL, flags) == -1 && e == 0)
+    e = errno;
+
+  return e;
+}
+
 void InetStreamSocket::connect(const sockaddr* serv_addr)
 {
   memcpy(&fSa, serv_addr, sizeof(sockaddr_in));
 
-  if (::connect(socketParms().sd(), serv_addr, sizeof(sockaddr_in)))
+  if (int e = connectSocket(serv_addr))
   {
-    int e = errno;
     string msg = "InetStreamSocket::connect: connect() error: ";
     scoped_array<char> buf(new char[80]);
 #if STRERROR_R_CHAR_P

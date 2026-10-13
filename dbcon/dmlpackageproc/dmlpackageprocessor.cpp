@@ -280,7 +280,7 @@ int32_t DMLPackageProcessor::tryToRollBackTransaction(uint64_t uniqueId, BRM::Tx
       // Setup connection in WE with PS.
       joblist::ResourceManager* rm = joblist::ResourceManager::instance(true);
       joblist::DistributedEngineComm* fEc = joblist::DistributedEngineComm::instance(rm);
-      weRc = fEc->Setup();
+      weRc = fEc->reconnectIfDead();
     }
   }
 
@@ -298,7 +298,7 @@ DMLPackageProcessor::DMLResult DMLPackageProcessor::processPackage(dmlpackage::C
     std::cerr << "DMLPackageProcessor: NETWORK ERROR; attempt # " << tries << std::endl;
     joblist::ResourceManager* rm = joblist::ResourceManager::instance(true);
     joblist::DistributedEngineComm* fEc = joblist::DistributedEngineComm::instance(rm);
-    if (fEc->Setup())
+    if (fEc->reconnectIfDead())
       return result;
 
     // The failed attempt may have left unread replies on the ExeMgr stream; start the retry on a fresh one.

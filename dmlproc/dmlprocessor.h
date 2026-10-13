@@ -203,7 +203,7 @@ class PackageHandler
   {
     joblist::ResourceManager* rm = joblist::ResourceManager::instance(true);
     joblist::DistributedEngineComm* fEc = joblist::DistributedEngineComm::instance(rm);
-    return fEc->Setup();
+    return fEc->reconnectIfDead();
   }
   execplan::CalpontSystemCatalog::ROPair getTableRID(boost::shared_ptr<execplan::CalpontSystemCatalog> fcsc,
                                                      execplan::CalpontSystemCatalog::TableName& tableName);
