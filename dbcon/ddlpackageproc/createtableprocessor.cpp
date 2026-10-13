@@ -121,7 +121,13 @@ CreateTableProcessor::DDLResult CreateTableProcessor::processPackageInternal(
   {
     if (checkPPLostConnection(ie.what()))
     {
-      result.result = NETWORK_ERROR;
+      // processPackage() retries PP_LOST_CONNECTION; the message is shown if the retries run out.
+      Message::Args args;
+      Message message(9);
+      args.add(ie.what());
+      message.format(args);
+      result.result = PP_LOST_CONNECTION;
+      result.message = message;
       return result;
     }
     else
