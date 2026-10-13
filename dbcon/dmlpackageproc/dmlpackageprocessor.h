@@ -529,6 +529,8 @@ class DMLPackageProcessor
   bool fRollbackPending;  // When set, any derived object should stop what it's doing and cleanup in
                           // preparation for a Rollback
   execplan::ClientRotator* fExeMgr;
+  // MCOL-6613 set once an attempt has sent anything to WES; such an attempt must not be retried.
+  bool fSentToWES = false;
 
  private:
   virtual DMLResult processPackageInternal(dmlpackage::CalpontDMLPackage& cpackage) = 0;

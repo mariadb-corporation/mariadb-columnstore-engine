@@ -301,7 +301,8 @@ DMLPackageProcessor::DMLResult UpdatePackageProcessor::processPackageInternal(
   }
   catch (std::exception& ex)
   {
-    if (checkPPLostConnection(ex))
+    // MCOL-6613 retry only if WES has not seen this attempt: its state is per txn and survives the attempt.
+    if (checkPPLostConnection(ex) && !fSentToWES)
     {
       result.result = PP_LOST_CONNECTION;
     }
@@ -538,6 +539,7 @@ uint64_t UpdatePackageProcessor::fixUpRows(dmlpackage::CalpontDMLPackage& cpacka
           metaData = true;
           // cout << "sending meta data" << endl;
           // timer.start("Meta");
+          fSentToWES = true;
           err = processRowgroup(msgBk, result, uniqueId, cpackage, pmState, metaData, dbroot);
           rowGroup.reset(new rowgroup::RowGroup());
           rowGroup->deserialize(msg);
@@ -673,8 +675,10 @@ uint64_t UpdatePackageProcessor::fixUpRows(dmlpackage::CalpontDMLPackage& cpacka
     }
 
     //@Bug 4358 get rid of broken pipe error by sending a dummy bs.
+    // MCOL-6613 qb=0 ends the query; the stale qb=100 made ExeMgr project one more band into the stream.
     if (err)
     {
+      qb = 0;
       msg.restart();
       msg << qb;
       fExeMgr->write(msg);

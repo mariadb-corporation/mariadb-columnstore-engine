@@ -289,6 +289,7 @@ int32_t DMLPackageProcessor::tryToRollBackTransaction(uint64_t uniqueId, BRM::Tx
 
 DMLPackageProcessor::DMLResult DMLPackageProcessor::processPackage(dmlpackage::CalpontDMLPackage& cpackage)
 {
+  fSentToWES = false;
   auto result = processPackageInternal(cpackage);
   uint32_t tries = 0;
   // Try to setup connection and process package one more time.
@@ -300,6 +301,11 @@ DMLPackageProcessor::DMLResult DMLPackageProcessor::processPackage(dmlpackage::C
     if (fEc->Setup())
       return result;
 
+    // The failed attempt may have left unread replies on the ExeMgr stream; start the retry on a fresh one.
+    if (fExeMgr)
+      fExeMgr->shutdown();
+
+    fSentToWES = false;
     result = processPackageInternal(cpackage);
     ++tries;
   }
