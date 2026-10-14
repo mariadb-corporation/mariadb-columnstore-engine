@@ -30,6 +30,17 @@ class HBHistory:
             'b', [ defaultValue for _ in range(self.tickWindow) ]
         )
 
+    def clear(self):
+        """Forget every node's responses.
+
+        Used when the monitor (re)starts or leaves maintenance: responses
+        missed while the cluster was being stopped must not count against
+        nodes afterwards.
+        """
+        self.mutex.acquire()
+        self.nodeHistory = {}
+        self.mutex.release()
+
     def removeNode(self, node):
         self.mutex.acquire()
         if node in self.nodeHistory:
