@@ -291,8 +291,10 @@ bool WEDataLoader::setupCpimport()  // fork the cpimport
     errMsgArgs.add(oss.str());
     fpSysLog->logMsg(errMsgArgs, logging::LOG_TYPE_ERROR, logging::M0000);
 
+    // _exit(), not exit(): static destructors can hang on threads that did
+    // not survive fork() (MCOL-6603).
     if (aRet == -1)
-      exit(-1);
+      _exit(-1);
   }
   else  // parent
   {
