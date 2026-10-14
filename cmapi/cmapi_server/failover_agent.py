@@ -20,6 +20,11 @@ from mcs_node_control.models.node_config import NodeConfig
 requests.packages.urllib3.disable_warnings()  # pylint: disable=no-member
 logger = logging.getLogger('failover_agent')
 
+# How long startTransaction() keeps retrying before it gives up. Another
+# cluster operation holds the transaction meanwhile, so the cluster state the
+# queued event was based on may be out of date by then.
+TXN_WAIT_DEADLINE_SECS = 60
+
 
 class FailoverAgent(AgentBase):
 
@@ -115,10 +120,17 @@ class FailoverAgent(AgentBase):
     # extra_nodes gives us add'l hostnames/addrs to send the transaction to.
     # Likewise for removing a node.  Presumably that node is not reachable, so must be
     # removed from the list to send to.
-    def startTransaction(self, extra_nodes = [], remove_nodes = []):
+    #
+    # Returns None instead of a transaction when should_stop() turns true or the
+    # deadline passes. The caller then drops its events; the node monitor queues
+    # them again if the node is still down, so nothing acts on a stale view.
+    def startTransaction(self, extra_nodes = [], remove_nodes = [], should_stop = None):
         got_txn = False
         count = 0
+        deadline = time.monotonic() + TXN_WAIT_DEADLINE_SECS
         while not got_txn:
+            if self._stopWaitingForTxn(should_stop, deadline):
+                return None
             msg = None
             try:
                 (got_txn, txn_id, nodes) = helpers.start_transaction(
@@ -145,6 +157,22 @@ class FailoverAgent(AgentBase):
             count += 1
         logger.info(f'FA.startTransaction(): started transaction {txn_id}')
         return (txn_id, nodes)
+
+    @staticmethod
+    def _stopWaitingForTxn(should_stop, deadline):
+        if should_stop is not None and should_stop():
+            logger.info(
+                'FA.startTransaction(): asked to stop, not waiting for a '
+                'transaction any longer'
+            )
+            return True
+        if time.monotonic() > deadline:
+            logger.error(
+                'FA.startTransaction(): no transaction after '
+                f'{TXN_WAIT_DEADLINE_SECS}s, giving up'
+            )
+            return True
+        return False
 
 
     # These shouldn't throw for now

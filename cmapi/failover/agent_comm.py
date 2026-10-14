@@ -8,6 +8,11 @@ import time
 
 logger = logging.getLogger('agent_comm')
 
+# How long die() waits for the runner thread. The runner checks _die at least
+# every 5 seconds, so this is only reached when it is stuck in a call that
+# can't be interrupted, such as an HTTP request.
+DIE_JOIN_TIMEOUT_SECS = 30
+
 
 # First an agent base class
 class AgentBase:
@@ -31,9 +36,10 @@ class AgentBase:
     def raiseAlarm(self, msg):
         print("AgentBase: Got raiseAlarm({})".format(msg))
 
-    def startTransaction(self, extra_nodes = [], remove_nodes = []):
+    # Returns (txn_id, nodes), or None if should_stop() asked it to give up.
+    def startTransaction(self, extra_nodes = [], remove_nodes = [], should_stop = None):
         print(f"AgentBase: Got startTransaction, extra_nodes={extra_nodes}, remove_nodes={remove_nodes}")
-        return 0
+        return (0, [])
 
     def commitTransaction(self, txnid, nodes):
         print("AgentBase: Got commitTransaction")
@@ -86,6 +92,8 @@ class AgentComm:
         # events up to 10s after they finished
         self._deduper = {}
         self._die = False
+        # set while the cluster is in maintenance: no membership changes
+        self._hold = False
         self._queue = []
         self._mutex = threading.Lock()
         self._thread = None
@@ -95,13 +103,65 @@ class AgentComm:
 
     def start(self):
         self._die = False
+        self._hold = False
+        # events queued before a stop describe a cluster state that is gone
+        self._mutex.acquire()
+        self._queue = []
+        self._deduper = {}
+        self._mutex.release()
         self._thread = threading.Thread(target=self._runner, name='AgentComm')
         self._thread.start()
 
     # TODO: rename to stop
     def die(self):
         self._die = True
-        self._thread.join()
+        thread = self._thread
+        # die() can be reached from the runner itself: a failover commit
+        # broadcasts a config to this node, and applying a maintenance config
+        # stops the monitor. Joining there would wait on ourselves.
+        if thread is None or thread is threading.current_thread():
+            return
+        thread.join(DIE_JOIN_TIMEOUT_SECS)
+        if thread.is_alive():
+            logger.warning(
+                f'AgentComm.die(): runner still busy after '
+                f'{DIE_JOIN_TIMEOUT_SECS}s, not waiting for it any longer.'
+            )
+
+    def holdMembershipChanges(self, hold):
+        """While held, drop queued membership changes and give up waiting for
+        a transaction. Used while the cluster is in maintenance, where silent
+        nodes are expected and must not be removed."""
+        if hold and not self._hold:
+            self._mutex.acquire()
+            dropped = [op for op in self._queue if self._needsTransaction(op)]
+            self._queue = [
+                op for op in self._queue if not self._needsTransaction(op)
+            ]
+            for op in dropped:
+                self._deduper.pop(op, None)
+            self._mutex.release()
+            if dropped:
+                logger.info(
+                    'AgentComm: cluster in maintenance, dropped queued '
+                    f'events {[str(op) for op in dropped]}'
+                )
+        self._hold = hold
+
+    def _needsTransaction(self, op):
+        return op.name in (
+            self._agent.activateNodes,
+            self._agent.deactivateNodes,
+            self._agent.movePrimaryNode
+        )
+
+    def _running(self):
+        # A runner that die() gave up on is superseded once start() makes a
+        # new one; it must exit rather than run alongside it.
+        return not self._die and self._thread is threading.current_thread()
+
+    def _shouldStop(self):
+        return not self._running() or self._hold
 
     # returns (len-of-event-queue, len-of-deduper)
     def getQueueSize(self):
@@ -168,6 +228,14 @@ class AgentComm:
         self._queue = events
         self._mutex.release()
 
+    def _forgetEvents(self, events):
+        """Drop events without running them. The node monitor queues them
+        again if the condition still holds."""
+        self._mutex.acquire()
+        for event in events:
+            self._deduper.pop(event, None)
+        self._mutex.release()
+
     def _markEventsFinished(self, events):
         self._mutex.acquire()
         now = datetime.datetime.now()
@@ -176,7 +244,7 @@ class AgentComm:
         self._mutex.release()
 
     def _runner(self):
-        while not self._die:
+        while self._running():
             try:
                 self.__runner()
             except Exception:
@@ -184,12 +252,12 @@ class AgentComm:
                     'AgentComm.runner(): got an unrecognised exception.',
                     exc_info=True
                 )
-            if not self._die:
+            if self._running():
                 time.sleep(1)
         logger.info('AgentComm.runner() exiting normally...')
 
     def __runner(self):
-        while not self._die:
+        while self._running():
             events = self._getEvents()
             logger.trace(f'Get events from queue "{events}".')
             if len(events) == 0:
@@ -210,11 +278,7 @@ class AgentComm:
 
                 # determine whether we need a transaction at all.
                 # List the fcns that require a txn here.
-                if not needs_transaction and event.name in (
-                    self._agent.activateNodes,
-                    self._agent.deactivateNodes,
-                    self._agent.movePrimaryNode
-                ):
+                if not needs_transaction and self._needsTransaction(event):
                     needs_transaction = True
 
                 if event.name == self._agent.activateNodes:
@@ -230,10 +294,24 @@ class AgentComm:
                 logger.debug(
                     'Failover starts transaction to run upcoming event.'
                 )
-                (txn_id, nodes) = self._agent.startTransaction(
+                txn = self._agent.startTransaction(
                     extra_nodes=list(nodes_added),
-                    remove_nodes=list(nodes_removed)
+                    remove_nodes=list(nodes_removed),
+                    should_stop=self._shouldStop
                 )
+                if txn is None:
+                    logger.info(
+                        'AgentComm: gave up waiting for a transaction, '
+                        f'dropping events {[str(e) for e in events]}'
+                    )
+                    self._forgetEvents(events)
+                    continue
+                (txn_id, nodes) = txn
+                if self._shouldStop():
+                    # maintenance began (or we are stopping) while we waited
+                    self._agent.rollbackTransaction(txn_id, nodes=nodes)
+                    self._forgetEvents(events)
+                    continue
 
             # The problem with this is that it's all-or-nothing
             # It would be preferable to commit what has been done up to the point of failure
