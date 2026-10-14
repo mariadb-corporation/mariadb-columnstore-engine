@@ -91,7 +91,7 @@ static int is_columnstore_partitions_fill(THD* thd, TABLE_LIST* tables, COND* co
       }
       else
       {
-        return 1;
+        throw;
       }
     }
 
@@ -156,6 +156,6 @@ int is_columnstore_partitions_plugin_init(void* p)
 {
   ST_SCHEMA_TABLE* schema = (ST_SCHEMA_TABLE*)p;
   schema->fields_info = is_columnstore_partitions_fields;
-  schema->fill_table = is_columnstore_partitions_fill;
+  schema->fill_table = is_columnstore_fill_guarded<is_columnstore_partitions_fill>;
   return 0;
 }
