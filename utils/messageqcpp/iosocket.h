@@ -188,6 +188,14 @@ class IOSocket
     fSocket->connectionTimeout(timeout);
   }
 
+  /** tcpConnectTimeout() forwarder for inherited classes
+   *
+   */
+  virtual void tcpConnectTimeout(int ms)
+  {
+    fSocket->tcpConnectTimeout(ms);
+  }
+
   inline virtual bool isConnected() const;
   inline virtual bool hasData() const;
   inline bool hasSocketDescriptor() const;

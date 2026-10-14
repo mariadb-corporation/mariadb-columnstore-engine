@@ -61,7 +61,8 @@ using namespace oam;
 namespace dmlpackageprocessor
 {
 // StopWatch timer;
-DMLPackageProcessor::DMLResult UpdatePackageProcessor::processPackage(dmlpackage::CalpontDMLPackage& cpackage)
+DMLPackageProcessor::DMLResult UpdatePackageProcessor::processPackageInternal(
+    dmlpackage::CalpontDMLPackage& cpackage)
 {
   SUMMARY_INFO("UpdatePackageProcessor::processPackage");
 
@@ -201,7 +202,6 @@ DMLPackageProcessor::DMLResult UpdatePackageProcessor::processPackage(dmlpackage
               abs_ts.tv_nsec = rm_ts.tv_nsec;
             } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-
             try
             {
               processID = ::getpid();
@@ -301,22 +301,29 @@ DMLPackageProcessor::DMLResult UpdatePackageProcessor::processPackage(dmlpackage
   }
   catch (std::exception& ex)
   {
-    cerr << "UpdatePackageProcessor::processPackage:" << ex.what() << endl;
-
-    if (result.result == 0)
+    // MCOL-6613 retry only if WES has not seen this attempt: its state is per txn and survives the attempt.
+    if (checkPPLostConnection(ex) && !fSentToWES)
     {
-      result.result = UPDATE_ERROR;
+      result.result = PP_LOST_CONNECTION;
     }
+    else
+    {
+      cerr << "UpdatePackageProcessor::processPackage:" << ex.what() << endl;
+      if (result.result == 0)
+      {
+        result.result = UPDATE_ERROR;
+      }
 
-    result.message = Message(ex.what());
-    result.rowCount = 0;
-    LoggingID logid(DMLLoggingId, fSessionID, txnid.id);
-    logging::Message::Args args1;
-    logging::Message msg(1);
-    args1.add("End SQL statement with error");
-    msg.format(args1);
-    logging::Logger logger(logid.fSubsysID);
-    logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
+      result.message = Message(ex.what());
+      result.rowCount = 0;
+      LoggingID logid(DMLLoggingId, fSessionID, txnid.id);
+      logging::Message::Args args1;
+      logging::Message msg(1);
+      args1.add("End SQL statement with error");
+      msg.format(args1);
+      logging::Logger logger(logid.fSubsysID);
+      logger.logMessage(LOG_TYPE_DEBUG, msg, logid);
+    }
   }
   catch (...)
   {
@@ -532,6 +539,7 @@ uint64_t UpdatePackageProcessor::fixUpRows(dmlpackage::CalpontDMLPackage& cpacka
           metaData = true;
           // cout << "sending meta data" << endl;
           // timer.start("Meta");
+          fSentToWES = true;
           err = processRowgroup(msgBk, result, uniqueId, cpackage, pmState, metaData, dbroot);
           rowGroup.reset(new rowgroup::RowGroup());
           rowGroup->deserialize(msg);
@@ -667,8 +675,10 @@ uint64_t UpdatePackageProcessor::fixUpRows(dmlpackage::CalpontDMLPackage& cpacka
     }
 
     //@Bug 4358 get rid of broken pipe error by sending a dummy bs.
+    // MCOL-6613 qb=0 ends the query; the stale qb=100 made ExeMgr project one more band into the stream.
     if (err)
     {
+      qb = 0;
       msg.restart();
       msg << qb;
       fExeMgr->write(msg);
