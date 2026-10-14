@@ -67,8 +67,9 @@
 		-->
  		<hdfsRdwrScratch>/rdwrscratch</hdfsRdwrScratch> <!-- Do not set to an hdfs file path -->
 		<!-- Be careful modifying SystemTempFileDir!  On start, ExeMgr deletes
-			the entire subdirectories "joins" & "aggregates" and recreates it to make sure no
-			files are left behind. -->
+			the entire subdirectories "<hostname>/joins" & "<hostname>/aggregates" and recreates
+			them to make sure no files are left behind. Keep it on node-local storage: the cpimport
+			BRM report and job files written here assume no other node shares it. -->
 		<SystemTempFileDir>/tmp/columnstore_tmp_files</SystemTempFileDir>
 	</SystemConfig>
 	<SystemModuleConfig>
