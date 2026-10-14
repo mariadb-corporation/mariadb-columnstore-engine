@@ -1,5 +1,7 @@
 [Unit]
 Description=mcs-workernode
+# Don't start on an empty image when the BRM load failed (MCOL-6606).
+Requires=mcs-loadbrm.service
 After=network.target mcs-loadbrm.service
 
 [Service]
