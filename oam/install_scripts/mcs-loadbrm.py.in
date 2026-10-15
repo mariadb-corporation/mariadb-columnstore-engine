@@ -564,6 +564,16 @@ if __name__ == '__main__':
                 LOADBRM, dbrmroot,
                 brm_saves_current.decode('utf-8').replace('BRM_saves', '')
             )
+        if use_systemd:
+            # load_brm runs as USER and replaces the BRM segments. One that a
+            # BRM tool run as root (editem, dbrmctl) created on this node
+            # since the last clearShm can't be removed by USER, and its
+            # journal records fail to apply (MCOL-6672).
+            for shm_file in glob.glob('/dev/shm/MCS-shm-*'):
+                try:
+                    shutil.chown(shm_file, USER, GROUP)
+                except FileNotFoundError:
+                    pass
         try:
             subprocess.check_call(cmd, shell=True)
             # systemd services by default works using mysql privileges.
