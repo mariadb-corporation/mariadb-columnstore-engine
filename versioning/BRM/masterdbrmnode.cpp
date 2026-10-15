@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sstream>
 #include <thread>
+#include <chrono>
 
 #include "sessionmanager.h"
 #include "socketclosed.h"
@@ -531,15 +532,34 @@ void MasterDBRMNode::msgProcessor()
       case DELETE_AI_SEQUENCE: doDeleteAISequence(msg, p); continue;
     }
 
-  retrycmd:
-    uint32_t haltloops = 0;
+    // BEGIN_VB_COPY rewrites the message in place; a retry must not do it a second time
+    bool vbCopyDbRootMapped = false;
 
-    while (halting && ++haltloops < static_cast<uint32_t>(FIVE_MIN_TIMEOUT.tv_sec))
+  retrycmd:
+    // By the clock: a reconnect attempt can block for a while
+    auto haltDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(FIVE_MIN_TIMEOUT.tv_sec);
+    bool haltTimedOut = false;
+
+    /* A worker that failed a read was most likely restarted. Nothing in a CMAPI cluster sends the
+       halt, reload, resume this used to wait for, so reconnect and retry. */
+    while (halting)
+    {
+      if (std::chrono::steady_clock::now() >= haltDeadline)
+      {
+        haltTimedOut = true;
+        break;
+      }
+
       sleep(1);
+
+      if (haltedOnNetError)
+        reconnectWorkersAfterNetError();
+    }
 
     slaveLock.lock();
 
-    if (haltloops == FIVE_MIN_TIMEOUT.tv_sec)
+    // not if the halt ended while this waited for the lock
+    if (haltTimedOut && halting)
     {
       ostringstream os;
       os << "A node is unresponsive for cmd = " << (uint32_t)cmd << ", no reconfigure in at least "
@@ -556,10 +576,20 @@ void MasterDBRMNode::msgProcessor()
       goto out;
     }
 
+    // Ended without a reconnect (RESUME, setreadwrite): the old connections may hold unread replies
+    if (workerSocketsDirty && !resetWorkerConnections())
+    {
+      slaveLock.unlock();
+      log("DBRM Controller: could not reconnect to all workers.  Sending command " + to_string(cmd) +
+          " failed.");
+      sendError(p->sock, ERR_NETWORK);
+      goto out;
+    }
+
     /* TODO: Separate these out-of-band items into separate functions */
 
     /* Need to get the dbroot, convert to vbOID */
-    if (cmd == BEGIN_VB_COPY)
+    if (cmd == BEGIN_VB_COPY && !vbCopyDbRootMapped)
     {
       try
       {
@@ -581,6 +611,7 @@ void MasterDBRMNode::msgProcessor()
         }
 
         *dbRoot = vboid;
+        vbCopyDbRootMapped = true;
       }
       catch (exception& ex)
       {
@@ -851,6 +882,8 @@ int MasterDBRMNode::gatherResponses(uint8_t cmd, uint32_t cmdMsgLength, vector<B
          << (uint32_t)cmd << ", length " << cmdMsgLength << ".  Will see if retry is possible.";
       log(os.str());
 
+      workerSocketsDirty = true;
+      haltedOnNetError = true;
       halting = true;
       readErrFlag = true;
       delete tmp;
@@ -879,6 +912,8 @@ int MasterDBRMNode::gatherResponses(uint8_t cmd, uint32_t cmdMsgLength, vector<B
          << ".  0 length response, possible time-out"
             ".  Will see if retry is possible.";
       log(os.str());
+      workerSocketsDirty = true;
+      haltedOnNetError = true;
       halting = true;
       readErrFlag = true;
       delete tmp;
@@ -998,6 +1033,63 @@ void MasterDBRMNode::undo() noexcept
   }
 }
 
+bool MasterDBRMNode::resetWorkerConnections()
+{
+  /* Drop every connection, not only the one that failed: the workers after it were sent the command
+     but their replies were never read, and would be taken as replies to the next command. All of them
+     first, so a worker that can't be reached yet can't leave the others on their old connections. A
+     worker rolls back a command it was never sent a CONFIRM or UNDO for. */
+  for (auto* slave : slaves)
+    slave->shutdown();
+
+  for (auto* slave : slaves)
+  {
+    try
+    {
+      if (!slave->connect())
+        return false;
+    }
+    catch (exception&)
+    {
+      return false;
+    }
+  }
+
+  iSlave = slaves.end();
+  undo();
+  workerSocketsDirty = false;
+  return true;
+}
+
+bool MasterDBRMNode::reconnectWorkersAfterNetError()
+{
+  // Every halted command calls this once a second; one of them is enough
+  boost::unique_lock<boost::mutex> lk(slaveLock, boost::try_to_lock);
+
+  if (!lk.owns_lock() || !halting || !haltedOnNetError || !resetWorkerConnections())
+    return false;
+
+  haltedOnNetError = false;
+  halting = false;
+  log("DBRM Controller: reconnected to all workers after a network error, retrying the command",
+      logging::LOG_TYPE_WARNING);
+  return true;
+}
+
+int MasterDBRMNode::askWorkersOwnerCheck(ByteStream& cmd, vector<ByteStream*>* responses, bool& readErrFlag)
+{
+  boost::mutex::scoped_lock lk(slaveLock);
+  readErrFlag = false;
+
+  // While halted, distribute() and gatherResponses() skip every worker, and no replies would read as
+  // "the owner is gone"
+  if (halting || (workerSocketsDirty && !resetWorkerConnections()))
+    return ERR_NETWORK;
+
+  distribute(&cmd);
+  return gatherResponses(OWNER_CHECK, cmd.length(), responses, readErrFlag);
+}
+
 /* Waited for the responses, not fire and forget.
  *
  * A slave holds the changes of a command in a copy of the data area that no
@@ -1020,6 +1112,18 @@ void MasterDBRMNode::confirm()
      that does not answer sets halting and readErrFlag, which the loop that
      called this acts on */
   gatherResponses(CONFIRM, confirmMsg.length(), &responses, readErrFlag);
+
+  /* Not one to reconnect and carry on from: the workers that answered have published the change, and
+     the one that didn't may come back without it (only the first worker journals, here). Read-only now,
+     as the 300 s halt ended before MCOL-6607, but without stalling the next write first. */
+  if (readErrFlag)
+  {
+    readOnly = true;
+    haltedOnNetError = false;
+    halting = false;
+    log("DBRM Controller: lost a worker while confirming a command; the workers may no longer agree.  "
+        "Setting read-only mode.");
+  }
 
   for (vector<ByteStream*>::iterator it = responses.begin(); it != responses.end(); ++it)
     delete *it;
@@ -1138,8 +1242,12 @@ void MasterDBRMNode::doHalt(messageqcpp::IOSocket* sock)
   ByteStream reply;
 
   log("Halting...", LOG_TYPE_INFO);
+  // an administrator's halt waits for RESUME; don't let a parked command end it by reconnecting.
+  // workerSocketsDirty stays: the connections still need resetting before the next command
+  haltedOnNetError = false;
   halting = true;
   lock();
+  haltHoldsSlaveLock = true;
   log("Halted", LOG_TYPE_INFO);
   reply << (uint8_t)ERR_OK;
 
@@ -1156,7 +1264,11 @@ void MasterDBRMNode::doResume(messageqcpp::IOSocket* sock)
 {
   ByteStream reply;
 
-  unlock();
+  // a halt set by a read error never took the lock, and unlocking a mutex nobody holds is undefined
+  if (haltHoldsSlaveLock.exchange(false))
+    unlock();
+
+  haltedOnNetError = false;
   halting = false;
   log("Resuming", LOG_TYPE_INFO);
   reply << (uint8_t)ERR_OK;
@@ -1303,6 +1415,12 @@ void MasterDBRMNode::doReload(messageqcpp::IOSocket* sock)
     throw;
   }
 
+  // Without a HALT before it, commands may be using the connections this replaces
+  boost::unique_lock<boost::mutex> lk(slaveLock, boost::defer_lock);
+
+  if (!haltHoldsSlaveLock)
+    lk.lock();
+
   for (int i = 0; i < (int)slaves.size(); i++)
   {
     MessageQueueClientPool::deleteInstance(slaves[i]);
@@ -1315,6 +1433,12 @@ void MasterDBRMNode::doReload(messageqcpp::IOSocket* sock)
 
   iSlave = slaves.end();
   undo();
+  workerSocketsDirty = false;
+
+  /* A halt from a read error would otherwise run out its 300 s and set read-only after this cleared
+     it. An administrator's halt still waits for RESUME. */
+  if (haltedOnNetError.exchange(false))
+    halting = false;
 
   readOnly = false;
 
@@ -2468,11 +2592,7 @@ void MasterDBRMNode::doChangeTableLockOwner(ByteStream& msg, ThreadParams* p)
 
     workerNodeCmd << (uint8_t)OWNER_CHECK << processName << tli.ownerPID;
     bool readErrFlag;
-    {
-      boost::mutex::scoped_lock lk(slaveLock);
-      distribute(&workerNodeCmd);
-      err = gatherResponses(OWNER_CHECK, workerNodeCmd.length(), &responses, readErrFlag);
-    }
+    err = askWorkersOwnerCheck(workerNodeCmd, &responses, readErrFlag);
 
     if ((err != ERR_OK) || (readErrFlag))
     {
@@ -2658,11 +2778,7 @@ void MasterDBRMNode::doOwnerCheck(ByteStream& msg, ThreadParams* p)
 
     workerNodeCmd << (uint8_t)OWNER_CHECK << processName << tli.ownerPID;
     bool readErrFlag;
-    {
-      boost::mutex::scoped_lock lk(slaveLock);
-      distribute(&workerNodeCmd);
-      err = gatherResponses(OWNER_CHECK, workerNodeCmd.length(), &responses, readErrFlag);
-    }
+    err = askWorkersOwnerCheck(workerNodeCmd, &responses, readErrFlag);
 
     if ((err != ERR_OK) || (readErrFlag))
     {
