@@ -35,6 +35,9 @@ namespace messageqcpp
 {
 class IOSocket;
 class SocketParms;
+#if defined(INETSOCKET_WITH_TLS)
+class TLSConn;
+#endif	
 
 // Might want to expand on this / derive from it to include things like uncompressed
 // data size, etc...
@@ -67,6 +70,93 @@ class Stats
  private:
   uint64_t data_sent;
   uint64_t data_recvd;
+};
+
+class TLSConn
+{
+public:
+  TLSConn() : fSSLContext(nullptr), fSSLConnector(nullptr) { }
+  ~TLSConn()
+  {
+    if (fSSLConnection)
+    {
+      SSL_shutdown(fSSLConnection);
+      SSL_free(fSSLConnection);
+    }
+    if (fSSLContext)
+    {
+      SSL_CTX_free(fSSLContext);
+    }
+  }
+  bool server(int sd)
+  {
+    const SSL_METHOD *method;
+    method = TLS_server_method();
+
+    fSSLContext = SSL_CTX_new(method);
+    if (!fSSLContext)
+    {
+      throw runtime_error("unable to create TLS context");
+    }
+    SSL_CTX_set_verify(fSSLContext, SSL_VERIFY_PEER, NULL);
+    const char* fn = "/data/cert.pem";
+    if (!SSL_CTX_load_verify_locations(ctx, fn, NULL))
+    {
+      throw runtime_error("unable to load and verify certificate");
+    }
+    fSSLConnection = SSL_new(ssl_ctx);
+    if (!SSL_set_fd(fSSLConnection, sd))
+    {
+      throw runtime_error("unable to set socket to SSL connection");
+    }
+
+    if (SSL_accept(fSSLConnection) <= 0)
+    {
+      throw runtime_error("unable to accept SSL connection");
+    }
+
+  }
+  bool client(int sd)
+  {
+    const SSL_METHOD *method;
+    method = TLS_client_method();
+
+    fSSLContext = SSL_CTX_new(method);
+    if (!fSSLContext)
+    {
+      throw runtime_error("unable to create TLS context");
+    }
+    SSL_CTX_set_verify(fSSLContext, SSL_VERIFY_PEER, NULL);
+    const char* fn = "/data/cert.pem";
+    if (!SSL_CTX_load_verify_locations(ctx, fn, NULL))
+    {
+      throw runtime_error("unable to load and verify certificate");
+    }
+    fSSLConnection = SSL_new(ssl_ctx);
+    if (!SSL_set_fd(fSSLConnection, sd))
+    {
+      throw runtime_error("unable to set socket to SSL connection");
+    }
+
+    if (SSL_connect(fSSLConnection) <= 0)
+    {
+      throw runtime_error("unable to connect with SSL connection");
+    }
+
+  }
+  int read(void* buf, int length)
+  {
+    idbassert(fSSLConnection);
+    return SSL_read(fSSLConnection, buf, length);
+  }
+  int write(void* buf, int length)
+  {
+    idbassert(fSSLConnection);
+    return SSL_write(fSSLConnection, buf, length);
+  }
+  bool connected() const { return !!fSSLConnection; }
+  SSL_CTX* fSSLContext;
+  SSL* fSSLConnection;
 };
 
 /** an abstract socket class interface
@@ -183,6 +273,13 @@ class Socket
    * allow test suite access to private data for OOB test
    */
   friend class ::MessageQTestSuite;
+
+  void enableTLSConn() { fTLSConn.reset(new TLSConn()); }
+
+  std::shared_ptr<TLSConn> TLSConn() { return fTLSConn; }
+private:
+  std::shared_ptr<TLSConn> fTLSConn;
+
 };
 
 }  // namespace messageqcpp

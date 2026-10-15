@@ -132,6 +132,7 @@ InetStreamSocket::InetStreamSocket(size_t blocksize)
   fConnectionTimeout.tv_nsec = 0;
 }
 
+
 InetStreamSocket::~InetStreamSocket() = default;
 
 void InetStreamSocket::open()
@@ -201,6 +202,9 @@ void InetStreamSocket::open()
 
 void InetStreamSocket::close()
 {
+
+  fTLSConn.reset(nullptr);
+
   if (isOpen())
   {
     ::shutdown(fSocketParms.sd(), SHUT_RDWR);
@@ -217,6 +221,7 @@ void InetStreamSocket::doCopy(const InetStreamSocket& rhs)
   fSa = rhs.fSa;
   fConnectionTimeout = rhs.fConnectionTimeout;
   fSyncProto = rhs.fSyncProto;
+  fTLSConn = rhs.fTLSConn;
 }
 
 // needs to be in sync with doCopy()
@@ -227,6 +232,7 @@ Socket* InetStreamSocket::clone() const
   iss->fSa = fSa;
   iss->fConnectionTimeout = fConnectionTimeout;
   iss->fSyncProto = fSyncProto;
+  iss->fTLSConn = fTLSConn;
   return iss;
 }
 
@@ -248,6 +254,10 @@ InetStreamSocket& InetStreamSocket::operator=(const InetStreamSocket& rhs)
  */
 int InetStreamSocket::pollConnection(int connectionNum, long msecs)
 {
+  if (TLSConn)
+  {
+    return 3; // catch-all error code.
+  }
   struct pollfd pfd[1];
   int err;
 
@@ -283,6 +293,7 @@ retry:
     return 0;
 
   return 3;  // catch-all error code
+#endif
 }
 
 /* returns true when the next thing in the stream is the beginning of a new
@@ -290,21 +301,87 @@ ByteStream object. */
 bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) const
 {
   int err;
-  struct pollfd pfd[1];
   uint8_t* magicBuffer8;
 
   fMagicBuffer = 0;
   magicBuffer8 = reinterpret_cast<uint8_t*>(&fMagicBuffer);
-  pfd[0].fd = fSocketParms.sd();
-  pfd[0].events = POLLIN;
 
-  while ((fMagicBuffer != BYTESTREAM_MAGIC) && (fMagicBuffer != COMPRESSED_BYTESTREAM_MAGIC))
+  if (TLSConn)
   {
-    if (msecs >= 0)
+    while ((fMagicBuffer != BYTESTREAM_MAGIC) && (fMagicBuffer != COMPRESSED_BYTESTREAM_MAGIC))
     {
-      pfd[0].revents = 0;
+      fMagicBuffer >>= 8;
+      if (fTLSConn->read(fSSLConnection, magicBuffer8 + 3, 1) <= 0)
+      {
+        throw runtime_error("SSL_read");
+      }
+      if (stats)
+        stats->dataRecvd(1);
+    }
+  }
+  else
+  {
+    struct pollfd pfd[1];
+    pfd[0].fd = fSocketParms.sd();
+    pfd[0].events = POLLIN;
+    while ((fMagicBuffer != BYTESTREAM_MAGIC) && (fMagicBuffer != COMPRESSED_BYTESTREAM_MAGIC))
+    {
+      if (msecs >= 0)
+      {
+        pfd[0].revents = 0;
 
-      err = poll(pfd, 1, msecs);
+        err = poll(pfd, 1, msecs);
+
+        if (err < 0)
+        {
+  	int e = errno;
+
+  	if (e == EINTR)
+  	{
+  	  continue;
+  	}
+
+  	if (e == KERR_ERESTARTSYS)
+  	{
+  	  logIoError("InetStreamSocket::readToMagic(): I/O error1", e);
+  	  continue;
+  	}
+
+  	ostringstream oss;
+  	oss << "InetStreamSocket::readToMagic(): I/O error1: " << strerror(e);
+  	throw runtime_error(oss.str());
+        }
+
+        if (pfd[0].revents & (POLLHUP | POLLNVAL | POLLERR))
+        {
+  	ostringstream oss;
+  	oss << "InetStreamSocket::readToMagic(): I/O error1: rc-" << err << "; poll signal interrupt ( ";
+
+  	if (pfd[0].revents & POLLHUP)
+  	  oss << "POLLHUP ";
+
+  	if (pfd[0].revents & POLLNVAL)
+  	  oss << "POLLNVAL ";
+
+  	if (pfd[0].revents & POLLERR)
+  	  oss << "POLLERR ";
+
+  	oss << ")";
+  	throw runtime_error(oss.str());
+        }
+
+        if (err == 0)  // timeout
+        {
+  	if (isTimeOut)
+  	  *isTimeOut = true;
+
+  	return false;
+        }
+      }
+
+      fMagicBuffer = fMagicBuffer >> 8;
+    retry:
+      err = ::read(fSocketParms.sd(), &magicBuffer8[3], 1);
 
       if (err < 0)
       {
@@ -312,84 +389,34 @@ bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) co
 
         if (e == EINTR)
         {
-          continue;
+  	goto retry;
         }
 
         if (e == KERR_ERESTARTSYS)
         {
-          logIoError("InetStreamSocket::readToMagic(): I/O error1", e);
-          continue;
+  	logIoError("InetStreamSocket::readToMagic(): I/O error2.0", e);
+  	goto retry;
         }
 
         ostringstream oss;
-        oss << "InetStreamSocket::readToMagic(): I/O error1: " << strerror(e);
+        oss << "InetStreamSocket::readToMagic(): I/O error2.1: " << "err = " << err << " e = " << e << ": "
+  	  << strerror(e);
         throw runtime_error(oss.str());
       }
 
-      if (pfd[0].revents & (POLLHUP | POLLNVAL | POLLERR))
+      // EOF. If no timeout was specified, ByteStream() gets returned to the caller.
+      // If one was, throw SocketClosed.
+      if (err == 0)  // EOF. if a timeout was specified, ByteStream()
       {
-        ostringstream oss;
-        oss << "InetStreamSocket::readToMagic(): I/O error1: rc-" << err << "; poll signal interrupt ( ";
-
-        if (pfd[0].revents & POLLHUP)
-          oss << "POLLHUP ";
-
-        if (pfd[0].revents & POLLNVAL)
-          oss << "POLLNVAL ";
-
-        if (pfd[0].revents & POLLERR)
-          oss << "POLLERR ";
-
-        oss << ")";
-        throw runtime_error(oss.str());
+        if (msecs < 0)
+  	return false;
+        else
+  	throw SocketClosed("InetStreamSocket::readToMagic: Remote is closed");
       }
 
-      if (err == 0)  // timeout
-      {
-        if (isTimeOut)
-          *isTimeOut = true;
-
-        return false;
-      }
+      if (stats)
+        stats->dataRecvd(1);
     }
-
-    fMagicBuffer = fMagicBuffer >> 8;
-  retry:
-    err = ::read(fSocketParms.sd(), &magicBuffer8[3], 1);
-
-    if (err < 0)
-    {
-      int e = errno;
-
-      if (e == EINTR)
-      {
-        goto retry;
-      }
-
-      if (e == KERR_ERESTARTSYS)
-      {
-        logIoError("InetStreamSocket::readToMagic(): I/O error2.0", e);
-        goto retry;
-      }
-
-      ostringstream oss;
-      oss << "InetStreamSocket::readToMagic(): I/O error2.1: " << "err = " << err << " e = " << e << ": "
-          << strerror(e);
-      throw runtime_error(oss.str());
-    }
-
-    // EOF. If no timeout was specified, ByteStream() gets returned to the caller.
-    // If one was, throw SocketClosed.
-    if (err == 0)  // EOF. if a timeout was specified, ByteStream()
-    {
-      if (msecs < 0)
-        return false;
-      else
-        throw SocketClosed("InetStreamSocket::readToMagic: Remote is closed");
-    }
-
-    if (stats)
-      stats->dataRecvd(1);
   }
 
   return true;
@@ -400,71 +427,95 @@ bool InetStreamSocket::readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, si
                                          int64_t msecs) const
 {
   size_t bytesRead = 0;
-  while (bytesRead < numberOfBytes)
+  if (TLSConn)
   {
-    ssize_t currentBytesRead;
-    int err;
-
-    if (timeout != nullptr)
+    while(bytes_read < numberOfBytes)
     {
-      pfd[0].revents = 0;
-      err = poll(pfd, 1, msecs);
-
-      if (err < 0 || pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+      int nread = SSL_read(fSSLConnection, buffer + bytesRead, numberOfBytes - bytesRead);
+      if (nread < 0)
       {
+        throw runtime_error("SSL_read in fixed size read");
+      }
+      if (nread == 0)
+      {
+        throw runtime_error("SSL EOF");
+      }
+      bytes_read += nread;
+    }
+
+    if (stats)
+      stats->dataRecvd(bytesRead);
+
+    return true;
+  }
+  else
+  {
+    while (bytesRead < numberOfBytes)
+    {
+      ssize_t currentBytesRead;
+      int err;
+
+      if (timeout != nullptr)
+      {
+        pfd[0].revents = 0;
+        err = poll(pfd, 1, msecs);
+
+        if (err < 0 || pfd[0].revents & (POLLERR | POLLHUP | POLLNVAL))
+        {
+          ostringstream oss;
+          oss << "InetStreamSocket::read: I/O error1: " << strerror(errno);
+          throw runtime_error(oss.str());
+        }
+
+        if (err == 0)  // timeout
+        {
+          if (isTimeOut)
+            *isTimeOut = true;
+
+          logIoError("InetStreamSocket::read: timeout during first poll", 0);
+          return false;
+        }
+      }
+
+      currentBytesRead = ::read(fSocketParms.sd(), buffer + bytesRead, numberOfBytes - bytesRead);
+
+      if (currentBytesRead == 0)
+      {
+        if (timeout == nullptr)
+        {
+          logIoError("InetStreamSocket::read: timeout during first read", 0);
+          return false;
+        }
+        else
+          throw SocketClosed("InetStreamSocket::read: Remote is closed");
+      }
+
+      if (currentBytesRead < 0)
+      {
+        err = errno;
+
+        if (err == EINTR)
+          continue;
+
+        if (err == KERR_ERESTARTSYS)
+        {
+          logIoError("InetStreamSocket::read: I/O error2", err);
+          continue;
+        }
+
         ostringstream oss;
-        oss << "InetStreamSocket::read: I/O error1: " << strerror(errno);
+        oss << "InetStreamSocket::read: I/O error2: " << strerror(err);
         throw runtime_error(oss.str());
       }
 
-      if (err == 0)  // timeout
-      {
-        if (isTimeOut)
-          *isTimeOut = true;
-
-        logIoError("InetStreamSocket::read: timeout during first poll", 0);
-        return false;
-      }
+      bytesRead += currentBytesRead;
     }
 
-    currentBytesRead = ::read(fSocketParms.sd(), buffer + bytesRead, numberOfBytes - bytesRead);
+    if (stats)
+      stats->dataRecvd(bytesRead);
 
-    if (currentBytesRead == 0)
-    {
-      if (timeout == nullptr)
-      {
-        logIoError("InetStreamSocket::read: timeout during first read", 0);
-        return false;
-      }
-      else
-        throw SocketClosed("InetStreamSocket::read: Remote is closed");
-    }
-
-    if (currentBytesRead < 0)
-    {
-      err = errno;
-
-      if (err == EINTR)
-        continue;
-
-      if (err == KERR_ERESTARTSYS)
-      {
-        logIoError("InetStreamSocket::read: I/O error2", err);
-        continue;
-      }
-
-      ostringstream oss;
-      oss << "InetStreamSocket::read: I/O error2: " << strerror(err);
-      throw runtime_error(oss.str());
-    }
-
-    bytesRead += currentBytesRead;
+    return true;
   }
-
-  if (stats)
-    stats->dataRecvd(bytesRead);
-
-  return true;
 }
 
 const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeOut, Stats* stats) const
@@ -529,22 +580,21 @@ void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stat
   // !!!
   uint32_t msglen = msg.length();
   uint32_t magic = whichMagic;
-  uint32_t* realBuf;
+  BSPrefix* realBuf;
 
   if (msglen == 0)
     return;
 
   /* buf.fCurOutPtr points to the data to send; ByteStream guarantees that there
-     are at least 12 bytes before that for the magic & length fields */
-  realBuf = (uint32_t*)msg.buf();
-  realBuf -= 3;
-  realBuf[0] = magic;
-  realBuf[1] = msglen;
-  realBuf[2] = 0;
+     are at least sizeof(BSPrefix) bytes before that for the magic & length fields */
+  realBuf = (BSPrefix*)msg.bufWithPrefix();
+  realBuf.fMagic = magic;
+  realBuf.fSize = msglen;
+  realBuf.fLongStrings = 0;
 
   try
   {
-    auto bytesToWrite = sizeof(msglen) + sizeof(magic) + sizeof(uint32_t) + msglen;
+    auto bytesToWrite = sizeof(*realBuf) + msglen;
     written(fSocketParms.sd(), (const uint8_t*)realBuf, bytesToWrite);
 
     if (stats)
@@ -817,6 +867,10 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
   }
   else
     throw runtime_error("InetStreamSocket::connect: unknown connection error");
+  if (TLSConn)
+  {
+    TLSConn()->client(socketParms().sd());
+  }
 }
 
 const string InetStreamSocket::toString() const
@@ -863,30 +917,41 @@ ssize_t InetStreamSocket::written(int fd, const uint8_t* ptr, size_t nbytes) con
   while (nleft > 0)
   {
     // the O_NONBLOCK flag is not set, this is a blocking I/O.
-    if ((nwritten = ::write(fd, bufp, nleft)) < 0)
-    {
-      if (errno == EINTR)
-        nwritten = 0;
-      else
-      {
-        // save the error no first
-        int e = errno;
-        string errorMsg = "InetStreamSocket::write error: ";
-        scoped_array<char> buf(new char[80]);
-#if STRERROR_R_CHAR_P
-        const char* p;
 
-        if ((p = strerror_r(e, buf.get(), 80)) != 0)
-          errorMsg += p;
+    if (TLSConn)
+    {
+      if ((nwritten = SSL_write(fSSLConnection, bufp, nleft)) <= 0)
+      {
+        throw runtime_error("SSL write error");
+      }
+    }
+    else
+    {
+      if ((nwritten = ::write(fd, bufp, nleft)) < 0)
+      {
+        if (errno == EINTR)
+          nwritten = 0;
+        else
+        {
+          // save the error no first
+          int e = errno;
+          string errorMsg = "InetStreamSocket::write error: ";
+          scoped_array<char> buf(new char[80]);
+#if STRERROR_R_CHAR_P
+          const char* p;
+
+          if ((p = strerror_r(e, buf.get(), 80)) != 0)
+            errorMsg += p;
 
 #else
-        int p;
+          int p;
 
-        if ((p = strerror_r(e, buf.get(), 80)) == 0)
-          errorMsg += buf.get();
+          if ((p = strerror_r(e, buf.get(), 80)) == 0)
+            errorMsg += buf.get();
 
 #endif
-        throw runtime_error(errorMsg);
+          throw runtime_error(errorMsg);
+        }
       }
     }
 
@@ -1003,19 +1068,25 @@ bool InetStreamSocket::isConnected() const
   if (error || retval)
     return false;
 
-  struct pollfd pfd[1];
-  pfd[0].fd = fSocketParms.sd();
-  pfd[0].events = POLLIN;
-  pfd[0].revents = 0;
-
-  error = poll(pfd, 1, 0);
-
-  if ((error < 0) || (pfd[0].revents & (POLLHUP | POLLNVAL | POLLERR)))
+  if (fTLSConn)
   {
-    return false;
+    return fTLSConn->connected();
   }
+  else
+  {
+    struct pollfd pfd[1];
+    pfd[0].fd = fSocketParms.sd();
+    pfd[0].events = POLLIN;
+    pfd[0].revents = 0;
 
-  return true;
+    error = poll(pfd, 1, 0);
+
+    if ((error < 0) || (pfd[0].revents & (POLLHUP | POLLNVAL | POLLERR)))
+    {
+      return false;
+    }
+    return true;
+  }
 }
 
 bool InetStreamSocket::hasData() const

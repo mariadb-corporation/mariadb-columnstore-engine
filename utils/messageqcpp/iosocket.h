@@ -201,6 +201,12 @@ class IOSocket
   Socket* fSocket;
   sockaddr fSa;
   uint32_t sockID;  // For debug purposes
+
+#if defined(INETSOCKET_WITH_TLS)
+  SSL_CTX* fSSLContext = nullptr;
+  SSL* fSSLConnection = nullptr;
+#endif
+
 };
 
 inline const sockaddr IOSocket::sa() const

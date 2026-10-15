@@ -57,6 +57,7 @@ optparse.define short=P long=report-path desc="Path for storing reports and prof
 optparse.define short=r long=restart-services variable=RESTART_SERVICES default=true value=false
 optparse.define short=R long=gcc-toolset-for-rocky-8 variable=GCC_TOOLSET default=false value=true
 optparse.define short=S long=skip-columnstore-submodules desc="Skip columnstore submodules initialization" variable=SKIP_SUBMODULES default=false value=true
+optparse.define short=s long=enable-tls desc="Enable TLS for internal messaging" variable=ENABLE_TLS default=true value=true
 optparse.define short=t long=build-type desc="Build Type: ${BUILD_TYPE_OPTIONS[*]}" variable=MCS_BUILD_TYPE
 optparse.define short=T long=tsan desc="Build with TSan" variable=TSAN default=false value=true
 optparse.define short=u long=skip-unit-tests desc="Skip UnitTests" variable=SKIP_UNIT_TESTS default=false value=true
@@ -394,6 +395,9 @@ construct_cmake_flags() {
         -DWITH_WSREP=NO
     )
 
+    if [[ "WITH_TLS" == true ]]; then
+      MDB_CMAKE_FLAGS+=(-DCOLUMNSTORE_INETSOCKET_WITH_TLS=YES)
+    fi
     if [[ "$MCS_BUILD_TYPE" == "Release" ]]; then
       if [[ "$(arch)" == "x86_64" ]]; then
         message "Require SSE4.2 for release builds"
