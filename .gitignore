@@ -149,6 +149,7 @@ oam/install_scripts/mcs-exemgr.service
 oam/install_scripts/mcs-loadbrm.service
 oam/install_scripts/mcs-primproc.service
 oam/install_scripts/mcs-stop-controllernode.sh
+oam/install_scripts/mcs-workernode-stop-shm.sh
 oam/install_scripts/mcs-workernode.service
 oam/install_scripts/mcs-writeengineserver.service
 oam/install_scripts/mcs-loadbrm.py

@@ -223,6 +223,9 @@ class CopyLocks
   EXPORT void releaseRange(const LBIDRange& range);
   EXPORT bool isLocked(const LBIDRange& range) const;
   EXPORT void rollback(VER_t txnID);
+  /** @brief Drops every copy lock. load_brm, before the journal replay rebuilds them
+   * (the segments may have been kept across a worker restart, MCS-2031). */
+  EXPORT void releaseAll();
 
   EXPORT void lock(OPS op);
   EXPORT void release(OPS op);

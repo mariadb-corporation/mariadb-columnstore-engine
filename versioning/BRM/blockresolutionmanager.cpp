@@ -143,12 +143,29 @@ int BlockResolutionManager::saveState(string filename) throw()
   return 0;
 }
 
+/* Drops a structure's unpublished copy and gives its write lock back. loadState() is
+   throw(), so a failure is reported, not thrown; a lock it strands is a robust mutex,
+   recovered when this process exits. */
+template <typename T>
+static void discardPartialLoad(const char* what, T& structure)
+{
+  try
+  {
+    structure.undoChanges();
+    structure.release(T::WRITE);
+  }
+  catch (exception& e)
+  {
+    cout << "Discarding the partial " << what << " load failed: " << e.what() << endl;
+  }
+}
+
 int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
 {
   string emFilename = filename + "_em";
   string vssFilename = filename + "_vss";
   string vbbmFilename = filename + "_vbbm";
-  bool locked[2] = {false, false};
+  bool locked[3] = {false, false, false};
 
   try
   {
@@ -156,11 +173,18 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
     locked[0] = true;
     vss.lock(VSS::WRITE);
     locked[1] = true;
+    copylocks.lock(CopyLocks::WRITE);
+    locked[2] = true;
 
     loadExtentMap(emFilename, fixFL);
     vbbm.load(vbbmFilename);
     vss.load(vssFilename);
+    /* Not saved, so not loaded: the journal replay that follows rebuilds them. They are
+       empty unless the worker's stop kept the segments for the readers still running. */
+    copylocks.releaseAll();
 
+    copylocks.release(CopyLocks::WRITE);
+    locked[2] = false;
     vss.release(VSS::WRITE);
     locked[1] = false;
     vbbm.release(VBBM::WRITE);
@@ -168,11 +192,15 @@ int BlockResolutionManager::loadState(string filename, bool fixFL) throw()
   }
   catch (exception& e)
   {
+    // Undone, not published: readers may be on these segments (MCS-2031).
+    if (locked[2])
+      discardPartialLoad("copy locks", copylocks);
+
     if (locked[1])
-      vss.release(VSS::WRITE);
+      discardPartialLoad("VSS", vss);
 
     if (locked[0])
-      vbbm.release(VBBM::WRITE);
+      discardPartialLoad("VBBM", vbbm);
 
     cout << e.what() << endl;
     return -1;

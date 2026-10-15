@@ -1837,9 +1837,9 @@ void ExtentMap::load(const string& filename, bool fixFL)
 
   catch (...)
   {
-    releaseFreeList(WRITE);
-    releaseEMIndex(WRITE);
-    releaseEMEntryTable(WRITE);
+    /* Discard, don't publish: readers may be on kept segments (MCS-2031). If the
+       discard throws, the locks still go back and its error replaces the load's. */
+    undoChanges();
     throw;
   }
 
