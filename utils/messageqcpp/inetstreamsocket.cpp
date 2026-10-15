@@ -202,6 +202,11 @@ void InetStreamSocket::open()
 
 void InetStreamSocket::close()
 {
+
+#if defined(INETSOCKET_WITH_TLS)
+  fTLSConn.reset(nullptr);
+#endif
+
   if (isOpen())
   {
     ::shutdown(fSocketParms.sd(), SHUT_RDWR);
@@ -218,6 +223,7 @@ void InetStreamSocket::doCopy(const InetStreamSocket& rhs)
   fSa = rhs.fSa;
   fConnectionTimeout = rhs.fConnectionTimeout;
   fSyncProto = rhs.fSyncProto;
+  fTLSConn = rhs.fTLSConn;
 }
 
 // needs to be in sync with doCopy()
@@ -228,6 +234,7 @@ Socket* InetStreamSocket::clone() const
   iss->fSa = fSa;
   iss->fConnectionTimeout = fConnectionTimeout;
   iss->fSyncProto = fSyncProto;
+  iss->fTLSConn = fTLSConn;
   return iss;
 }
 
@@ -249,6 +256,9 @@ InetStreamSocket& InetStreamSocket::operator=(const InetStreamSocket& rhs)
  */
 int InetStreamSocket::pollConnection(int connectionNum, long msecs)
 {
+#if defined(INETSOCKET_WITH_TLS)
+  return 3; // catch-all error code.
+#else
   struct pollfd pfd[1];
   int err;
 
@@ -284,6 +294,7 @@ retry:
     return 0;
 
   return 3;  // catch-all error code
+#endif
 }
 
 /* returns true when the next thing in the stream is the beginning of a new
@@ -300,7 +311,7 @@ bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) co
   while ((fMagicBuffer != BYTESTREAM_MAGIC) && (fMagicBuffer != COMPRESSED_BYTESTREAM_MAGIC))
   {
     fMagicBuffer >>= 8;
-    if (SSL_read(fSSLConnection, magicBuffer8 + 3, 1) <= 0)
+    if (fTLSConn->read(fSSLConnection, magicBuffer8 + 3, 1) <= 0)
     {
       throw runtime_error("SSL_read");
     }
@@ -853,31 +864,7 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
   else
     throw runtime_error("InetStreamSocket::connect: unknown connection error");
 #if defined(INETSOCKET_WITH_TLS)
-  const SSL_METHOD *method;
-  method = TLS_client_method();
-
-  fSSLContext = SSL_CTX_new(method);
-  if (!fSSLContext)
-  {
-    throw runtime_error("unable to create TLS context");
-  }
-  SSL_CTX_set_verify(fSSLContext, SSL_VERIFY_PEER, NULL);
-  const char* fn = "/data/cert.pem";
-  if (!SSL_CTX_load_verify_locations(ctx, fn, NULL))
-  {
-    throw runtime_error("unable to load and verify certificate");
-  }
-  fSSLConnection = SSL_new(ssl_ctx);
-  if (!SSL_set_fd(fSSLConnection, socketParms().sd()))
-  {
-    throw runtime_error("unable to set socket to SSL connection");
-  }
-
-  if (SSL_accept(fSSLConnection) <= 0)
-  {
-    throw runtime_error("unable to accept SSL connection");
-  }
-
+  TLSConni()->client(socketParms().sd());
 #endif
 }
 

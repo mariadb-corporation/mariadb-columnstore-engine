@@ -44,8 +44,6 @@ IOSocket::IOSocket(Socket* socket) : fSocket(socket), sockID(0)
 IOSocket::~IOSocket()
 {
   delete fSocket;
-#if defined(INETSOCKET_WITH_TLS)
-#endif
 }
 
 void IOSocket::doCopy(const IOSocket& rhs)
