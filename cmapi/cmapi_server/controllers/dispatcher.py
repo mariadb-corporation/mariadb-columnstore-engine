@@ -130,6 +130,14 @@ dispatcher.connect(name = 'get_vbbm',
                    conditions = {'method': ['GET']})
 
 
+# /_version/meta/bundle/ (GET)
+dispatcher.connect(name = 'get_bundle',
+                   route = f'/cmapi/{_version}/node/meta/bundle',
+                   action = 'get_bundle',
+                   controller = ExtentMapController(),
+                   conditions = {'method': ['GET']})
+
+
 # /_version/meta/footprint/ (GET)
 dispatcher.connect(name = 'get_footprint',
                    route = f'/cmapi/{_version}/node/meta/footprint',
