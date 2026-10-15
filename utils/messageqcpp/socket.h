@@ -35,6 +35,9 @@ namespace messageqcpp
 {
 class IOSocket;
 class SocketParms;
+#if defined(INETSOCKET_WITH_TLS)
+class TLSConn;
+#endif	
 
 // Might want to expand on this / derive from it to include things like uncompressed
 // data size, etc...
@@ -183,6 +186,41 @@ class Socket
    * allow test suite access to private data for OOB test
    */
   friend class ::MessageQTestSuite;
+
+#if defined(INETSOCKET_WITH_TLS)
+  std::shared_ptr<TLSConn> fTLSConn;
+#endif
+
 };
+
+#if defined(INETSOCKET_WITH_TLS)
+class TLSConn
+{
+public:
+  TLSConn() : fSSLContext(nullptr), fSSLConnector(nullptr) { }
+  ~TLSConn()
+  {
+    if (fSSLConnection)
+    {
+      SSL_shutdown(fSSLConnection);
+      SSL_free(fSSLConnection);
+    }
+    if (fSSLContext)
+    {
+      SSL_CTX_free(fSSLContext);
+    }
+  }
+  bool server(int sd)
+  {
+    idbassert(0);
+  }
+  bool client(int sd)
+  {
+    idbassert(0);
+  }
+  SSL_CTX* fSSLContext;
+  SSL* fSSLConnection;
+};
+#endif
 
 }  // namespace messageqcpp

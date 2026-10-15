@@ -132,6 +132,7 @@ InetStreamSocket::InetStreamSocket(size_t blocksize)
   fConnectionTimeout.tv_nsec = 0;
 }
 
+
 InetStreamSocket::~InetStreamSocket() = default;
 
 void InetStreamSocket::open()
@@ -290,14 +291,26 @@ ByteStream object. */
 bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) const
 {
   int err;
-  struct pollfd pfd[1];
   uint8_t* magicBuffer8;
 
   fMagicBuffer = 0;
   magicBuffer8 = reinterpret_cast<uint8_t*>(&fMagicBuffer);
+
+#if defined(INETSOCKET_WITH_TLS)
+  while ((fMagicBuffer != BYTESTREAM_MAGIC) && (fMagicBuffer != COMPRESSED_BYTESTREAM_MAGIC))
+  {
+    fMagicBuffer >>= 8;
+    if (SSL_read(fSSLConnection, magicBuffer8 + 3, 1) <= 0)
+    {
+      throw runtime_error("SSL_read");
+    }
+    if (stats)
+      stats->dataRecvd(1);
+  }
+#else
+  struct pollfd pfd[1];
   pfd[0].fd = fSocketParms.sd();
   pfd[0].events = POLLIN;
-
   while ((fMagicBuffer != BYTESTREAM_MAGIC) && (fMagicBuffer != COMPRESSED_BYTESTREAM_MAGIC))
   {
     if (msecs >= 0)
@@ -391,6 +404,7 @@ bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) co
     if (stats)
       stats->dataRecvd(1);
   }
+#endif
 
   return true;
 }
@@ -399,6 +413,27 @@ bool InetStreamSocket::readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, si
                                          const struct ::timespec* timeout, bool* isTimeOut, Stats* stats,
                                          int64_t msecs) const
 {
+#if defined(INETSOCKET_WITH_TLS)
+  size_t bytes_read = 0;
+  while(bytes_read < numberOfBytes)
+  {
+    int nread = SSL_read(fSSLConnection, buffer + bytesRead, numberOfBytes - bytesRead);
+    if (nread < 0)
+    {
+      throw runtime_error("SSL_read in fixed size read");
+    }
+    if (nread == 0)
+    {
+      throw runtime_error("SSL EOF");
+    }
+    bytes_read += nread;
+  }
+
+  if (stats)
+    stats->dataRecvd(bytesRead);
+
+  return true;
+#else
   size_t bytesRead = 0;
   while (bytesRead < numberOfBytes)
   {
@@ -465,6 +500,7 @@ bool InetStreamSocket::readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, si
     stats->dataRecvd(bytesRead);
 
   return true;
+#endif
 }
 
 const SBS InetStreamSocket::read(const struct ::timespec* timeout, bool* isTimeOut, Stats* stats) const
@@ -529,22 +565,21 @@ void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stat
   // !!!
   uint32_t msglen = msg.length();
   uint32_t magic = whichMagic;
-  uint32_t* realBuf;
+  BSPrefix* realBuf;
 
   if (msglen == 0)
     return;
 
   /* buf.fCurOutPtr points to the data to send; ByteStream guarantees that there
-     are at least 12 bytes before that for the magic & length fields */
-  realBuf = (uint32_t*)msg.buf();
-  realBuf -= 3;
-  realBuf[0] = magic;
-  realBuf[1] = msglen;
-  realBuf[2] = 0;
+     are at least sizeof(BSPrefix) bytes before that for the magic & length fields */
+  realBuf = (BSPrefix*)msg.bufWithPrefix();
+  realBuf.fMagic = magic;
+  realBuf.fSize = msglen;
+  realBuf.fLongStrings = 0;
 
   try
   {
-    auto bytesToWrite = sizeof(msglen) + sizeof(magic) + sizeof(uint32_t) + msglen;
+    auto bytesToWrite = sizeof(*realBuf) + msglen;
     written(fSocketParms.sd(), (const uint8_t*)realBuf, bytesToWrite);
 
     if (stats)
@@ -817,6 +852,33 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
   }
   else
     throw runtime_error("InetStreamSocket::connect: unknown connection error");
+#if defined(INETSOCKET_WITH_TLS)
+  const SSL_METHOD *method;
+  method = TLS_client_method();
+
+  fSSLContext = SSL_CTX_new(method);
+  if (!fSSLContext)
+  {
+    throw runtime_error("unable to create TLS context");
+  }
+  SSL_CTX_set_verify(fSSLContext, SSL_VERIFY_PEER, NULL);
+  const char* fn = "/data/cert.pem";
+  if (!SSL_CTX_load_verify_locations(ctx, fn, NULL))
+  {
+    throw runtime_error("unable to load and verify certificate");
+  }
+  fSSLConnection = SSL_new(ssl_ctx);
+  if (!SSL_set_fd(fSSLConnection, socketParms().sd()))
+  {
+    throw runtime_error("unable to set socket to SSL connection");
+  }
+
+  if (SSL_accept(fSSLConnection) <= 0)
+  {
+    throw runtime_error("unable to accept SSL connection");
+  }
+
+#endif
 }
 
 const string InetStreamSocket::toString() const
@@ -863,6 +925,12 @@ ssize_t InetStreamSocket::written(int fd, const uint8_t* ptr, size_t nbytes) con
   while (nleft > 0)
   {
     // the O_NONBLOCK flag is not set, this is a blocking I/O.
+ #if defined(INETSOCKET_WITH_TLS)
+    if ((nwritten = SSL_write(fSSLConnection, bufp, nleft)) <= 0)
+    {
+      throw runtime_error("SSL write error");
+    }
+#else
     if ((nwritten = ::write(fd, bufp, nleft)) < 0)
     {
       if (errno == EINTR)
@@ -889,6 +957,7 @@ ssize_t InetStreamSocket::written(int fd, const uint8_t* ptr, size_t nbytes) con
         throw runtime_error(errorMsg);
       }
     }
+#endif
 
     nleft -= nwritten;
     bufp += nwritten;
@@ -1003,6 +1072,9 @@ bool InetStreamSocket::isConnected() const
   if (error || retval)
     return false;
 
+#if defined(INETSOCKET_WITH_TLS)
+  return fSSLConnection != nullptr;
+#else
   struct pollfd pfd[1];
   pfd[0].fd = fSocketParms.sd();
   pfd[0].events = POLLIN;
@@ -1014,8 +1086,8 @@ bool InetStreamSocket::isConnected() const
   {
     return false;
   }
-
   return true;
+#endif
 }
 
 bool InetStreamSocket::hasData() const

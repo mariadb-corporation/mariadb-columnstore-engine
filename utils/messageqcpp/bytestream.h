@@ -50,6 +50,11 @@ namespace messageqcpp
 typedef boost::shared_ptr<ByteStream> SBS;
 using BSSizeType = uint64_t;
 using BSBufType = uint8_t;
+
+struct BSPrefix
+{
+  uint32_t fMagic, fSize, fLongStrings;  // space for the BS magic & length & number of long strings.
+};
 /**
  * @brief A class to marshall bytes as a stream
  *
@@ -380,6 +385,11 @@ class ByteStream : public Serializeable
   inline uint8_t* buf();
 
   /**
+   * Returns pointer to the current data *with* BSPrefix
+   */
+  inline uint8_t* bufWithPrefix();
+
+  /**
    *	advance the output ptr without having to extract bytes
    * @warning be careful advancing near 4GB!
    */
@@ -446,7 +456,7 @@ class ByteStream : public Serializeable
 
   /** size of the space we want in front of the data */
   EXPORT static const BSSizeType ISSOverhead =
-      3 * sizeof(uint32_t);  // space for the BS magic & length & number of long strings.
+      sizeof(BSPrefix);
 
   friend class ::ByteStreamTestSuite;
 
@@ -537,6 +547,10 @@ inline const uint8_t* ByteStream::buf() const
 inline uint8_t* ByteStream::buf()
 {
   return fCurOutPtr;
+}
+inline uint8_t* ByteStream::bufWithPrefix()
+{
+  return fBuf;
 }
 inline BSSizeType ByteStream::length() const
 {
