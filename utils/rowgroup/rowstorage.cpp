@@ -93,8 +93,8 @@ size_t findFirstSetBit(const uint64_t mask)
 #define throwIOError(filename, what, errNo) \
     throwIOError_(__FILE__, __LINE__, (filename), (what), (errNo))
 
-void throwIOError_(const char* srcFile, int srcLine,
-                   const std::string& filename, const std::string& what, int errNo)
+[[noreturn]] void throwIOError_(const char* srcFile, int srcLine,
+                                const std::string& filename, const std::string& what, int errNo)
 {
   logging::Message::Args args;
   args.add(srcFile);
