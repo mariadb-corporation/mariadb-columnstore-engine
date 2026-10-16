@@ -31,6 +31,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <ios>
+#include <iomanip>
 #include <cerrno>
 #include <sstream>
 #include <vector>
@@ -1738,6 +1739,47 @@ void ExtentMap::loadVersion4or5(T* in, bool upgradeV4ToV5)
 
 }
 
+// Logs the free list as a checksum of its ranges in LBID order, so nodes that
+// loaded the same image can be compared from their logs. Slot order is left
+// out on purpose: allocation doesn't depend on it.
+static void logFreeListSummary(const string& filename, const InlineLBIDRange* freeList, int capacity,
+                               size_t extents)
+{
+  vector<pair<LBID_t, uint32_t>> ranges;
+
+  for (int i = 0; i < capacity; i++)
+  {
+    if (freeList[i].size != 0)
+      ranges.emplace_back(freeList[i].start, freeList[i].size);
+  }
+
+  sort(ranges.begin(), ranges.end());
+
+  // FNV-1a over each range's start and size.
+  uint64_t hash = 14695981039346656037ULL;
+  uint64_t freeBlocks = 0;
+
+  for (const auto& range : ranges)
+  {
+    for (uint64_t value : {static_cast<uint64_t>(range.first), static_cast<uint64_t>(range.second)})
+    {
+      for (int byte = 0; byte < 8; byte++)
+      {
+        hash ^= (value >> (byte * 8)) & 0xff;
+        hash *= 1099511628211ULL;
+      }
+    }
+
+    freeBlocks += range.second;
+  }
+
+  ostringstream os;
+  os << "ExtentMap::load(): loaded " << filename << ": " << extents << " extents, free list " << ranges.size()
+     << " ranges, " << freeBlocks << " x 1024 free LBIDs, checksum " << hex << setw(16) << setfill('0')
+     << hash;
+  log(os.str(), logging::LOG_TYPE_INFO);
+}
+
 void ExtentMap::load(const string& filename, bool fixFL)
 {
 #ifdef BRM_INFO
@@ -1781,13 +1823,23 @@ void ExtentMap::load(const string& filename, bool fixFL)
   try
   {
     load(in.get());
+
+    // The load has taken; a failure to log it must not report it as failed.
+    try
+    {
+      logFreeListSummary(filename, fFreeList, fFLHeader->capacity, fExtentMapRBTree->size());
+    }
+    catch (const std::exception& e)
+    {
+      cerr << "ExtentMap::load(): could not log the free list summary: " << e.what() << endl;
+    }
   }
 
   catch (...)
   {
-    releaseFreeList(WRITE);
-    releaseEMIndex(WRITE);
-    releaseEMEntryTable(WRITE);
+    /* Discard, don't publish: readers may be on kept segments (MCS-2031). If the
+       discard throws, the locks still go back and its error replaces the load's. */
+    undoChanges();
     throw;
   }
 
@@ -3879,30 +3931,31 @@ LBID_t ExtentMap::_createDictStoreExtent(uint32_t size, int OID, uint16_t dbRoot
 //------------------------------------------------------------------------------
 LBID_t ExtentMap::getLBIDsFromFreeList(uint32_t size)
 {
-  LBID_t ret = -1;
-  int i;
+  // Take the fitting range with the lowest start, not the first fitting slot.
+  // Slot order differs between nodes (a delete fills the highest empty slot,
+  // a load rebuilds the list in LBID order), but the set of ranges doesn't,
+  // so every node hands out the same LBIDs.
+  int best = -1;
   int flEntries = fFLHeader->capacity;
 
-  for (i = 0; i < flEntries; i++)
+  for (int i = 0; i < flEntries; i++)
   {
-    if (size <= fFreeList[i].size)
-    {
-      ret = fFreeList[i].start;
-      fFreeList[i].start += size * 1024;
-      fFreeList[i].size -= size;
-
-      if (fFreeList[i].size == 0)
-        fFLHeader->currentSize--;
-
-      break;
-    }
+    if (size <= fFreeList[i].size && (best == -1 || fFreeList[i].start < fFreeList[best].start))
+      best = i;
   }
 
-  if (i == flEntries)
+  if (best == -1)
   {
     log("ExtentMap::getLBIDsFromFreeList(): out of LBID space");
     throw runtime_error("ExtentMap::getLBIDsFromFreeList(): out of LBID space");
   }
+
+  LBID_t ret = fFreeList[best].start;
+  fFreeList[best].start += size * 1024;
+  fFreeList[best].size -= size;
+
+  if (fFreeList[best].size == 0)
+    fFLHeader->currentSize--;
 
   return ret;
 }

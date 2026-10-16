@@ -93,7 +93,8 @@ class DDLPackageProcessor
     NETWORK_ERROR,
     PARTITION_WARNING,
     WARN_NO_PARTITION,
-    DROP_TABLE_NOT_IN_CATALOG_ERROR
+    DROP_TABLE_NOT_IN_CATALOG_ERROR,
+    PP_LOST_CONNECTION
   };
 
   enum DebugLevel /** @brief Debug level type enumeration */
@@ -284,6 +285,18 @@ class DDLPackageProcessor
     // std::cout << "in DDLPackageProcessor constructor " << this << std::endl;
   }
 
+  /** @brief Function wrapper for `processPackageInternal`.
+   */
+  DDLResult processPackage(ddlpackage::SqlStatement* sqlStmt);
+
+  /** @brief Check that give exception is related to PP lost connection.
+   */
+  bool checkPPLostConnection(std::string error);
+
+  /** @brief Internal implementation for `process` package command.
+   */
+  virtual DDLResult processPackageInternal(ddlpackage::SqlStatement* sqlStmt);
+
   /** @brief destructor
    */
   EXPORT virtual ~DDLPackageProcessor();
@@ -409,6 +422,8 @@ class DDLPackageProcessor
    *
    */
   EXPORT void fetchLogFile(TableLogInfo& tableLogInfos, uint64_t uniqueId);
+
+  // virtual EXPORT DDLResult processPackage(ddlpackage::TruncTableStatement& truncTableStmt);
 
   BRM::TxnID fTxnid;
 
@@ -872,6 +887,8 @@ class DDLPackageProcessor
   void cleanString(std::string& s);
   // std::string            fDDLLogFileName;
   DebugLevel fDebugLevel;  // internal use debug level
+
+  const std::string PPLostConnectionErrorCode = "MCS-2045";
 };
 /** @brief helper template function to do safe from string to type conversions
  *
@@ -912,4 +929,3 @@ class FormatStatementString
 }  // namespace ddlpackageprocessor
 
 #undef EXPORT
-

@@ -16,6 +16,7 @@ class Config:
     _primary_node = ''
     _my_name = None  # derived from config file
     _failover_sampling_interval = DEFAULT_FAILOVER_SAMPLING_INTERVAL_SECS
+    _maintenance = False
 
     config_lock = threading.Lock()
     last_mtime = 0
@@ -71,6 +72,14 @@ class Config:
         self.config_lock.acquire()
         self.check_reload()
         ret = self._failover_sampling_interval
+        self.config_lock.release()
+        return ret
+
+    def inMaintenance(self) -> bool:
+        """True while the cluster is stopped or being stopped/started."""
+        self.config_lock.acquire()
+        self.check_reload()
+        ret = self._maintenance
         self.config_lock.release()
         return ret
 
@@ -168,5 +177,11 @@ class Config:
             self._failover_sampling_interval = int(sampling_interval_node.text)
         else:
             self._failover_sampling_interval = DEFAULT_FAILOVER_SAMPLING_INTERVAL_SECS
+
+        maintenance_node = root.find('./Maintenance')
+        self._maintenance = (
+            maintenance_node is not None
+            and (maintenance_node.text or '').strip().lower() == 'true'
+        )
 
         return True
