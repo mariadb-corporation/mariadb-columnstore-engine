@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import selectors
+import shlex
 import tempfile
 import uuid
 from subprocess import PIPE, Popen, run, CalledProcessError
@@ -154,9 +155,13 @@ class S3DataLoadController:
                 CMAPI_PYTHON_BINARY_DEPS_PATH, 'gsutil'
             )
 
+            # Quote user-controlled inputs so `key`/`secret` cannot break out
+            # of the shell string and inject commands. `shell=True` is kept
+            # because `gsutil config -a` is interactive and reads the three
+            # answers from a piped stdin.
+            answers = shlex.quote(f'{key}\n{secret}\n{project_id}')
             commandline = (
-                f'/usr/bin/bash -c '
-                f'\'echo -e "{key}\n{secret}\n{project_id}"\' | '
+                f'printf \'%s\\n\' {answers} | '
                 f'{CMAPI_PYTHON_BIN} {gs_cli_binary} '
                 f'config -a -o {temporary_config}'
             )
