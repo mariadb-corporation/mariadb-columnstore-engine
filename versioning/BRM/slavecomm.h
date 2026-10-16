@@ -72,6 +72,8 @@ class SlaveComm
   void processCommand(messageqcpp::ByteStream& msg);
 
   void do_createStripeColumnExtents(messageqcpp::ByteStream& msg);
+  void do_createHiddenStripeColumnExtents(messageqcpp::ByteStream& msg);
+  void do_makePartitionVisible(messageqcpp::ByteStream& msg);
   void do_createColumnExtent_DBroot(messageqcpp::ByteStream& msg);
   void do_createColumnExtentExactFile(messageqcpp::ByteStream& msg);
   void do_createDictStoreExtent(messageqcpp::ByteStream& msg);
