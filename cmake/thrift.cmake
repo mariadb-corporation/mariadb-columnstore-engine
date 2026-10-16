@@ -50,8 +50,8 @@ endif()
 
 ExternalProject_Add(
     external_thrift
-    URL https://github.com/apache/thrift/archive/refs/tags/v0.24.0.tar.gz
-    URL_HASH SHA256=d3a60676b1df3fb9850f6ce1e8a3df9a0efac036ceb4bce8ce46ee3eca735d2d
+    URL https://github.com/apache/thrift/archive/refs/tags/v0.25.0.tar.gz
+    URL_HASH SHA256=f6aa5fadd01320e17c73e0c1f3b22c858bd235fe5214a5dd9cd5c830822c4529
     PREFIX ${INSTALL_LOCATION}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_LOCATION}
                -DBUILD_COMPILER=NO
