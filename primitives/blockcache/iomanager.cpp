@@ -798,11 +798,14 @@ void* thr_popper(ioManager* arg)
           // hdrs may have been modified since we cached them in fdit->second...
           time_t cur_mtime = numeric_limits<time_t>::max();
           int updatePtrsRc = 0;
-          fdMapMutex.lock();
+          // fstat outside fdMapMutex: on NFS it can be a server round trip, and holding the one global
+          // fd-cache lock across it serializes every chunk read in PrimProc. fp stays open (inUse > 0).
           time_t fp_mtime = fp->mtime();
 
           if (fp_mtime != (time_t)-1)
             cur_mtime = fp_mtime;
+
+          fdMapMutex.lock();
 
           if (decompRetryCount > 0 || retryReadHeadersCount > 0 || cur_mtime > fdit->second->cmpMTime)
             updatePtrsRc = updateptrs(&alignedbuff[0], fdit);
