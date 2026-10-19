@@ -635,7 +635,9 @@ class RowGroupStorage
 
   ssize_t getAproxRGSize() const
   {
-    return fRowGroupOut->getSizeWithStrings(fMaxRows);
+    // fRowGroupOut may still point at an RGData that dropRGData() already released, so don't
+    // touch its string store here. This is an estimate; the fixed-width part is enough.
+    return fRowGroupOut->getDataSize(fMaxRows);
   }
 
   /** @brief Take away RGDatas from another RowGroupStorage
@@ -1734,7 +1736,7 @@ void RowAggStorage::dump()
   constexpr int64_t freeMemLimit = 50LL * 1024LL * 1024LL;
 
   const int64_t leaveFree = std::max<uint64_t>(
-      freeMemLimit, fNumOfInputRGPerThread * fRowGroupOut->getSizeWithStrings(fMaxRows) * getBucketSize());
+      freeMemLimit, fNumOfInputRGPerThread * fRowGroupOut->getDataSize(fMaxRows) * getBucketSize());
   uint64_t freeAttempts{0};
   int64_t freeMem = 0;
   while (true)
