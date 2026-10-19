@@ -25,6 +25,8 @@
 #include <fcntl.h>
 #include "rowstorage.h"
 #include "robin_hood.h"
+#include "messagelog.h"
+#include <sstream>
 
 // #define DISK_AGG_DEBUG
 
@@ -628,16 +630,31 @@ class RowGroupStorage
     fRowGroupOut->setData(curRG);
     fRowGroupOut->resetRowGroup(0);
     fRGDatas.emplace_back(curRG);
-    fMM->acquire(fRowGroupOut->getSizeWithStrings(fMaxRows));
+    fMM->acquire(rgDataSize(*curRG));
   }
 
+  // Doesn't detach fRowGroupOut: the RowGroup may already be gone when a storage is destroyed
+  // (the step owning it can destroy it before the aggregation). Call detachRowGroup() first
+  // when the RowGroup outlives this storage.
   ~RowGroupStorage() = default;
+
+  /** @brief Detach fRowGroupOut if it points at one of this storage's RGDatas.
+   *
+   *    fRowGroupOut is a cursor shared by every storage of the aggregation (generations,
+   *    clones, the aggregation itself), so it can be left on any of their RGDatas. It must
+   *    never be left on a freed one: a later getRowCount()/setDBRoot()/getSizeWithStrings()
+   *    on it would read or write freed memory.
+   */
+  void detachRowGroup() const
+  {
+    for (const auto& rgd : fRGDatas)
+      forgetRG(rgd.get());
+  }
 
   ssize_t getAproxRGSize() const
   {
-    // fRowGroupOut may still point at an RGData that dropRGData() already released, so don't
-    // touch its string store here. This is an estimate; the fixed-width part is enough.
-    return fRowGroupOut->getDataSize(fMaxRows);
+    // fRowGroupOut points at a live RGData or at none (then this is the size without strings)
+    return fRowGroupOut->getSizeWithStrings(fMaxRows);
   }
 
   /** @brief Take away RGDatas from another RowGroupStorage
@@ -655,14 +672,13 @@ class RowGroupStorage
   {
     std::unique_ptr<RGData> rgd;
     std::string ofname;
-    while (o->getNextRGData(rgd, ofname))
+    while (o->takeNextRGData(rgd, ofname))
     {
       fRGDatas.push_back(std::move(rgd));
       uint64_t rgid = fRGDatas.size() - 1;
       if (fRGDatas[rgid])
       {
-        fRowGroupOut->setData(fRGDatas[rgid].get());
-        int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+        int64_t memSz = rgDataSize(*fRGDatas[rgid]);
         if (!fMM->acquire(memSz))
         {
           throw logging::IDBExcept(
@@ -709,11 +725,15 @@ class RowGroupStorage
       auto rgdata = std::move(fRGDatas[rgid]);
       fRGDatas.pop_back();
 
-      fRowGroupOut->setData(rgdata.get());
-      fMM->release(fRowGroupOut->getSizeWithStrings(fMaxRows));
+      fMM->release(rgDataSize(*rgdata));
       fLRU->remove(rgid);
+      fRowGroupOut->setData(rgdata.get());
       if (fRowGroupOut->getRowCount() == 0)
+      {
+        forgetRG(rgdata.get());
         continue;
+      }
+      // the caller owns it now, and detaches fRowGroupOut before freeing it
       return rgdata;
     }
 
@@ -781,8 +801,8 @@ class RowGroupStorage
     {
       return;
     }
-    fRowGroupOut->setData(fRGDatas[rgid].get());
-    fMM->release(fRowGroupOut->getSizeWithStrings(fMaxRows));
+    fMM->release(rgDataSize(*fRGDatas[rgid]));
+    forgetRG(fRGDatas[rgid].get());
     fRGDatas[rgid].reset();
   }
 
@@ -828,6 +848,7 @@ class RowGroupStorage
 
     if (UNLIKELY(need_new))
     {
+      // estimate from the RGData fRowGroupOut points at, live or none (then without strings)
       auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
       if (!fMM->acquire(memSz))
       {
@@ -862,6 +883,7 @@ class RowGroupStorage
 
     while (rgid >= fRGDatas.size())
     {
+      // estimate from the RGData fRowGroupOut points at, live or none (then without strings)
       int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
       if (!fMM->acquire(memSz))
       {
@@ -940,14 +962,14 @@ class RowGroupStorage
     dumpAll();
     fLRU->clear();
     fMM->release();
-    fRGDatas.clear();
+    clearRGDatas();
 
     // we need at least one RGData so create it right now
     auto* curRG = new RGData(*fRowGroupOut, fMaxRows);
     fRowGroupOut->setData(curRG);
     fRowGroupOut->resetRowGroup(0);
     fRGDatas.emplace_back(curRG);
-    auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+    auto memSz = rgDataSize(*curRG);
     if (!fMM->acquire(memSz))
     {
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_AGGREGATION_TOO_BIG),
@@ -1046,13 +1068,14 @@ class RowGroupStorage
   RowGroupStorage* clone(uint16_t gen) const
   {
     auto* ret = new RowGroupStorage(fTmpDir, fRowGroupOut, fMaxRows);
-    ret->fRGDatas.clear();
+    ret->clearRGDatas();
     ret->fLRU.reset(fLRU->clone());
     ret->fMM.reset(fMM->clone());
     ret->fUniqId = fUniqId;
     ret->fGeneration = gen;
     ret->fCompressor = fCompressor;
     ret->fDumper.reset(new Dumper(fCompressor, fMM.get()));
+    ret->fLog = fLog;
     ret->loadFinalizedInfo();
     return ret;
   }
@@ -1091,6 +1114,26 @@ class RowGroupStorage
   }
 
  private:
+  /** @brief getNextRGData() for a storage that hands its RGDatas over to another one.
+   *
+   *    Detaches fRowGroupOut from the returned RGData: the receiving storage detaches only its
+   *    own RowGroup when it frees it. Also detaches if loading it fails, as unwinding frees it.
+   */
+  bool takeNextRGData(std::unique_ptr<RGData>& rgdata, std::string& fname)
+  {
+    try
+    {
+      bool more = getNextRGData(rgdata, fname);
+      forgetRG(rgdata.get());
+      return more;
+    }
+    catch (...)
+    {
+      forgetRG(rgdata.get());
+      throw;
+    }
+  }
+
   /** @brief Get next available RGData and fill filename of the dump if it's
    *         not in the memory.
    *
@@ -1180,6 +1223,9 @@ class RowGroupStorage
 
         if (pos == 0)
         {
+          // every row is finalized: drop it. rgdata is freed by the next iteration or by the caller
+          fMM->release(rgDataSize(*rgdata));
+          forgetRG(rgdata.get());
           fLRU->remove(rgid);
           unlink(makeRGFilename(rgid).c_str());
           continue;
@@ -1191,9 +1237,7 @@ class RowGroupStorage
 
       if (rgdata)
       {
-        fRowGroupOut->setData(rgdata.get());
-        int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
-        fMM->release(memSz);
+        fMM->release(rgDataSize(*rgdata));
         unlink(makeRGFilename(rgid).c_str());
       }
       else
@@ -1253,6 +1297,11 @@ class RowGroupStorage
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
 
+    if (fLog)
+    {
+      ++fLog->fRGsRead;
+      fLog->fBytesRead += data.size();
+    }
     messageqcpp::ByteStream bs(reinterpret_cast<uint8_t*>(data.data()), data.size());
 
     if (unlinkDump)
@@ -1261,7 +1310,7 @@ class RowGroupStorage
     rgdata->deserialize(bs, fRowGroupOut->getDataSize(fMaxRows));
 
     fRowGroupOut->setData(rgdata.get());
-    auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+    auto memSz = rgDataSize(*rgdata);
 
     if (!fMM->acquire(memSz))
     {
@@ -1281,10 +1330,18 @@ class RowGroupStorage
       return;
 
     fLRU->remove(rgid);
-    fRowGroupOut->setData(rgdata.get());
-    fMM->release(fRowGroupOut->getSizeWithStrings(fMaxRows));
+    fMM->release(rgDataSize(*rgdata));
 
-    saveRG(rgid, rgdata.get());
+    try
+    {
+      saveRG(rgid, rgdata.get());
+    }
+    catch (...)
+    {
+      forgetRG(rgdata.get());  // rgdata is freed by unwinding
+      throw;
+    }
+    forgetRG(rgdata.get());  // rgdata is freed on return
   }
 
   /** @brief Dump RGData to disk.
@@ -1305,6 +1362,11 @@ class RowGroupStorage
           logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_DISKAGG_FILEIO_ERROR, errorString(errNo)),
           logging::ERR_DISKAGG_FILEIO_ERROR);
     }
+    if (fLog)
+    {
+      ++fLog->fRGsWritten;
+      fLog->fBytesWritten += bs.length();
+    }
   }
 
 #ifdef DISK_AGG_DEBUG
@@ -1323,6 +1385,29 @@ class RowGroupStorage
     close(fd);
   }
 #endif
+
+  /** @brief Memory an RGData of this storage holds: the fixed-size rows plus its strings.
+   *
+   *    Reads rgd itself rather than fRowGroupOut, which may point at another RGData.
+   */
+  int64_t rgDataSize(const RGData& rgd) const
+  {
+    return fRowGroupOut->getDataSize(fMaxRows) + (rgd.strings ? rgd.strings->getSize() : 0);
+  }
+
+  /** @brief Detach fRowGroupOut if it points at rgd, which is about to be freed. */
+  void forgetRG(const RGData* rgd) const
+  {
+    if (rgd && fRowGroupOut->getRGData() == rgd)
+      fRowGroupOut->detachData();
+  }
+
+  /** @brief Free every RGData in memory, detaching fRowGroupOut from them first. */
+  void clearRGDatas()
+  {
+    detachRowGroup();
+    fRGDatas.clear();
+  }
 
   /** @brief Create dump filename.
    */
@@ -1356,6 +1441,7 @@ class RowGroupStorage
   std::string fTmpDir;
   compress::CompressInterface* fCompressor;
   std::unique_ptr<Dumper> fDumper;
+  DiskAggLog* fLog{nullptr};  // owned by RowAggStorage
 };
 
 /** @brief Internal data for the hashmap */
@@ -1609,6 +1695,63 @@ RowAggStorage::~RowAggStorage()
   cleanupAll();
 }
 
+void DiskAggLog::log(const std::string& msg) const
+{
+  logging::Message::Args args;
+  args.add("Disk-based aggregation: " + msg);
+  logging::Message m(6);  // "%1%"
+  m.format(args);
+  logging::MessageLog ml(logging::LoggingID(16, fSessionId));
+  ml.logInfoMessage(m);
+}
+
+void DiskAggLog::progress(const char* phase)
+{
+  using namespace std::chrono;
+  const int64_t now = steady_clock::now().time_since_epoch().count();
+  int64_t last = fLastProgress.load(std::memory_order_relaxed);
+  if (now - last < duration_cast<steady_clock::duration>(PROGRESS_INTERVAL).count() ||
+      !fLastProgress.compare_exchange_strong(last, now))
+    return;  // logged recently, or another bucket is logging right now
+
+  std::ostringstream oss;
+  oss << phase << ", " << duration_cast<seconds>(steady_clock::now() - fStart).count() << " s: " << fSpilling
+      << " buckets spilled, " << fGenerations << " new generations, written " << fRGsWritten
+      << " rowgroups / " << (fBytesWritten >> 20) << " MiB, read back " << fRGsRead << " / "
+      << (fBytesRead >> 20) << " MiB";
+  if (fFinalizing)
+    oss << ", final merge " << fFinalized << " of " << fFinalizing << " buckets done, " << fRowsMerged
+        << " rows merged";
+  log(oss.str());
+}
+
+void RowAggStorage::setDiskAggLog(DiskAggLogPtr log)
+{
+  fLog = std::move(log);
+  if (fStorage)
+    fStorage->fLog = fLog.get();
+  if (fRealKeysStorage)
+    fRealKeysStorage->fLog = fLog.get();
+}
+
+void RowAggStorage::noteSpill()
+{
+  if (!fLog)
+    return;
+  if (!fSpilled)
+  {
+    fSpilled = true;
+    if (fLog->fSpilling++ == 0)
+    {
+      std::ostringstream oss;
+      oss << "started spilling to " << fTmpDir << ", free memory " << (fMM->getFree() >> 20) << " MiB of "
+          << (fMM->getConfigured() >> 20) << " MiB";
+      fLog->log(oss.str());
+    }
+  }
+  fLog->progress("aggregating");
+}
+
 bool RowAggStorage::getTargetRow(const Row& row, Row& rowOut)
 {
   uint64_t hash = hashRow(row, fLastKeyCol);
@@ -1634,6 +1777,7 @@ bool RowAggStorage::getTargetRow(const Row& row, uint64_t hash, Row& rowOut)
     {
       fKeysStorage = fStorage.get();
     }
+    setDiskAggLog(fLog);
     fKeysStorage->initRow(fKeyRow);
     reserve(fMaxRows);
   }
@@ -1736,9 +1880,10 @@ void RowAggStorage::dump()
   constexpr int64_t freeMemLimit = 50LL * 1024LL * 1024LL;
 
   const int64_t leaveFree = std::max<uint64_t>(
-      freeMemLimit, fNumOfInputRGPerThread * fRowGroupOut->getDataSize(fMaxRows) * getBucketSize());
+      freeMemLimit, fNumOfInputRGPerThread * fRowGroupOut->getSizeWithStrings(fMaxRows) * getBucketSize());
   uint64_t freeAttempts{0};
   int64_t freeMem = 0;
+  bool spilled = false;
   while (true)
   {
     ++freeAttempts;
@@ -1752,7 +1897,10 @@ void RowAggStorage::dump()
 
     if (!success)
       break;
+    spilled = true;
   }
+  if (spilled)
+    noteSpill();
 
   int64_t totalMem = fMM->getConfigured();
   // If the generations are allowed and there are less than half of
@@ -2048,6 +2196,11 @@ void RowAggStorage::startNewGeneration()
     fKeysStorage->startNewGeneration();
 
   ++fGeneration;
+  if (fLog)
+  {
+    ++fLog->fGenerations;
+    noteSpill();
+  }
   fMM->release();
   // reinitialize internal structures
   fCurData->fInfo.reset();
@@ -2106,6 +2259,16 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
   {
     cleanup();
     return;
+  }
+
+  uint64_t merged = 0;  // added to fLog->fRowsMerged in batches
+  if (fLog && fLog->fFinalizing++ == 0)
+  {
+    std::ostringstream oss;
+    oss << "final merge starting: " << fGeneration + 1 << " generations in the first bucket, "
+        << fLog->fSpilling << " buckets spilled, written " << fLog->fRGsWritten << " rowgroups / "
+        << (fLog->fBytesWritten >> 20) << " MiB";
+    fLog->log(oss.str());
   }
 
   Row tmpKeyRow;
@@ -2179,6 +2342,13 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
           }
         }
 
+        if (UNLIKELY(fLog && (rowidx & 0xFFFF) == 0))
+        {
+          fLog->fRowsMerged += merged;
+          merged = 0;
+          fLog->progress("final merge");
+        }
+
         if (prevKeyRowStorage->isFinalized(rowidx))
         {
           continue;
@@ -2230,6 +2400,7 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
           fStorage->getRow(curidx, rowOut);
         }
         mergeFunc(tmpRow);
+        ++merged;
         genUpdated = true;
         prevKeyRowStorage->markFinalized(rowidx);
         if (fExtKeys)
@@ -2262,6 +2433,10 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
     auto oh = std::move(fCurData->fHashes);
     fCurData->fHashes = oh->clone(0, curGen - 1, true);
 
+    // dumpAll() above left the rowgroups on this generation's RGDatas, which are freed here
+    fStorage->detachRowGroup();
+    if (fExtKeys)
+      fRealKeysStorage->detachRowGroup();
     fStorage = std::move(prevRowStorage);
     if (fExtKeys)
     {
@@ -2287,6 +2462,20 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
     fKeysStorage = fStorage.get();
 
   fAggregated = true;
+  if (fLog)
+  {
+    fLog->fRowsMerged += merged;
+    if (++fLog->fFinalized == fLog->fFinalizing)
+    {
+      std::ostringstream oss;
+      oss << "final merge done in all " << fLog->fFinalized << " buckets that spilled, "
+          << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - fLog->fStart)
+                 .count()
+          << " s after the step started: " << fLog->fRowsMerged << " rows merged, read back "
+          << fLog->fRGsRead << " rowgroups / " << (fLog->fBytesRead >> 20) << " MiB";
+      fLog->log(oss.str());
+    }
+  }
 }
 
 void RowAggStorage::loadGeneration(uint16_t gen)
