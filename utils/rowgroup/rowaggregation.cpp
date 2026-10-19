@@ -519,6 +519,7 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
 
 RowAggregation::RowAggregation(const RowAggregation& rhs)
  : fRowGroupOut(nullptr)
+ , fDiskAggLog(rhs.fDiskAggLog)
  , fSmallSideRGs(nullptr)
  , fLargeSideRG(nullptr)
  , fSmallSideCount(0)
@@ -682,6 +683,7 @@ void RowAggregation::initialize(bool hasGroupConcat)
     fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
                                            disk_agg, allow_gen, compressor));
   }
+  fRowAggStorage->setDiskAggLog(fDiskAggLog);
 
   // Initialize the work row.
   fRowGroupOut->initRow(&fRow);
@@ -775,6 +777,7 @@ void RowAggregation::aggReset()
     fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
                                            disk_agg, allow_gen, compressor));
   }
+  fRowAggStorage->setDiskAggLog(fDiskAggLog);
   fRowGroupOut->getRow(0, &fRow);
   copyNullRow(fRow);
   attachGroupConcatAg();
@@ -4491,6 +4494,27 @@ RowAggregationDistinct::~RowAggregationDistinct()
 // Aggregation
 //
 //------------------------------------------------------------------------------
+void RowAggregation::setDiskAggLog(const DiskAggLogPtr& log)
+{
+  fDiskAggLog = log;
+  if (fRowAggStorage)
+    fRowAggStorage->setDiskAggLog(log);
+}
+
+void RowAggregationDistinct::setDiskAggLog(const DiskAggLogPtr& log)
+{
+  RowAggregationUMP2::setDiskAggLog(log);
+  if (fAggregator)
+    fAggregator->setDiskAggLog(log);
+}
+
+void RowAggregationMultiDistinct::setDiskAggLog(const DiskAggLogPtr& log)
+{
+  RowAggregationDistinct::setDiskAggLog(log);
+  for (auto& agg : fSubAggregators)
+    agg->setDiskAggLog(log);
+}
+
 void RowAggregationDistinct::setInputOutput(const RowGroup& pRowGroupIn, RowGroup* pRowGroupOut)
 {
   fRowGroupIn = fRowGroupDist;
