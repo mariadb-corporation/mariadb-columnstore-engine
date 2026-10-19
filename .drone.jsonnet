@@ -8,7 +8,7 @@ local servers = {
 };
 
 local platforms = {
-  [current_branch]: ["rockylinux:8"],
+  [current_branch]: ["rockylinux:8", "rockylinux:9"],
 };
 
 local platforms_arm = {
