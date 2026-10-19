@@ -1807,8 +1807,12 @@ void RowAggStorage::dump()
 
   constexpr int64_t freeMemLimit = 50LL * 1024LL * 1024LL;
 
-  const int64_t leaveFree = std::max<uint64_t>(
-      freeMemLimit, fNumOfInputRGPerThread * fRowGroupOut->getSizeWithStrings(fMaxRows) * getBucketSize());
+  // Keep room for one more input batch: fNumOfInputRGPerThread rowgroups whose rows may all be new
+  // groups, each needing an output row and a hash bucket. Acquires are not strict with disk
+  // aggregation on, so this loop is what keeps the aggregation within its memory limit.
+  const int64_t leaveFree =
+      std::max<int64_t>(freeMemLimit, fNumOfInputRGPerThread *
+                                          (fRowGroupOut->getDataSize(fMaxRows) + fMaxRows * getBucketSize()));
   uint64_t freeAttempts{0};
   int64_t freeMem = 0;
   while (true)
