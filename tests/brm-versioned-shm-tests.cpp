@@ -874,7 +874,7 @@ TYPED_TEST(VersionedShmTest, ConcurrentPinsNeverSeeAHalfWrittenArea)
     readers.emplace_back(
         [&]()
         {
-          while (!done.load(std::memory_order_relaxed))
+          while (!done.load(std::memory_order_relaxed) || reads.load(std::memory_order_relaxed) < Publications)
           {
             const auto pin = shm.pin();
 
@@ -898,7 +898,10 @@ TYPED_TEST(VersionedShmTest, ConcurrentPinsNeverSeeAHalfWrittenArea)
   }
 
   for (uint64_t id = 2; id <= Publications; ++id)
+  {
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
     this->publish(shm, this->markerFor(id));
+  }
 
   done.store(true, std::memory_order_relaxed);
 
