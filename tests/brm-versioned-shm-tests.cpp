@@ -899,7 +899,7 @@ TYPED_TEST(VersionedShmTest, ConcurrentPinsNeverSeeAHalfWrittenArea)
 
   for (uint64_t id = 2; id <= Publications; ++id)
   {
-    std::this_thread::sleep_for(std::chrono::microseconds(100));
+    std::this_thread::yield();
     this->publish(shm, this->markerFor(id));
   }
 
