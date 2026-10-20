@@ -100,23 +100,23 @@ public:
     fSSLContext = SSL_CTX_new(method);
     if (!fSSLContext)
     {
-      throw runtime_error("unable to create TLS context");
+      throw std::runtime_error("unable to create TLS context");
     }
     SSL_CTX_set_verify(fSSLContext, SSL_VERIFY_PEER, NULL);
     const char* fn = "/data/cert.pem";
-    if (!SSL_CTX_load_verify_locations(ctx, fn, NULL))
+    if (!SSL_CTX_load_verify_locations(fSSLContext, fn, NULL))
     {
-      throw runtime_error("unable to load and verify certificate");
+      throw std::runtime_error("unable to load and verify certificate");
     }
-    fSSLConnection = SSL_new(ssl_ctx);
+    fSSLConnection = SSL_new(fSSLContext);
     if (!SSL_set_fd(fSSLConnection, sd))
     {
-      throw runtime_error("unable to set socket to SSL connection");
+      throw std::runtime_error("unable to set socket to SSL connection");
     }
 
     if (SSL_accept(fSSLConnection) <= 0)
     {
-      throw runtime_error("unable to accept SSL connection");
+      throw std::runtime_error("unable to accept SSL connection");
     }
 
   }
@@ -128,23 +128,23 @@ public:
     fSSLContext = SSL_CTX_new(method);
     if (!fSSLContext)
     {
-      throw runtime_error("unable to create TLS context");
+      throw std::runtime_error("unable to create TLS context");
     }
     SSL_CTX_set_verify(fSSLContext, SSL_VERIFY_PEER, NULL);
     const char* fn = "/data/cert.pem";
-    if (!SSL_CTX_load_verify_locations(ctx, fn, NULL))
+    if (!SSL_CTX_load_verify_locations(fSSLContext, fn, NULL))
     {
-      throw runtime_error("unable to load and verify certificate");
+      throw std::runtime_error("unable to load and verify certificate");
     }
-    fSSLConnection = SSL_new(ssl_ctx);
+    fSSLConnection = SSL_new(fSSLContext);
     if (!SSL_set_fd(fSSLConnection, sd))
     {
-      throw runtime_error("unable to set socket to SSL connection");
+      throw std::runtime_error("unable to set socket to SSL connection");
     }
 
     if (SSL_connect(fSSLConnection) <= 0)
     {
-      throw runtime_error("unable to connect with SSL connection");
+      throw std::runtime_error("unable to connect with SSL connection");
     }
 
   }
