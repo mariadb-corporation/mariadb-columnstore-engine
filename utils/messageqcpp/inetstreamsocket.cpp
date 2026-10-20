@@ -293,7 +293,6 @@ retry:
     return 0;
 
   return 3;  // catch-all error code
-#endif
 }
 
 /* returns true when the next thing in the stream is the beginning of a new

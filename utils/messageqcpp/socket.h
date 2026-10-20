@@ -281,7 +281,7 @@ class Socket
   void enableTLSConn() { fTLSConn.reset(new TLSConnection()); }
 
   std::shared_ptr<TLSConnection> TLSConn() { return fTLSConn; }
-private:
+protected:
   std::shared_ptr<TLSConnection> fTLSConn;
 
 };
