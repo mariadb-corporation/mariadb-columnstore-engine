@@ -21,11 +21,11 @@ local platforms = {
 };
 
 local servers_main_support_platforms = {
-  [current_branch]: ["rockylinux:9", "debian:13", "ubuntu:24.04"],
+  [current_branch]: ["ubuntu:24.04"],
 };
 
 local servers_frontier_dev_platforms = {
-  [current_branch]:  servers_main_support_platforms[current_branch] + ["ubuntu:22.04", "ubuntu:26.04"],
+  [current_branch]:  servers_main_support_platforms[current_branch] + ["ubuntu:24.04"],
 };
 
 //local archs = ["amd64", "arm64"];
@@ -563,7 +563,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6-enterprise", 
     if (platform == "rockylinux:9" && arch == "amd64" && server == "10.6-enterprise")
     then [pipeline.mcs_cli_docs_check] else [],
   local mtr_steps =
-    if (platform == "ubuntu-24.04" && arch == "amd64")
+    if (platform == "ubuntu:24.04" && arch == "amd64")
     then [pipeline.dockerfile, pipeline.dockerhub, pipeline.multi_node_mtr, pipeline.multinode_mtrlog, pipeline.publish("multinode-mtrlog")]
     else [pipeline.mtr, pipeline.mtrlog, pipeline.publish("mtrlog")],
 //    if (platform == "rockylinux:8" && arch == "amd64" && customBootstrapParamsKey == "gcc-toolset")
