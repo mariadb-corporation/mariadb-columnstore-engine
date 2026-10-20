@@ -32,12 +32,6 @@
 #include "socketparms.h"
 #include "bytestream.h"
 
-#if defined(INETSOCKET_WITH_TLS)
-// TODO: choose current TLS library.
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#endif
-
 #define EXPORT
 
 class MessageQTestSuite;

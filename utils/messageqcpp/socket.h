@@ -29,6 +29,10 @@
 #include <boost/shared_ptr.hpp>
 #include "bytestream.h"
 
+// TODO: choose current TLS library.
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+
 class MessageQTestSuite;
 
 namespace messageqcpp
