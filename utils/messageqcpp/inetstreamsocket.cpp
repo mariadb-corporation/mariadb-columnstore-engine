@@ -203,7 +203,7 @@ void InetStreamSocket::open()
 void InetStreamSocket::close()
 {
 
-  fTLSConn.reset(nullptr);
+  fTLSConn.reset();
 
   if (isOpen())
   {
@@ -254,10 +254,6 @@ InetStreamSocket& InetStreamSocket::operator=(const InetStreamSocket& rhs)
  */
 int InetStreamSocket::pollConnection(int connectionNum, long msecs)
 {
-  if (TLSConn())
-  {
-    return 3; // catch-all error code.
-  }
   struct pollfd pfd[1];
   int err;
 

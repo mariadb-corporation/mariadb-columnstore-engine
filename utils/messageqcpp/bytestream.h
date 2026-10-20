@@ -387,6 +387,7 @@ class ByteStream : public Serializeable
   /**
    * Returns pointer to the current data *with* BSPrefix
    */
+  inline const uint8_t* bufWithPrefix() const;
   inline uint8_t* bufWithPrefix();
 
   /**
@@ -549,6 +550,10 @@ inline uint8_t* ByteStream::buf()
   return fCurOutPtr;
 }
 inline uint8_t* ByteStream::bufWithPrefix()
+{
+  return fBuf;
+}
+inline const uint8_t* ByteStream::bufWithPrefix() const
 {
   return fBuf;
 }
