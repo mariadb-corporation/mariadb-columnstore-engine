@@ -254,7 +254,7 @@ InetStreamSocket& InetStreamSocket::operator=(const InetStreamSocket& rhs)
  */
 int InetStreamSocket::pollConnection(int connectionNum, long msecs)
 {
-  if (TLSConn)
+  if (TLSConn())
   {
     return 3; // catch-all error code.
   }
@@ -305,12 +305,12 @@ bool InetStreamSocket::readToMagic(long msecs, bool* isTimeOut, Stats* stats) co
   fMagicBuffer = 0;
   magicBuffer8 = reinterpret_cast<uint8_t*>(&fMagicBuffer);
 
-  if (TLSConn)
+  if (TLSConn())
   {
     while ((fMagicBuffer != BYTESTREAM_MAGIC) && (fMagicBuffer != COMPRESSED_BYTESTREAM_MAGIC))
     {
       fMagicBuffer >>= 8;
-      if (fTLSConn->read(fSSLConnection, magicBuffer8 + 3, 1) <= 0)
+      if (fTLSConn->read(magicBuffer8 + 3, 1) <= 0)
       {
         throw runtime_error("SSL_read");
       }
@@ -426,11 +426,11 @@ bool InetStreamSocket::readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, si
                                          int64_t msecs) const
 {
   size_t bytesRead = 0;
-  if (TLSConn)
+  if (TLSConn())
   {
-    while(bytes_read < numberOfBytes)
+    while(bytesRead < numberOfBytes)
     {
-      int nread = SSL_read(fSSLConnection, buffer + bytesRead, numberOfBytes - bytesRead);
+      int nread = TLSConn()->read(buffer + bytesRead, numberOfBytes - bytesRead);
       if (nread < 0)
       {
         throw runtime_error("SSL_read in fixed size read");
@@ -587,9 +587,9 @@ void InetStreamSocket::do_write(const ByteStream& msg, uint32_t whichMagic, Stat
   /* buf.fCurOutPtr points to the data to send; ByteStream guarantees that there
      are at least sizeof(BSPrefix) bytes before that for the magic & length fields */
   realBuf = (BSPrefix*)msg.bufWithPrefix();
-  realBuf.fMagic = magic;
-  realBuf.fSize = msglen;
-  realBuf.fLongStrings = 0;
+  realBuf->fMagic = magic;
+  realBuf->fSize = msglen;
+  realBuf->fLongStrings = 0;
 
   try
   {
@@ -866,7 +866,7 @@ void InetStreamSocket::connect(const sockaddr* serv_addr)
   }
   else
     throw runtime_error("InetStreamSocket::connect: unknown connection error");
-  if (TLSConn)
+  if (TLSConn())
   {
     TLSConn()->client(socketParms().sd());
   }
@@ -917,9 +917,9 @@ ssize_t InetStreamSocket::written(int fd, const uint8_t* ptr, size_t nbytes) con
   {
     // the O_NONBLOCK flag is not set, this is a blocking I/O.
 
-    if (TLSConn)
+    if (TLSConn())
     {
-      if ((nwritten = SSL_write(fSSLConnection, bufp, nleft)) <= 0)
+      if ((nwritten = TLSConn()->write(bufp, nleft)) <= 0)
       {
         throw runtime_error("SSL write error");
       }
@@ -1067,7 +1067,7 @@ bool InetStreamSocket::isConnected() const
   if (error || retval)
     return false;
 
-  if (fTLSConn)
+  if (fTLSConn())
   {
     return fTLSConn->connected();
   }
