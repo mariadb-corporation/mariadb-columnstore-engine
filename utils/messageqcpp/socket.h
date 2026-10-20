@@ -76,11 +76,11 @@ class Stats
   uint64_t data_recvd;
 };
 
-class TLSConn
+class TLSConnection
 {
 public:
-  TLSConn() : fSSLContext(nullptr), fSSLConnector(nullptr) { }
-  ~TLSConn()
+  TLSConnection() : fSSLContext(nullptr), fSSLConnection(nullptr) { }
+  ~TLSConnection()
   {
     if (fSSLConnection)
     {
@@ -282,7 +282,7 @@ class Socket
 
   std::shared_ptr<TLSConn> TLSConn() { return fTLSConn; }
 private:
-  std::shared_ptr<TLSConn> fTLSConn;
+  std::shared_ptr<TLSConnection> fTLSConn;
 
 };
 
