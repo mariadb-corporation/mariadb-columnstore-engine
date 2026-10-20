@@ -63,13 +63,12 @@ class InetStreamSocket : public Socket
   /** copy ctor
    *
    */
-private: InetStreamSocket(const InetStreamSocket& rhs);
+  InetStreamSocket(const InetStreamSocket& rhs);
 
   /** assign op
    *
    */
-private: InetStreamSocket& operator=(const InetStreamSocket& rhs);
-public:
+  InetStreamSocket& operator=(const InetStreamSocket& rhs);
 
   /** fSocket mutator
    *
