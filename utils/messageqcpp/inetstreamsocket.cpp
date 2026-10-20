@@ -919,7 +919,7 @@ ssize_t InetStreamSocket::written(int fd, const uint8_t* ptr, size_t nbytes) con
 
     if (TLSConn())
     {
-      if ((nwritten = TLSConn()->write(bufp, nleft)) <= 0)
+      if ((nwritten = TLSConn()->write(reinterpret_cast<const void*>(bufp), nleft)) <= 0)
       {
         throw runtime_error("SSL write error");
       }
