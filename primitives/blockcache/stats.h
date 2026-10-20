@@ -39,6 +39,9 @@ class Stats
   Stats(const char* name);
   virtual ~Stats();
 
+  Stats(const Stats& rhs) = delete;
+  Stats& operator=(const Stats& rhs) = delete;
+
   void touchedLBID(uint64_t lbid, pthread_t thdid, uint32_t session = 0);
   void markEvent(const uint64_t lbid, const pthread_t thdid, const uint32_t session, const char event);
 
@@ -54,9 +57,7 @@ class Stats
   }
 
  private:
-  Stats(const Stats& rhs);
-  Stats& operator=(const Stats& rhs);
-
+  void initMonitorIfNeeded();
   boost::thread* fMonitorp;
   BRM::DBRM brm;
   // ostringstream fName;

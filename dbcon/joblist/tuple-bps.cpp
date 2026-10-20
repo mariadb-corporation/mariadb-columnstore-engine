@@ -1415,6 +1415,9 @@ void TupleBPS::run()
   uint32_t retryCounter = 0;
   const uint32_t retryMax = 1000;       // 50s max; we've seen a 15s window so 50s should be 'safe'
   const uint32_t waitInterval = 50000;  // in us
+  // One reload asks BRM for every column's extents, which takes seconds on a wide table, so bound the
+  // wait by time as well as by count.
+  const time_t retryMaxSeconds = 50;
 
   if (fRunExecuted)
     return;
@@ -1422,10 +1425,15 @@ void TupleBPS::run()
   fRunExecuted = true;
 
   // make sure each numeric column has the same # of extents! See bugs 4564 and 3607
+  bool extentCountOk = false;
+  const time_t retryStart = time(nullptr);
+
   try
   {
-    while (!goodExtentCount() && retryCounter++ < retryMax)
+    while (!(extentCountOk = goodExtentCount()) && retryCounter < retryMax && !cancelled() &&
+           time(nullptr) - retryStart < retryMaxSeconds)
     {
+      retryCounter++;
       usleep(waitInterval);
       reloadExtentLists();
     }
@@ -1439,10 +1447,44 @@ void TupleBPS::run()
     return;
   }
 
-  if (retryCounter == retryMax)
+  if (!extentCountOk)
   {
-    catchHandler("TupleBPS: Could not get a consistent extent count for each column.", ERR_TUPLE_BPS,
-                 fErrorInfo, fSessionId);
+    // Cancelled (KILL or another step's error): that error is already set, don't replace it.
+    if (!cancelled())
+    {
+      ostringstream os;
+      os << "TupleBPS: Could not get a consistent extent count for each column after " << retryCounter
+         << " retries in " << time(nullptr) - retryStart << "s.";
+      // Name the columns that differ from the most common count; a wide table has hundreds.
+      map<size_t, uint32_t> countFreq;
+
+      for (auto& col : extentsMap)
+        countFreq[col.second.size()]++;
+
+      size_t usual = 0;
+      uint32_t usualFreq = 0;
+
+      for (auto& cf : countFreq)
+        if (cf.second > usualFreq)
+        {
+          usual = cf.first;
+          usualFreq = cf.second;
+        }
+
+      os << " " << usualFreq << " of " << extentsMap.size() << " columns have " << usual
+         << " extents; OID=extents for the others:";
+      uint32_t shown = 0;
+
+      for (auto& col : extentsMap)
+        if (col.second.size() != usual && shown++ < 16)
+          os << ' ' << col.first << '=' << col.second.size();
+
+      if (shown > 16)
+        os << " (+" << shown - 16 << " more)";
+
+      catchHandler(os.str(), ERR_TUPLE_BPS, fErrorInfo, fSessionId);
+    }
+
     fOutputJobStepAssociation.outAt(0)->rowGroupDL()->endOfInput();
     return;
   }

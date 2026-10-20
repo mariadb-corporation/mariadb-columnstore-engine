@@ -43,6 +43,7 @@
 #include <cstdint>
 #include <csignal>
 #include <sys/resource.h>
+#include <sys/vfs.h>
 
 #undef root_name
 #include <boost/filesystem.hpp>
@@ -121,6 +122,40 @@ void ServiceExeMgr::setupSignalHandlers()
   sigaction(SIGFPE, &ign, 0);
 }
 
+// SystemTempFileDir on a network filesystem is usually shared by several nodes. Spill files get a
+// per-host subdirectory, but other users of the directory (the cpimport BRM report, job files)
+// still assume it is node-local.
+void warnIfNetworkTempDir(const std::string& dir)
+{
+  struct statfs fs;
+  if (dir.empty() || statfs(dir.c_str(), &fs) != 0)
+    return;
+
+  switch (static_cast<uint32_t>(fs.f_type))
+  {
+    case 0x6969:      // NFS
+    case 0x517B:      // SMB
+    case 0xFF534D42:  // CIFS
+    case 0xFE534D42:  // SMB2
+    case 0x00C36400:  // Ceph
+    case 0x01161970:  // GFS2
+    case 0x7461636F:  // OCFS2
+    case 0x65735546:  // FUSE
+      break;
+    default: return;
+  }
+
+  std::cerr << "SystemTempFileDir (" << dir << ") is on a network filesystem" << std::endl;
+  logging::LoggingID logid(16, 0, 0);
+  logging::Message::Args args;
+  logging::Message message(8);
+  args.add("SystemTempFileDir is on a network filesystem, it must be node-local:");
+  args.add(dir);
+  message.format(args);
+  logging::Logger logger(logid.fSubsysID);
+  logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
+}
+
 void cleanTempDir()
 {
   using TempDirPurpose = config::Config::TempDirPurpose;
@@ -191,6 +226,9 @@ void cleanTempDir()
       logger.logMessage(logging::LOG_TYPE_WARNING, message, logid);
     }
   }
+
+  // After the loop, so the directory exists (and the default is covered when the setting is empty).
+  warnIfNetworkTempDir(config->getTempFileDir(TempDirPurpose::Joins));
 }
 
 const std::string ServiceExeMgr::prettyPrintMiniInfo(const std::string& in)

@@ -43,7 +43,7 @@ ThreadPool::ThreadPool() : fMaxThreads(0), fQueueSize(0)
 }
 
 ThreadPool::ThreadPool(size_t maxThreads, size_t queueSize)
- : fMaxThreads(maxThreads), fQueueSize(queueSize), fPruneThread(NULL)
+ : fMaxThreads(maxThreads), fQueueSize(queueSize), fPruneThread(nullptr)
 {
   init();
 }
@@ -72,7 +72,6 @@ void ThreadPool::init()
   fStop = false;
   fNextFunctor = fWaitingFunctors.end();
   fNextHandle = 1;
-  fPruneThread = new boost::thread(boost::bind(&ThreadPool::pruneThread, this));
 }
 
 void ThreadPool::setQueueSize(size_t queueSize)
@@ -131,9 +130,13 @@ void ThreadPool::stop()
   fStop = true;
   lock1.unlock();
 
-  fPruneThreadEnd.notify_all();
-  fPruneThread->join();
-  delete fPruneThread;
+  if (fPruneThread != nullptr)
+  {
+    fPruneThreadEnd.notify_all();
+    fPruneThread->join();
+    delete fPruneThread;
+    fPruneThread = nullptr;
+  }
   fNeedThread.notify_all();
   fThreads.join_all();
 }
@@ -223,6 +226,12 @@ void ThreadPool::join(std::vector<uint64_t>& thrHandle)
 uint64_t ThreadPool::invoke(const Functor_T& threadfunc)
 {
   boost::mutex::scoped_lock lock1(fMutex);
+
+  if (!fStop && fPruneThread == nullptr)
+  {
+    fPruneThread = new boost::thread(boost::bind(&ThreadPool::pruneThread, this));
+  }
+
   uint64_t thrHandle = 0;
 
   for (;;)

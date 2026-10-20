@@ -363,7 +363,7 @@ class ThreadPool
   boost::mutex fInitMutex;
   boost::mutex fPruneMutex;
   boost::condition_variable fPruneThreadEnd;
-  boost::thread* fPruneThread;
+  boost::thread* fPruneThread{nullptr};
   std::stack<boost::thread::id> fPruneThreads;  // A list of stale thread IDs to be joined
 };
 

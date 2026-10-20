@@ -8,11 +8,19 @@ local servers = {
 };
 
 local platforms = {
-  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:11", "ubuntu:22.04"],
+  [current_branch]: ["rockylinux:8", "rockylinux:9"],
 };
 
+// [test-only] The el9 image is Rocky 9.3, but the live repos upgrade glibc/libsepol during the dependency
+// install, so the RPMs needed RHEL 9.7+ (libc GLIBC_2.35, libsepol >= 3.6). Pin the repos to the 9.3 vault
+// so the packages install on RHEL 9.3 and later.
+local el9_repo_pin(platform) =
+  if (platform == "rockylinux:9") then
+    ["sed -i -e 's/^mirrorlist=/#mirrorlist=/' -e 's|^#baseurl=http://dl.rockylinux.org/[$]contentdir/[$]releasever/|baseurl=https://dl.rockylinux.org/vault/rocky/9.3/|' /etc/yum.repos.d/rocky*.repo && dnf clean all"]
+  else [];
+
 local platforms_arm = {
-  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:11", "ubuntu:22.04"],
+  [current_branch]: ["rockylinux:8"],
 };
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
@@ -524,7 +532,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6.15-10", custo
              },
 
              # errorprone if we pass --custom-cmake-flags twice, the last one will win
-             commands: [
+             commands: el9_repo_pin(platform) + [
                          "mkdir /mdb/" + builddir + "/" + result,
                        ]
                        + customEnvCommands(customBuildEnvCommandsMapKey, builddir) +
@@ -549,7 +557,7 @@ local Pipeline(branch, platform, event, arch="amd64", server="10.6.15-10", custo
              environment: {
                DEBIAN_FRONTEND: "noninteractive",
              },
-             commands: [
+             commands: el9_repo_pin(platform) + [
                get_build_command("build_cmapi.sh") + " --distro " + platform,
              ],
            },
