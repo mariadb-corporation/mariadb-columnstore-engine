@@ -439,7 +439,7 @@ bool InetStreamSocket::readFixedSizeData(struct pollfd* pfd, uint8_t* buffer, si
       {
         throw runtime_error("SSL EOF");
       }
-      bytes_read += nread;
+      bytesRead += nread;
     }
 
     if (stats)
@@ -1067,9 +1067,9 @@ bool InetStreamSocket::isConnected() const
   if (error || retval)
     return false;
 
-  if (fTLSConn())
+  if (TLSConn())
   {
-    return fTLSConn->connected();
+    return TLSConn()->connected();
   }
   else
   {

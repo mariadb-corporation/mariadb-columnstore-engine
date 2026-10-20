@@ -153,7 +153,7 @@ public:
     idbassert(fSSLConnection);
     return SSL_read(fSSLConnection, buf, length);
   }
-  int write(void* buf, int length)
+  int write(const void* buf, int length)
   {
     idbassert(fSSLConnection);
     return SSL_write(fSSLConnection, buf, length);
@@ -280,7 +280,7 @@ class Socket
 
   void enableTLSConn() { fTLSConn.reset(new TLSConnection()); }
 
-  std::shared_ptr<TLSConnection> TLSConn() { return fTLSConn; }
+  std::shared_ptr<TLSConnection> TLSConn() const { return fTLSConn; }
 protected:
   std::shared_ptr<TLSConnection> fTLSConn;
 
