@@ -278,9 +278,9 @@ class Socket
    */
   friend class ::MessageQTestSuite;
 
-  void enableTLSConn() { fTLSConn.reset(new TLSConn()); }
+  void enableTLSConn() { fTLSConn.reset(new TLSConnection()); }
 
-  std::shared_ptr<TLSConn> TLSConn() { return fTLSConn; }
+  std::shared_ptr<TLSConnection> TLSConn() { return fTLSConn; }
 private:
   std::shared_ptr<TLSConnection> fTLSConn;
 
