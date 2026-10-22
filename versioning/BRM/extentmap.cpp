@@ -2233,9 +2233,13 @@ void ExtentMap::discardEMUpdate()
     return;
 
   fPExtMapRBTreeImpl->discardUpdate();
-  // Back to whatever is published.
+  // Back to whatever is published, if anything. On a never-published segment -
+  // the write that just rolled back was the first ever and nothing is on disk
+  // for refresh() to point at - leave the pointer alone. The next beginEMUpdate()
+  // or initEMDataAreaIfNeeded() will lay out a fresh image and set it.
   fPExtMapRBTreeImpl->refresh();
-  fExtentMapRBTree = fPExtMapRBTreeImpl->get();
+  if (auto* tree = fPExtMapRBTreeImpl->get())
+    fExtentMapRBTree = tree;
 }
 
 /* Returns with the free list mapped, holding the free list write lock for a
@@ -2379,10 +2383,16 @@ void ExtentMap::discardFLUpdate()
     return;
 
   fPFreeListImpl->discardUpdate();
-  // Back to whatever is published.
+  // Back to whatever is published, if anything. On a never-published segment -
+  // the write that just rolled back was the first ever and nothing is on disk
+  // for refresh() to point at - leave the pointers alone. The next beginFLUpdate()
+  // or initFLDataAreaIfNeeded() will lay out a fresh image and set them.
   fPFreeListImpl->refresh();
-  fFLHeader = fPFreeListImpl->get();
-  fFreeList = freeListEntriesOf(fFLHeader);
+  if (auto* header = fPFreeListImpl->get())
+  {
+    fFLHeader = header;
+    fFreeList = freeListEntriesOf(fFLHeader);
+  }
 }
 
 /* Returns with the EM index mapped, holding the EM index write lock for a write
@@ -2502,9 +2512,14 @@ void ExtentMap::discardEMIndexUpdate()
     return;
 
   fPExtMapIndexImpl_->discardUpdate();
-  // Back to whatever is published.
+  // Back to whatever is published, if anything. On a never-published segment -
+  // the write that just rolled back was the first ever and nothing is on disk
+  // for refresh() to point at - leave the pointer alone. The next
+  // beginEMIndexUpdate() or initEMIndexDataAreaIfNeeded() will lay out a fresh
+  // image and set it.
   fPExtMapIndexImpl_->refresh();
-  fEMIndex = fPExtMapIndexImpl_->get();
+  if (auto* index = fPExtMapIndexImpl_->get())
+    fEMIndex = index;
 }
 
 void ExtentMap::releaseEMEntryTable(OPS op)

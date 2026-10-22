@@ -220,9 +220,13 @@ void VSS::discardUpdate()
     return;
 
   fPVSSImpl->discardUpdate();
-  // Back to whatever is published.
+  // Back to whatever is published, if anything. On a never-published segment -
+  // the write that just rolled back was the first ever and nothing is on disk
+  // for refresh() to point at - leave the pointers alone. The next beginUpdate()
+  // or ensureDataArea() will lay out a fresh image and set them.
   fPVSSImpl->refresh();
-  setPointers(fPVSSImpl->get());
+  if (VSSShmsegHeader* header = fPVSSImpl->get())
+    setPointers(header);
 }
 
 /* Nothing to do: the changes are in a copy nobody else can see, and it is
