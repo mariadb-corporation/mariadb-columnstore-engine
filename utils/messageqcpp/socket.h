@@ -33,6 +33,8 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
+#include "config.h"
+
 class MessageQTestSuite;
 
 namespace messageqcpp
@@ -103,11 +105,14 @@ public:
       throw std::runtime_error("unable to create TLS context");
     }
     SSL_CTX_set_verify(fSSLContext, SSL_VERIFY_PEER, NULL);
-    const char* fn = "/data/cert.pem";
-    if (!SSL_CTX_load_verify_locations(fSSLContext, fn, NULL))
+    if (!SSL_CTX_load_verify_locations(fSSLContext, certFN.c_str(), NULL))
     {
       throw std::runtime_error("unable to load and verify certificate");
     }
+    if (SSL_CTX_use_PrivateKey_file(fSSLContext, keyFN.c_str(), SSL_FILETYPE_PEM) <= 0) {
+      throw std::runtime_error("unable to load private key");
+    }
+
     fSSLConnection = SSL_new(fSSLContext);
     if (!SSL_set_fd(fSSLConnection, sd))
     {
@@ -131,8 +136,7 @@ public:
       throw std::runtime_error("unable to create TLS context");
     }
     SSL_CTX_set_verify(fSSLContext, SSL_VERIFY_PEER, NULL);
-    const char* fn = "/data/cert.pem";
-    if (!SSL_CTX_load_verify_locations(fSSLContext, fn, NULL))
+    if (!SSL_CTX_load_verify_locations(fSSLContext, certFN.c_str(), NULL))
     {
       throw std::runtime_error("unable to load and verify certificate");
     }
@@ -161,6 +165,8 @@ public:
   bool connected() const { return !!fSSLConnection; }
   SSL_CTX* fSSLContext;
   SSL* fSSLConnection;
+  std::string keyFN;
+  std::string certFN;
 };
 
 /** an abstract socket class interface
@@ -174,6 +180,13 @@ class Socket
    */
   virtual ~Socket()
   {
+  }
+
+  Socket()
+  {
+    fTLSConn.reset(new TLSConnection());
+    fTLSConn->certFN = "/data/ssl/cert.pem";
+    fTLSConn->keyFN = "/data/ssl/key.pem";
   }
 
   /** open the socket
