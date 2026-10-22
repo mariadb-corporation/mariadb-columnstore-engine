@@ -33,7 +33,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#include "config.h"
+#include "configcpp.h"
 
 class MessageQTestSuite;
 
