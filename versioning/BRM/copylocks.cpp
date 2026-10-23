@@ -141,9 +141,20 @@ void CopyLocks::setReadOnly()
 /* Points the members at the image header describes. The entry array sits
    immediately behind the header and so never moves relative to it, but the
    image as a whole does - every publish and every growth of the copy relocates
-   it - so this has to run again after either. */
+   it - so this has to run again after either.
+
+   Null-safe: a null header means there is no image to point at (e.g. after
+   discardUpdate() on a never-published segment). Reset the members so that a
+   stale pointer to a freed copy is not left behind. */
 void CopyLocks::setPointers(CLShmsegHeader* h)
 {
+  if (!h)
+  {
+    header = nullptr;
+    entries = nullptr;
+    return;
+  }
+
   header = h;
   entries = clEntriesOf(h);
 }

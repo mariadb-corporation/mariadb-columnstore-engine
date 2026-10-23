@@ -2235,8 +2235,9 @@ void ExtentMap::discardEMUpdate()
   fPExtMapRBTreeImpl->discardUpdate();
   // Back to whatever is published, if anything. On a never-published segment -
   // the write that just rolled back was the first ever and nothing is on disk
-  // for refresh() to point at - leave the pointer alone. The next beginEMUpdate()
-  // or initEMDataAreaIfNeeded() will lay out a fresh image and set it.
+  // for refresh() to point at - get() returns null, and fExtentMapRBTree is set
+  // to null rather than left dangling at the freed copy. The next
+  // beginEMUpdate() or initEMDataAreaIfNeeded() will lay out a fresh image.
   fPExtMapRBTreeImpl->refresh();
   if (auto* tree = fPExtMapRBTreeImpl->get())
     fExtentMapRBTree = tree;
@@ -2385,14 +2386,17 @@ void ExtentMap::discardFLUpdate()
   fPFreeListImpl->discardUpdate();
   // Back to whatever is published, if anything. On a never-published segment -
   // the write that just rolled back was the first ever and nothing is on disk
-  // for refresh() to point at - leave the pointers alone. The next beginFLUpdate()
-  // or initFLDataAreaIfNeeded() will lay out a fresh image and set them.
+  // for refresh() to point at - get() returns null, and both members are reset
+  // to null rather than left dangling at the freed copy. freeListEntriesOf()
+  // adds sizeof(FreeListHeader) to its arg so passing it null would hand back
+  // a trap address, not null; the explicit reset below avoids that. The next
+  // beginFLUpdate() or initFLDataAreaIfNeeded() will lay out a fresh image.
   fPFreeListImpl->refresh();
-  if (auto* header = fPFreeListImpl->get())
-  {
-    fFLHeader = header;
+  fFLHeader = fPFreeListImpl->get();
+  if (fFLHeader)
     fFreeList = freeListEntriesOf(fFLHeader);
-  }
+  else
+    fFreeList = nullptr;
 }
 
 /* Returns with the EM index mapped, holding the EM index write lock for a write
@@ -2514,9 +2518,10 @@ void ExtentMap::discardEMIndexUpdate()
   fPExtMapIndexImpl_->discardUpdate();
   // Back to whatever is published, if anything. On a never-published segment -
   // the write that just rolled back was the first ever and nothing is on disk
-  // for refresh() to point at - leave the pointer alone. The next
-  // beginEMIndexUpdate() or initEMIndexDataAreaIfNeeded() will lay out a fresh
-  // image and set it.
+  // for refresh() to point at - get() returns null, and fEMIndex is set to
+  // null rather than left dangling at the freed copy. The next
+  // beginEMIndexUpdate() or initEMIndexDataAreaIfNeeded() will lay out a
+  // fresh image.
   fPExtMapIndexImpl_->refresh();
   if (auto* index = fPExtMapIndexImpl_->get())
     fEMIndex = index;
