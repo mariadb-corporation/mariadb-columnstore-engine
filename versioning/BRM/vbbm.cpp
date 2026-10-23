@@ -130,9 +130,22 @@ VBBM::~VBBM()
 
 /* Points the three array members at the arrays of the image header describes.
    Every change to nFiles or numHashBuckets moves the arrays behind it, so this
-   has to run again after any of them. */
+   has to run again after any of them.
+
+   Null-safe: a null header means there is no image to point at (e.g. after
+   discardUpdate() on a never-published segment). Reset the members so that a
+   stale pointer to a freed copy is not left behind. */
 void VBBM::setPointers(VBShmsegHeader* header)
 {
+  if (!header)
+  {
+    vbbm = nullptr;
+    files = nullptr;
+    hashBuckets = nullptr;
+    storage = nullptr;
+    return;
+  }
+
   const VBBMLayout layout = vbbmLayoutOf(header);
 
   vbbm = header;
@@ -256,9 +269,13 @@ void VBBM::discardUpdate()
     return;
 
   fPVBBMImpl->discardUpdate();
-  // Back to whatever is published.
+  // Back to whatever is published, if anything. On a never-published segment -
+  // the write that just rolled back was the first ever and nothing is on disk
+  // for refresh() to point at - leave the pointers alone. The next beginUpdate()
+  // or initDataAreaIfNeeded() will lay out a fresh image and set them.
   fPVBBMImpl->refresh();
-  setPointers(fPVBBMImpl->get());
+  if (VBShmsegHeader* header = fPVBBMImpl->get())
+    setPointers(header);
 }
 
 /* Nothing to do: the changes are in a copy nobody else can see, and it is

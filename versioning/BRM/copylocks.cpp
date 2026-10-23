@@ -141,9 +141,20 @@ void CopyLocks::setReadOnly()
 /* Points the members at the image header describes. The entry array sits
    immediately behind the header and so never moves relative to it, but the
    image as a whole does - every publish and every growth of the copy relocates
-   it - so this has to run again after either. */
+   it - so this has to run again after either.
+
+   Null-safe: a null header means there is no image to point at (e.g. after
+   discardUpdate() on a never-published segment). Reset the members so that a
+   stale pointer to a freed copy is not left behind. */
 void CopyLocks::setPointers(CLShmsegHeader* h)
 {
+  if (!h)
+  {
+    header = nullptr;
+    entries = nullptr;
+    return;
+  }
+
   header = h;
   entries = clEntriesOf(h);
 }
@@ -238,9 +249,13 @@ void CopyLocks::discardUpdate()
     return;
 
   fCopyLocksImpl->discardUpdate();
-  // Back to whatever is published.
+  // Back to whatever is published, if anything. On a never-published segment -
+  // the write that just rolled back was the first ever and nothing is on disk
+  // for refresh() to point at - leave the pointers alone. The next beginUpdate()
+  // or ensureDataArea() will lay out a fresh image and set them.
   fCopyLocksImpl->refresh();
-  setPointers(fCopyLocksImpl->get());
+  if (CLShmsegHeader* header = fCopyLocksImpl->get())
+    setPointers(header);
 }
 
 /* Nothing to do: the changes are in a copy nobody else can see, and it is
