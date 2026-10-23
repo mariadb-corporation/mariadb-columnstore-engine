@@ -20,6 +20,7 @@
 #include <iostream>
 #include <algorithm>
 #include <map>
+//#include <tuple>
 #include <assert.h>
 #include <sys/time.h>
 using namespace std;
@@ -47,7 +48,10 @@ struct ExtentPos
   uint16_t segNum;
   uint32_t blockOff;
 
-  auto operator<=>(const ExtentPos&) const = default;
+  bool operator<(const ExtentPos& o) const
+  {
+    return std::tie(dbRoot, partNum, segNum, blockOff) < std::tie(o.dbRoot, o.partNum, o.segNum, o.blockOff);
+  }
 };
 
 ExtentPos extentPos(const BRM::EMEntry& e)
@@ -727,13 +731,16 @@ SystemCatalog::UpgradeState SystemCatalog::checkUpgradeCandidate(int oid, int re
 
   bool matches = (extents.size() == refExtents.size());
 
-  for (const auto& e : extents)
+  if (matches)
   {
-    auto it = refStatus.find(extentPos(e));
-
-    if (it == refStatus.end() || (e.status == BRM::EXTENTUNAVAILABLE && it->second != BRM::EXTENTUNAVAILABLE))
+    for (const auto& e : extents)
     {
-      matches = false;
+      auto it = refStatus.find(extentPos(e));
+
+      if (it == refStatus.end() || (e.status == BRM::EXTENTUNAVAILABLE && it->second != BRM::EXTENTUNAVAILABLE))
+      {
+        matches = false;
+      }
     }
   }
 
@@ -759,7 +766,7 @@ int SystemCatalog::removeUpgradeLeftovers(int oid, string& detail)
   try
   {
     FileOp fileOp;
-    rc = fileOp.deleteFiles(vector<int32_t>{oid});
+    rc = fileOp.existsDefaultFile(oid) ? fileOp.deleteFiles(vector<int32_t>{oid}) : NO_ERROR;
   }
   catch (const exception& ex)
   {

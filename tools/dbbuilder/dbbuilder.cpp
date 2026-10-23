@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
                        false);
       }
 
-      if (!isUpgrade && hasErrors)
+      if (hasErrors)
       {
         string cmd =
             "echo 'FAILED: inconsistent system catalog columns, see the critical log' > " + logFile;
