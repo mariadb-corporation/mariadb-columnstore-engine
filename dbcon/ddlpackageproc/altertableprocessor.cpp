@@ -1169,6 +1169,21 @@ void AlterTableProcessor::addColumn(uint32_t sessionID, execplan::CalpontSystemC
             errorMsg = " Unknown exception caught while dropping column files.";
           }
 
+          // Remove allocated extents to prevent leaking
+          if (rc == 0)
+          {
+            try
+            {
+              flushPrimprocCache(oidList);
+              removeExtents(oidList);
+            }
+            catch (std::exception& ex)
+            {
+              rc = 1;
+              errorMsg += std::string("; the new column's extents are not removed yet: ") + ex.what();
+            }
+          }
+
           if (rc == 0)
           {
             fWEClient->removeQueue(uniqueId);

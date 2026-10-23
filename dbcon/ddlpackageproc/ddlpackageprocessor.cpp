@@ -591,8 +591,8 @@ void DDLPackageProcessor::createFiles(CalpontSystemCatalog::TableName aTableName
   ByteStream bytestream;
   boost::shared_ptr<messageqcpp::ByteStream> bsIn;
   bytestream << (ByteStream::byte)WE_SVR_WRITE_CREATETABLEFILES;
-  bytestream << (uint32_t)1;
   bytestream << uniqueId;
+  bytestream << (uint32_t)1;
   bytestream << numOids;
 
   for (unsigned col = 0; col < ridList.size(); col++)
