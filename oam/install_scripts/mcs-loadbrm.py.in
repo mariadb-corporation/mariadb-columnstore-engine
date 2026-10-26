@@ -441,12 +441,29 @@ if __name__ == '__main__':
         except OSError:
             sys.exit(1)
     else:
+        # mcs-workernode Requires= this unit, so the exit code decides whether
+        # the worker starts on an empty image (MCOL-6606). A new install has
+        # no saves yet and must start empty; a node whose saves exist but
+        # whose _current pointer is missing or empty must not.
         if s3_enabled:
-            logging.info(
-                'brm_saves_currenty returned empty string from read_from_sm_with_retry'
+            # A new install and an unreadable save look the same through smcat.
+            logging.warning(
+                'brm_saves_current returned empty string from '
+                'read_from_sm_with_retry; starting with an empty BRM.'
             )
-        else:
-            logging.info(
-                'brm_saves_currenty returned empty string from read_from_disk'
+            sys.exit(0)
+        saves = glob.glob('{}*_em'.format(dbrmroot))
+        if saves:
+            logging.error(
+                '{}_current is missing or empty, but BRM saves exist ({}). '
+                'Not starting with an empty BRM.'.format(
+                    dbrmroot, ', '.join(sorted(saves))
+                )
             )
-        sys.exit(1)
+            sys.exit(1)
+        logging.info(
+            'No BRM saves found ({}*): new install, nothing to load.'.format(
+                dbrmroot
+            )
+        )
+        sys.exit(0)
