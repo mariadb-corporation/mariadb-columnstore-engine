@@ -52,6 +52,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-ddlproc.service.in" "${CMAKE_CUR
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.service" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-storagemanager.service.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-storagemanager.service" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-stop-controllernode.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-stop-controllernode.sh" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-workernode-stop-shm.sh.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-workernode-stop-shm.sh" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-loadbrm.py" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-savebrm.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcs-savebrm.py" @ONLY)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mcs-savebrm.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/mcssavebrm.py" @ONLY)
@@ -64,6 +65,7 @@ install(PROGRAMS columnstore-post-install
                 post-mysqld-install
                 columnstoreSyslogSetup.sh
                 mcs-stop-controllernode.sh
+                mcs-workernode-stop-shm.sh
                 mcs-loadbrm.py
                 mcs-savebrm.py
                 mariadb-columnstore-start.sh
