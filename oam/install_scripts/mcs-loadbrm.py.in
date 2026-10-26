@@ -56,7 +56,7 @@ def run_load_brm(cmd):
     shared memory to be cleared; raises CalledProcessError on other failures."""
     ret = subprocess.run(
         cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-        text=True, errors='replace'
+        errors='replace'  # implies text mode; text= needs 3.7, Rocky 8 has 3.6
     )
     sys.stdout.write(ret.stdout)
     sys.stdout.flush()
