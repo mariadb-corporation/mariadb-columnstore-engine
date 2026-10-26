@@ -57,7 +57,8 @@ using namespace messageqcpp;
 using namespace oam;
 namespace dmlpackageprocessor
 {
-DMLPackageProcessor::DMLResult DeletePackageProcessor::processPackage(dmlpackage::CalpontDMLPackage& cpackage)
+DMLPackageProcessor::DMLResult DeletePackageProcessor::processPackageInternal(
+    dmlpackage::CalpontDMLPackage& cpackage)
 {
   SUMMARY_INFO("DeletePackageProcessor::processPackage");
 
@@ -174,7 +175,6 @@ DMLPackageProcessor::DMLResult DeletePackageProcessor::processPackage(dmlpackage
               abs_ts.tv_nsec = rm_ts.tv_nsec;
             } while (nanosleep(&abs_ts, &rm_ts) < 0);
 
-
             try
             {
               processID = ::getpid();
@@ -264,15 +264,23 @@ DMLPackageProcessor::DMLResult DeletePackageProcessor::processPackage(dmlpackage
   }
   catch (exception& ex)
   {
-    cerr << "DeletePackageProcessor::processPackage: " << ex.what() << endl;
-
-    //@Bug 4994 Cancelled job is not error
-    if (result.result == 0)
+    // MCOL-6613 retry only if WES has not seen this attempt: its state is per txn and survives the attempt.
+    if (checkPPLostConnection(ex) && !fSentToWES)
     {
-      result.result = DELETE_ERROR;
+      result.result = PP_LOST_CONNECTION;
     }
+    else
+    {
+      cerr << "DeletePackageProcessor::processPackage: " << ex.what() << endl;
 
-    result.message = Message(ex.what());
+      //@Bug 4994 Cancelled job is not error
+      if (result.result == 0)
+      {
+        result.result = DELETE_ERROR;
+      }
+
+      result.message = Message(ex.what());
+    }
   }
   catch (...)
   {
@@ -471,6 +479,7 @@ uint64_t DeletePackageProcessor::fixUpRows(dmlpackage::CalpontDMLPackage& cpacka
           // This is meta data, need to send to all PMs.
           metaData = true;
           // cout << "sending meta data" << endl;
+          fSentToWES = true;
           err = processRowgroup(msgBk, result, uniqueId, cpackage, pmStateDel, metaData, dbroot);
           rowGroup.reset(new rowgroup::RowGroup());
           rowGroup->deserialize(msg);
@@ -584,8 +593,10 @@ uint64_t DeletePackageProcessor::fixUpRows(dmlpackage::CalpontDMLPackage& cpacka
     }
 
     //@Bug 4358 get rid of broken pipe error by sending a dummy bs.
+    // MCOL-6613 qb=0 ends the query; the stale qb=100 made ExeMgr project one more band into the stream.
     if (err)
     {
+      qb = 0;
       msg.restart();
       msg << qb;
       fExeMgr->write(msg);

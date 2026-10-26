@@ -246,6 +246,9 @@ const SBS MessageQueueClient::read(const struct timespec* timeout, bool* isTimeO
 {
   if (!fClientSock.isOpen())
   {
+    if (!fAutoReconnect)
+      throw SocketClosed("MessageQueueClient: connection to " + fClientSock.addr2String() + " is closed");
+
     fClientSock.open();
 
     try
@@ -296,6 +299,9 @@ void MessageQueueClient::write(const ByteStream& msg, const struct timespec* tim
 {
   if (!fClientSock.isOpen())
   {
+    if (!fAutoReconnect)
+      throw SocketClosed("MessageQueueClient: connection to " + fClientSock.addr2String() + " is closed");
+
     fClientSock.open();
 
     try
