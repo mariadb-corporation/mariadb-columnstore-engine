@@ -102,6 +102,12 @@ if(WITH_UNITTESTS)
     target_link_libraries(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:brm_em_standalone COMMAND brm_em_standalone)
     set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
+
+    # MCOL-6603: no thread starts before the first ThreadPool::invoke()
+    add_executable(mcol6603_tests mcol6603-tests.cpp)
+    add_dependencies(mcol6603_tests googletest)
+    columnstore_link(mcol6603_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
+    gtest_add_tests(TARGET mcol6603_tests TEST_PREFIX columnstore:)
 endif()
 # -Werror=sign-compare
 if(WITH_MICROBENCHMARKS AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
