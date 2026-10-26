@@ -11,7 +11,7 @@ import tempfile
 import threading
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, call, patch
 
 # pylint: disable=protected-access
 from lxml import etree
@@ -19,10 +19,11 @@ from lxml import etree
 from cmapi_server import failover_agent
 from cmapi_server.failover_agent import FailoverAgent
 from cmapi_server.logging_management import add_logging_level
-from failover import agent_comm
+from failover import agent_comm, node_monitor
 from failover.agent_comm import AgentBase, AgentComm
 from failover.config import Config
 from failover.heartbeat_history import HBHistory
+from failover.node_monitor import NodeMonitor
 from mcs_node_control.models.node_config import NodeConfig
 
 # the failover code logs at TRACE, which CMAPI registers at start-up
@@ -143,6 +144,72 @@ class AgentCommDieTest(unittest.TestCase):
         self.assertTrue(done.wait(2))
 
 
+class TxnRecordingAgent(RecordingAgent):
+    """Gets transaction 7 and records what is committed or rolled back.
+    on_txn runs just before the transaction is handed back."""
+
+    def __init__(self, ignore_stop=False, on_txn=None):
+        super().__init__(txn_result=(7, ['node2']), ignore_stop=ignore_stop)
+        self.on_txn = on_txn
+        self.committed = []
+        self.rolled_back = []
+
+    def startTransaction(self, extra_nodes=None, remove_nodes=None, should_stop=None):
+        txn = super().startTransaction(extra_nodes, remove_nodes, should_stop)
+        if self.on_txn:
+            self.on_txn()
+        return txn
+
+    def commitTransaction(self, txnid, nodes):
+        self.committed.append((txnid, nodes))
+
+    def rollbackTransaction(self, txnid, nodes):
+        self.rolled_back.append((txnid, nodes))
+
+
+class AgentCommTxnAfterStopTest(unittest.TestCase):
+    """A transaction that arrives once the runner should no longer act."""
+
+    def test_hold_after_txn_acquired_rolls_back(self):
+        agent = TxnRecordingAgent()
+        ac = AgentComm(agent)
+        agent.on_txn = lambda: ac.holdMembershipChanges(True)
+        ac.start()
+        try:
+            ac.deactivateNodes(['node2'])
+            self.assertTrue(wait_for(lambda: agent.rolled_back))
+            self.assertEqual([(7, ['node2'])], agent.rolled_back)
+            self.assertEqual([], agent.committed)
+            self.assertEqual([], agent.deactivated)
+            self.assertEqual((0, 0), ac.getQueueSize())
+        finally:
+            ac.die()
+
+    @patch.object(agent_comm, 'DIE_JOIN_TIMEOUT_SECS', 0.5)
+    def test_superseded_runner_exits_without_acting(self):
+        # die() gives up on a runner stuck in startTransaction, and start()
+        # makes a new one; the old one gets its transaction afterwards.
+        agent = TxnRecordingAgent(ignore_stop=True)
+        ac = AgentComm(agent)
+        ac.start()
+        old = ac._thread
+        try:
+            ac.deactivateNodes(['node2'])
+            self.assertTrue(wait_for(lambda: agent.txn_calls == 1))
+            ac.die()
+            self.assertTrue(old.is_alive())
+            ac.start()
+            self.assertIsNot(old, ac._thread)
+            old.join(10)
+            self.assertFalse(old.is_alive())
+            self.assertEqual([(7, ['node2'])], agent.rolled_back)
+            self.assertEqual([], agent.committed)
+            self.assertEqual([], agent.deactivated)
+            self.assertTrue(ac._thread.is_alive())
+        finally:
+            ac.die()
+
+
 class HeartbeatHistoryClearTest(unittest.TestCase):
 
     def test_clear_forgets_missed_responses(self):
@@ -181,6 +248,66 @@ class ConfigMaintenanceTest(unittest.TestCase):
             self.assertFalse(config.inMaintenance())
             self._write(path, '', 3000)
             self.assertFalse(config.inMaintenance())
+
+
+class FakeConfig:
+    """Three nodes; inMaintenance() answers from a script, then stops the
+    monitor at the end of that loop pass."""
+
+    def __init__(self, maintenance):
+        self.maintenance = list(maintenance)
+        self.monitor = None
+
+    def getAllNodes(self):
+        nodes = ['node1', 'node2', 'node3']
+        return nodes, list(nodes), []
+
+    def who_am_I(self):
+        return 'node1'
+
+    def getPrimaryNode(self):
+        return 'node1'
+
+    def inMaintenance(self):
+        if len(self.maintenance) == 1:
+            self.monitor._die = True
+        return self.maintenance.pop(0)
+
+
+class NodeMonitorMaintenanceTest(unittest.TestCase):
+
+    def run_monitor(self, maintenance):
+        config = FakeConfig(maintenance)
+        with patch.object(node_monitor, 'HeartBeater'), \
+                patch.object(node_monitor, 'SharedStorageMonitor'):
+            monitor = NodeMonitor(agent=RecordingAgent(), config=config)
+        monitor.stop = lambda: None  # nothing was started; __del__ calls it
+        config.monitor = monitor
+        monitor._agentComm = MagicMock()
+        clear = patch.object(monitor._hbHistory, 'clear',
+                             wraps=monitor._hbHistory.clear).start()
+        self.addCleanup(patch.stopall)
+        with patch.object(node_monitor.time, 'sleep'), \
+                patch.object(node_monitor.AppStatefulConfig, 'is_shared_storage',
+                             return_value=False) as shared:
+            monitor._monitor()
+        return monitor, clear, shared
+
+    def test_maintenance_holds_then_resumes_with_fresh_history(self):
+        monitor, clear, shared = self.run_monitor([True, True, False])
+        self.assertEqual(
+            [call.holdMembershipChanges(True), call.holdMembershipChanges(False)],
+            monitor._agentComm.mock_calls,
+        )
+        clear.assert_called_once_with()
+        # the passes in maintenance skip the rest of the loop
+        self.assertEqual(1, shared.call_count)
+
+    def test_no_maintenance_no_hold(self):
+        monitor, clear, shared = self.run_monitor([False, False])
+        self.assertEqual([], monitor._agentComm.mock_calls)
+        clear.assert_not_called()
+        self.assertEqual(2, shared.call_count)
 
 
 if __name__ == '__main__':
