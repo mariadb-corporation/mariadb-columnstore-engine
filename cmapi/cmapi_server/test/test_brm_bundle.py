@@ -6,6 +6,7 @@ even when a save moves it during the read.
 import base64
 import hashlib
 import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -148,6 +149,79 @@ class TestBRMBundleSaveRace(BRMBundleFixture):
         bundle, reads = self.read_with(lambda element: None)
         self.assertEqual(len(reads), 8)
         self.assertEqual(bundle['generation'], 'BRM_savesA')
+
+
+class TestBRMBundleMissingJournal(BRMBundleFixture):
+    def test_missing_journal_is_a_503(self):
+        # The first worker creates the journal when it starts, before any
+        # save writes current, so this means it was removed or a restore left
+        # it out. Each attempt fails to stat it; the answer must be the
+        # retryable 503, not an unhandled error.
+        self.journal.unlink()
+        with patch.object(
+            endpoints, '_brm_save_marker', wraps=endpoints._brm_save_marker
+        ) as marker:
+            with self.assertRaises(APIError) as ctx:
+                endpoints.read_brm_bundle()
+        self.assertEqual(ctx.exception.code, 503)
+        self.assertEqual(marker.call_count, endpoints.BRM_BUNDLE_ATTEMPTS)
+
+
+class TestBRMBundleS3(BRMBundleFixture):
+    """On S3 every file is read with smcat, and there is no stat to compare."""
+
+    def setUp(self):
+        super().setUp()
+        self.files = {
+            element: f'S3 {element}'.encode() for element in endpoints.BRM_ELEMENTS
+        }
+        prefix = endpoints.EM_PATH_SUFFIX
+        self.smcat_files = {endpoints.S3_BRM_CURRENT_PATH: b'BRM_savesB\n'}
+        for element, data in self.files.items():
+            generation = 'BRM_saves' if element == 'journal' else 'BRM_savesB'
+            self.smcat_files[f'{prefix}/{generation}_{element}'] = data
+        missing = str(self.dir / 'not-on-local-disk')
+        node_config = patch.object(endpoints, 'NodeConfig')
+        node_config.start().return_value.s3_enabled.return_value = True
+        for patcher in (
+            node_config,
+            patch.object(endpoints, 'MCS_EM_PATH', missing),
+            patch.object(endpoints, 'MCS_BRM_CURRENT_PATH', missing),
+            patch.object(endpoints.MCSProcessManager, 'dispatcher_name', 'container'),
+        ):
+            if patcher is not node_config:
+                patcher.start()
+            self.addCleanup(patcher.stop)
+        self.smcat = patch.object(
+            endpoints.subprocess, 'run', side_effect=self.fake_smcat
+        ).start()
+        self.addCleanup(patch.stopall)
+
+    def fake_smcat(self, args, stdout=None):
+        self.assertEqual(args[0], 'smcat')
+        data = self.smcat_files.get(args[1])
+        if data is None:
+            return subprocess.CompletedProcess(args, 1, stdout=b'')
+        return subprocess.CompletedProcess(args, 0, stdout=data)
+
+    def test_one_generation_through_smcat(self):
+        bundle = endpoints.read_brm_bundle()
+        self.assertEqual(bundle['generation'], 'BRM_savesB')
+        self.assertEqual(self.decode(bundle), self.files)
+
+    def test_smcat_failing_on_current_is_a_503(self):
+        del self.smcat_files[endpoints.S3_BRM_CURRENT_PATH]
+        with self.assertRaises(APIError) as ctx:
+            endpoints.read_brm_bundle()
+        self.assertEqual(ctx.exception.code, 503)
+        # smcat is retried 10 times within each attempt
+        self.assertEqual(self.smcat.call_count, 10 * endpoints.BRM_BUNDLE_ATTEMPTS)
+
+    def test_smcat_failing_on_a_file_is_a_503(self):
+        del self.smcat_files[f'{endpoints.EM_PATH_SUFFIX}/BRM_savesB_vss']
+        with self.assertRaises(APIError) as ctx:
+            endpoints.read_brm_bundle()
+        self.assertEqual(ctx.exception.code, 503)
 
 
 if __name__ == '__main__':
