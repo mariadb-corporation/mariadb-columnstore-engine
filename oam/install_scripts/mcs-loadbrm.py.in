@@ -2,6 +2,7 @@
 """
 Works with python 3.4 and higher.
 """
+import atexit
 import configparser
 import fcntl
 import glob
@@ -33,6 +34,12 @@ MCS_MODULE_FILE_PATH = os.path.join(MCS_DATA_PATH, 'local/module')
 MCS_BIN_DIR = '@ENGINE_BINDIR@'
 SMCAT = os.path.join(MCS_BIN_DIR, 'smcat')
 LOADBRM = os.path.join(MCS_BIN_DIR, 'load_brm')
+CLEARSHM = os.path.join(MCS_BIN_DIR, 'clearShm')
+# BRM's own words when only removing the shared memory helps (unrecoverable update mutex,
+# inconsistent metadata area). mcs-workernode-stop-shm.sh may have kept the segments.
+SHM_HAS_TO_BE_CLEARED = 'has to be cleared'
+# The processes that map the BRM shared memory; mcs-workernode-stop-shm.sh checks the same list.
+BRM_READERS = ('PrimProc', 'WriteEngineServer', 'DMLProc', 'DDLProc')
 S3_DBROOT1_BRM_PATH = 'data1/systemFiles/dbrm/BRM_saves_current'
 USER = '@DEFAULT_USER@'
 GROUP = '@DEFAULT_GROUP@'
@@ -42,6 +49,60 @@ UNREASONABLE_DELAY = 600
 LOCALHOST = '127.0.0.1'
 API_VERSION = '0.4.0'
 API_PORT = '8640'
+
+
+def run_load_brm(cmd):
+    """Run load_brm, echoing its output. False if it failed asking for the
+    shared memory to be cleared; raises CalledProcessError on other failures."""
+    ret = subprocess.run(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        text=True, errors='replace'
+    )
+    sys.stdout.write(ret.stdout)
+    sys.stdout.flush()
+    if ret.returncode == 0:
+        return True
+    if SHM_HAS_TO_BE_CLEARED in ret.stdout:
+        return False
+    raise subprocess.CalledProcessError(ret.returncode, cmd)
+
+
+def live_brm_readers():
+    """name[pid] of every running BRM_READERS process."""
+    names = {name[:15]: name for name in BRM_READERS}  # comm is cut to 15 chars
+    found = []
+    for comm_path in glob.glob('/proc/[0-9]*/comm'):
+        try:
+            with open(comm_path) as comm:
+                name = names.get(comm.read().strip())
+        except OSError:  # the process has exited
+            continue
+        if name:
+            found.append('{}[{}]'.format(name, comm_path.split('/')[2]))
+    return sorted(found)
+
+
+def clear_shm(why):
+    """Remove the BRM shared memory. A reader still running keeps the old
+    segments mapped and never sees what is loaded afterwards (MCOL-6683), so it
+    is named: it has to be restarted."""
+    subprocess.run(CLEARSHM, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    readers = live_brm_readers()
+    if readers:
+        logging.error(
+            'Cleared the BRM shared memory (%s) while %s still run: they keep the '
+            'old segments and have to be restarted.', why, ' '.join(readers)
+        )
+    else:
+        logging.info('Cleared the BRM shared memory (%s).', why)
+
+
+def clear_shm_unless_loaded():
+    """atexit: the worker starts even if this fails, and the segments its stop
+    kept still hold the image from before it went down. Leave it no BRM rather
+    than a stale one, as when the stop always cleared."""
+    if not loaded:
+        clear_shm('the BRM load did not complete')
 
 
 def get_api_key():
@@ -286,6 +347,8 @@ if __name__ == '__main__':
     logging.basicConfig(
         format='%(levelname)s: %(message)s', level=logging.DEBUG
     )
+    loaded = False
+    atexit.register(clear_shm_unless_loaded)
     # To avoid systemd in container environment
     use_systemd = True
     if len(sys.argv) > 1:
@@ -428,7 +491,11 @@ if __name__ == '__main__':
                 brm_saves_current.decode('utf-8').replace('BRM_saves', '')
             )
         try:
-            subprocess.check_call(cmd, shell=True)
+            if not run_load_brm(cmd):
+                clear_shm('load_brm reports that it has to be cleared')
+                logging.warning('Loading BRM once more.')
+                subprocess.check_call(cmd, shell=True)
+            loaded = True
             # systemd services by default works using mysql privileges.
             # There were cases when shmem segments belongs to root so
             # explicitly chowns segments.

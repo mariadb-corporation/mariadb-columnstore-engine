@@ -14,7 +14,7 @@ LimitCORE=@CORE_DUMPS@
 Environment="@WORKERNODE_ALLOC_CONFIG@"
 ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker%i
 ExecStopPost=@ENGINE_BINDIR@/mcs-savebrm.py
-ExecStopPost=/usr/bin/env bash -c "clearShm > /dev/null 2>&1"
+ExecStopPost=@ENGINE_BINDIR@/mcs-workernode-stop-shm.sh
 
 Restart=on-failure
 TimeoutStopSec=750
