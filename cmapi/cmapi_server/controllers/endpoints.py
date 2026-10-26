@@ -1,3 +1,4 @@
+import base64
 import logging
 import hashlib
 import os
@@ -825,79 +826,149 @@ class ShutdownController:
         return shutdown_response
 
 
+BRM_ELEMENTS = ('em', 'journal', 'vbbm', 'vss')
+BRM_BUNDLE_ATTEMPTS = 5
+
+
+def _smcat_brm(path: str) -> Optional[bytes]:
+    """Read a file through SM, retrying for up to 10 s."""
+    # TODO: Remove conditional once container dispatcher
+    #       uses non-root by default
+    if MCSProcessManager.dispatcher_name == 'systemd':
+        args = ['su', '-s', '/bin/sh', '-c', f'smcat {path}', 'mysql']
+    else:
+        args = ['smcat', path]
+    for _ in range(10):
+        ret = subprocess.run(args, stdout=subprocess.PIPE)
+        if ret.returncode == 0:
+            return ret.stdout
+        module_logger.warning(
+            f'smcat {path} got error code {ret.returncode}, retrying'
+        )
+        time.sleep(1)
+    return None
+
+
+def _read_brm_current(s3_enabled: bool) -> Optional[str]:
+    """The save generation BRM_saves_current names, e.g. BRM_savesA."""
+    if s3_enabled:
+        data = _smcat_brm(S3_BRM_CURRENT_PATH)
+        return None if data is None else data.decode('utf-8').rstrip()
+    return Path(MCS_BRM_CURRENT_PATH).read_text().rstrip()
+
+
+def _read_brm_element(
+    s3_enabled: bool, current: str, element: str
+) -> Optional[bytes]:
+    suffix_for_file = current
+    # The journal is always in the current directory, strip trailing A/B from suffix
+    if element == 'journal' and suffix_for_file.endswith(('A', 'B')):
+        suffix_for_file = suffix_for_file[:-1]
+    if s3_enabled:
+        return _smcat_brm(f'{EM_PATH_SUFFIX}/{suffix_for_file}_{element}')
+    return Path(f'{MCS_EM_PATH}/{suffix_for_file}_{element}').read_bytes()
+
+
+def _brm_save_marker(s3_enabled: bool):
+    """What changes whenever a save starts, plus whether the journal is stale.
+
+    A save truncates BRM_saves_current before it rewrites any file, then
+    writes it, then truncates the journal. It may rewrite the generation
+    current already names (the A/B toggle restarts at A with the worker), so
+    comparing the name alone misses it. On local storage the stat of
+    BRM_saves_current changes with every save, and a journal older than it
+    is one the save hasn't truncated yet. SM has no stat, so on S3 only the
+    name is compared.
+    """
+    if s3_enabled:
+        return None, False
+    current = os.stat(MCS_BRM_CURRENT_PATH)
+    journal = os.stat(os.path.join(MCS_EM_PATH, 'BRM_saves_journal'))
+    return (
+        (current.st_ino, current.st_mtime_ns, current.st_size),
+        journal.st_mtime_ns < current.st_mtime_ns,
+    )
+
+
+def _read_brm_generation(s3_enabled: bool, seen: list) -> Optional[tuple]:
+    """One attempt at a consistent set: (generation, files) or None.
+
+    A stale journal is accepted once the same save marker was already seen
+    a second earlier: the save truncates it right after writing current, so
+    a journal that stays older is not a save in progress (e.g. a restore
+    that kept the files' times). seen carries the markers between attempts.
+    """
+    try:
+        marker, _ = _brm_save_marker(s3_enabled)
+        current = _read_brm_current(s3_enabled)
+        if not current:
+            return None
+        files = {
+            element: _read_brm_element(s3_enabled, current, element)
+            for element in BRM_ELEMENTS
+        }
+        marker_after, journal_stale = _brm_save_marker(s3_enabled)
+        current_after = _read_brm_current(s3_enabled)
+    except OSError:
+        module_logger.warning('Reading the BRM files failed.', exc_info=True)
+        return None
+    save_in_progress = journal_stale and marker_after not in seen
+    seen.append(marker_after)
+    if (
+        current_after != current
+        or marker_after != marker
+        or save_in_progress
+        or None in files.values()
+        or not files['em']
+    ):
+        return None
+    return current, files
+
+
+def read_brm_bundle() -> dict:
+    """All BRM files of one save generation, each with its size and sha256.
+
+    If a save ran during the read, a file was missing or the extent map was
+    empty, the files are read again.
+
+    :raises APIError: 503 if no consistent set could be read
+    """
+    s3_enabled = NodeConfig().s3_enabled()
+    seen = []
+    for attempt in range(1, BRM_BUNDLE_ATTEMPTS + 1):
+        result = _read_brm_generation(s3_enabled, seen)
+        if result is not None:
+            current, files = result
+            return {
+                'generation': current,
+                'files': {
+                    element: {
+                        'size': len(data),
+                        'sha256': hashlib.sha256(data).hexdigest(),
+                        'data': base64.b64encode(data).decode('ascii'),
+                    }
+                    for element, data in files.items()
+                },
+            }
+        module_logger.warning(
+            f'BRM bundle attempt {attempt}: a save ran during the read, or a '
+            f'file was missing or the extent map empty; retrying.'
+        )
+        time.sleep(1)
+    raise APIError(503, 'Could not read a consistent set of BRM files.')
+
 class ExtentMapController:
     def get_brm_bytes(self, element:str):
         func_name = 'get_brm_bytes'
         log_begin(module_logger, func_name)
-        node_config = NodeConfig()
-        result = b''
         # there must be sm available
-        if node_config.s3_enabled():
-            success = False
-            retry_count = 0
-            while not success and retry_count < 10:
-                module_logger.debug(f'{func_name} returns {element} from S3.')
-
-                # TODO: Remove conditional once container dispatcher
-                #       uses non-root by default
-                if MCSProcessManager.dispatcher_name == 'systemd':
-                    args = [
-                        'su', '-s', '/bin/sh', '-c',
-                        f'smcat {S3_BRM_CURRENT_PATH}', 'mysql'
-                    ]
-                else:
-                    args = ['smcat', S3_BRM_CURRENT_PATH]
-
-                ret = subprocess.run(args, stdout=subprocess.PIPE)
-                if ret.returncode != 0:
-                    module_logger.warning(f"{func_name} got error code {ret.returncode} from smcat, retrying")
-                    time.sleep(1)
-                    retry_count += 1
-                    continue
-                elem_current_suffix = ret.stdout.decode("utf-8").rstrip()
-
-                suffix_for_file = elem_current_suffix
-                # The journal is always in the current directory, strip trailing A/B from suffix
-                if element == 'journal' and suffix_for_file.endswith(('A', 'B')):
-                    suffix_for_file = suffix_for_file[:-1]
-                elem_current_filename = f'{EM_PATH_SUFFIX}/{suffix_for_file}_{element}'
-
-                # TODO: Remove conditional once container dispatcher
-                #       uses non-root by default
-                if MCSProcessManager.dispatcher_name == 'systemd':
-                    args = [
-                        'su', '-s', '/bin/sh', '-c',
-                        f'smcat {elem_current_filename}', 'mysql'
-                    ]
-                else:
-                    args = ['smcat', elem_current_filename]
-
-                ret = subprocess.run(args, stdout=subprocess.PIPE)
-                if ret.returncode != 0:
-                    module_logger.warning(f"{func_name} got error code {ret.returncode} from smcat, retrying")
-                    time.sleep(1)
-                    retry_count += 1
-                    continue
-                result = ret.stdout
-                success = True
-        else:
-            module_logger.debug(
-                f'{func_name} returns {element} from local storage.'
-            )
-            elem_current_name = Path(MCS_BRM_CURRENT_PATH)
-            elem_current_filename = elem_current_name.read_text().rstrip()
-
-            suffix_for_file = elem_current_filename
-            # The journal is always in the current directory, strip trailing A/B from suffix
-            if element == 'journal' and suffix_for_file.endswith(('A', 'B')):
-                suffix_for_file = suffix_for_file[:-1]
-            elem_current_file = Path(
-                f'{MCS_EM_PATH}/{suffix_for_file}_{element}'
-            )
-            result = elem_current_file.read_bytes()
-
+        s3_enabled = NodeConfig().s3_enabled()
+        current = _read_brm_current(s3_enabled)
+        result = None
+        if current is not None:
+            result = _read_brm_element(s3_enabled, current, element)
         module_logger.debug(f'{func_name} returns.')
-        return result
+        return result or b''
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
@@ -918,6 +989,12 @@ class ExtentMapController:
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
     def get_vbbm(self):
         return self.get_brm_bytes('vbbm')
+
+    @cherrypy.tools.timeit()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    @cherrypy.tools.json_out()
+    def get_bundle(self):
+        return read_brm_bundle()
 
     @cherrypy.tools.timeit()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
