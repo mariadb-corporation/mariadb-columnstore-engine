@@ -23,7 +23,13 @@ COLUMSNTORE_SOURCE_PATH=$(realpath "$SCRIPT_LOCATION"/../)
 DEFAULT_MARIA_BUILD_PATH=$(realpath "$MDB_SOURCE_PATH"/../BuildOf_$(basename "$MDB_SOURCE_PATH"))
 
 BUILD_TYPE_OPTIONS=("Debug" "RelWithDebInfo" "Release")
-DISTRO_OPTIONS=("ubuntu:22.04" "ubuntu:24.04" "debian:12" "debian:13" "rockylinux:8" "rockylinux:9" "rocky:10")
+DISTRO_OPTIONS=("ubuntu:22.04" "ubuntu:24.04" "debian:12" "debian:13" \
+    "rockylinux:8" "rockylinux:9" "rocky:10" \
+    "rhel:8" "rhel:9" "rhel:10" \
+    "almalinux:8" "almalinux:9" "almalinux:10" \
+    "oraclelinux:8" "oraclelinux:9" "oraclelinux:10" \
+    "fedora:38" "fedora:39" \
+    "amazonlinux:2023")
 
 GCC_VERSION="11"
 MDB_CMAKE_FLAGS=()
@@ -124,7 +130,10 @@ install_deps() {
       libjemalloc-dev liblz-dev liblzo2-dev liblzma-dev liblz4-dev libbz2-dev libbenchmark-dev libdistro-info-perl \
       graphviz devscripts ccache equivs eatmydata curl python3"
 
-    if is_rocky_version $OS 8; then
+    DISTRO_FAMILY=$(get_distro_family $OS)
+    DISTRO_MAJOR=$(get_distro_major $OS)
+
+    if is_rhel_compatible $OS && [[ "$DISTRO_MAJOR" == "8" ]]; then
         command="dnf install -y curl 'dnf-command(config-manager)' && dnf config-manager --set-enabled powertools && \
       dnf install -y libarchive cmake  ${RPM_BUILD_DEPS}"
         if [[ $GCC_TOOLSET = false ]]; then
@@ -133,9 +142,13 @@ install_deps() {
             command="$command && dnf install -y gcc-toolset-${GCC_VERSION} && . /opt/rh/gcc-toolset-${GCC_VERSION}/enable"
         fi
 
-    elif is_rocky_version_ge $OS 9; then
+    elif is_rhel_compatible_ge $OS 9; then
         command="dnf install -y 'dnf-command(config-manager)' && dnf config-manager --set-enabled crb && \
       dnf install -y pcre2-devel gcc gcc-c++ curl-minimal ${RPM_BUILD_DEPS}"
+
+    elif [[ "$DISTRO_FAMILY" == "fedora" || "$DISTRO_FAMILY" == "amazon" ]]; then
+        # Fedora and Amazon Linux ship the equivalent of CRB packages directly; no repo toggle needed.
+        command="dnf install -y pcre2-devel gcc gcc-c++ ${RPM_BUILD_DEPS}"
 
     elif [[ $PKG_FORMAT == "deb" ]]; then
         command="apt-get -y update && apt-get -y install ${DEB_BUILD_DEPS}"
@@ -144,7 +157,7 @@ install_deps() {
         exit 17
     fi
 
-    if is_rocky_version_ge $OS 9; then
+    if is_rhel_compatible_ge $OS 9 || [[ "$DISTRO_FAMILY" == "fedora" || "$DISTRO_FAMILY" == "amazon" ]]; then
         command="${command} && dnf install -y selinux-policy-devel"
     fi
 

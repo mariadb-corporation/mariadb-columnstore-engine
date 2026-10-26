@@ -55,18 +55,21 @@ install_deps() {
 
   cd "$COLUMNSTORE_SOURCE_PATH"/cmapi
 
-  if is_rocky_version $OS 9; then
+  DISTRO_FAMILY=$(get_distro_family $OS)
+  DISTRO_MAJOR=$(get_distro_major $OS)
+
+  # Rocky 9 ships redhat-lsb-core only in the `devel` repo, which is disabled by default.
+  if [[ "$DISTRO_FAMILY" == "rocky" && "$DISTRO_MAJOR" == "9" ]]; then
     retry_eval 5 "dnf install -q -y libxcrypt-compat yum-utils"
-    retry_eval 5 "dnf config-manager --set-enabled devel && dnf update -q -y" #to make redhat-lsb-core available for rocky 9
+    retry_eval 5 "dnf config-manager --set-enabled devel && dnf update -q -y"
   fi
 
-  #no redhat-lsb-release for rockylinux >=10
-  if is_rocky_version $OS && ! is_rocky_version_ge $OS 10; then
+  # redhat-lsb-core is only available on RHEL-compatible distros < 10.
+  if is_rhel_compatible $OS && ! is_rhel_compatible_ge $OS 10; then
     retry_eval 5 "dnf update -q -y && dnf install -q -y redhat-lsb-core"
   fi
 
-
-  if is_rocky_version_ge $OS 10; then
+  if is_rhel_compatible_ge $OS 10; then
     retry_eval 5 "dnf update -q -y && dnf install -q -y libxcrypt-compat"
   fi
 
