@@ -18,11 +18,15 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <boost/filesystem.hpp>
+#include <cstdint>
+#include "branchpred.h"
 #include "rowgroup.h"
 #include <resourcemanager.h>
 #include <fcntl.h>
 #include "rowstorage.h"
 #include "robin_hood.h"
+
+// #define DISK_AGG_DEBUG
 
 namespace
 {
@@ -83,6 +87,17 @@ std::string errorString(int errNo)
 
 namespace rowgroup
 {
+// Upstream has these in rowgroup.h (from MCOL-5852, not in 23.02).
+inline uint64_t rowGidRidToIdx(uint64_t gid, uint32_t rid, uint32_t maxRows)
+{
+  return gid * maxRows + rid;
+}
+
+inline std::pair<uint64_t, uint64_t> rowIdxToGidRid(uint64_t idx, uint32_t maxRows)
+{
+  return {idx / maxRows, idx % maxRows};
+}
+
 uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol)
 {
   uint64_t ret = 0;
@@ -278,8 +293,10 @@ class MemManager
     release(fMemUsed);
   }
 
-  bool acquire(std::size_t amount)
+  bool acquire(ssize_t amount)
   {
+    if (UNLIKELY(-amount > fMemUsed))
+      amount = -fMemUsed;
     return acquireImpl(amount);
   }
   void release(ssize_t amount = 0)
@@ -326,16 +343,16 @@ class MemManager
   }
 
  protected:
-  virtual bool acquireImpl(std::size_t amount)
+  virtual bool acquireImpl(ssize_t amount)
   {
     fMemUsed += amount;
     return true;
   }
-  virtual void releaseImpl(std::size_t amount)
+  virtual void releaseImpl(ssize_t amount)
   {
     fMemUsed -= amount;
   }
-  ssize_t fMemUsed = 0;
+  ssize_t fMemUsed{0};
 };
 
 class RMMemManager : public MemManager
@@ -383,7 +400,7 @@ class RMMemManager : public MemManager
   }
 
  protected:
-  bool acquireImpl(size_t amount) final
+  bool acquireImpl(ssize_t amount) final
   {
     if (amount)
     {
@@ -404,7 +421,7 @@ class RMMemManager : public MemManager
     return true;
   }
 
-  void releaseImpl(size_t amount) override
+  void releaseImpl(ssize_t amount) override
   {
     if (amount)
     {
@@ -611,13 +628,30 @@ class RowGroupStorage
     fRowGroupOut->setData(curRG);
     fRowGroupOut->resetRowGroup(0);
     fRGDatas.emplace_back(curRG);
-    fMM->acquire(fRowGroupOut->getSizeWithStrings(fMaxRows));
+    fMM->acquire(rgDataSize(*curRG));
   }
 
+  // Doesn't detach fRowGroupOut: the RowGroup may already be gone when a storage is destroyed
+  // (the step owning it can destroy it before the aggregation). Call detachRowGroup() first
+  // when the RowGroup outlives this storage.
   ~RowGroupStorage() = default;
+
+  /** @brief Detach fRowGroupOut if it points at one of this storage's RGDatas.
+   *
+   *    fRowGroupOut is a cursor shared by every storage of the aggregation (generations,
+   *    clones, the aggregation itself), so it can be left on any of their RGDatas. It must
+   *    never be left on a freed one: a later getRowCount()/setDBRoot()/getSizeWithStrings()
+   *    on it would read or write freed memory.
+   */
+  void detachRowGroup() const
+  {
+    for (const auto& rgd : fRGDatas)
+      forgetRG(rgd.get());
+  }
 
   ssize_t getAproxRGSize() const
   {
+    // fRowGroupOut points at a live RGData or at none (then this is the size without strings)
     return fRowGroupOut->getSizeWithStrings(fMaxRows);
   }
 
@@ -636,14 +670,13 @@ class RowGroupStorage
   {
     std::unique_ptr<RGData> rgd;
     std::string ofname;
-    while (o->getNextRGData(rgd, ofname))
+    while (o->takeNextRGData(rgd, ofname))
     {
       fRGDatas.push_back(std::move(rgd));
       uint64_t rgid = fRGDatas.size() - 1;
       if (fRGDatas[rgid])
       {
-        fRowGroupOut->setData(fRGDatas[rgid].get());
-        int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+        int64_t memSz = rgDataSize(*fRGDatas[rgid]);
         if (!fMM->acquire(memSz))
         {
           throw logging::IDBExcept(
@@ -690,12 +723,15 @@ class RowGroupStorage
       auto rgdata = std::move(fRGDatas[rgid]);
       fRGDatas.pop_back();
 
-      fRowGroupOut->setData(rgdata.get());
-      int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
-      fMM->release(memSz);
+      fMM->release(rgDataSize(*rgdata));
       fLRU->remove(rgid);
+      fRowGroupOut->setData(rgdata.get());
       if (fRowGroupOut->getRowCount() == 0)
+      {
+        forgetRG(rgdata.get());
         continue;
+      }
+      // the caller owns it now, and detaches fRowGroupOut before freeing it
       return rgdata;
     }
 
@@ -722,6 +758,50 @@ class RowGroupStorage
     }
     fRGDatas[rgid]->getRow(rid, &row);
     fLRU->add(rgid);
+  }
+
+  /** @brief Get the row at the specified position, skipping nonexistent rows
+   *
+   * @param idx(in, out) index (from 0) of the row, set to the actual index
+   * @param row(out)     resulting row
+   */
+  bool getRowForFinalization(uint64_t& idx, Row& row)
+  {
+    auto [rgid, rid] = rowIdxToGidRid(idx, fMaxRows);
+    while (rgid < fRGDatas.size())
+    {
+      if (UNLIKELY(!fRGDatas[rgid]))
+      {
+        loadRG(rgid);
+      }
+      fRowGroupOut->setData(fRGDatas[rgid].get());
+      if (UNLIKELY(rid >= fRowGroupOut->getRowCount()))
+      {
+        ++rgid;
+        rid = 0;
+        continue;
+      }
+      fRGDatas[rgid]->getRow(rid, &row);
+      idx = rowGidRidToIdx(rgid, rid, fMaxRows);
+      return true;
+    }
+    return false;
+  }
+
+  size_t getRowsPerRG() const
+  {
+    return fMaxRows;
+  }
+
+  void dropRGData(uint64_t rgid)
+  {
+    if (UNLIKELY(!fRGDatas[rgid]))
+    {
+      return;
+    }
+    fMM->release(rgDataSize(*fRGDatas[rgid]));
+    forgetRG(fRGDatas[rgid].get());
+    fRGDatas[rgid].reset();
   }
 
   /** @brief Return a row and an index at the first free position.
@@ -766,6 +846,7 @@ class RowGroupStorage
 
     if (UNLIKELY(need_new))
     {
+      // estimate from the RGData fRowGroupOut points at, live or none (then without strings)
       auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
       if (!fMM->acquire(memSz))
       {
@@ -800,6 +881,7 @@ class RowGroupStorage
 
     while (rgid >= fRGDatas.size())
     {
+      // estimate from the RGData fRowGroupOut points at, live or none (then without strings)
       int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
       if (!fMM->acquire(memSz))
       {
@@ -878,14 +960,14 @@ class RowGroupStorage
     dumpAll();
     fLRU->clear();
     fMM->release();
-    fRGDatas.clear();
+    clearRGDatas();
 
     // we need at least one RGData so create it right now
     auto* curRG = new RGData(*fRowGroupOut, fMaxRows);
     fRowGroupOut->setData(curRG);
     fRowGroupOut->resetRowGroup(0);
     fRGDatas.emplace_back(curRG);
-    auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+    auto memSz = rgDataSize(*curRG);
     if (!fMM->acquire(memSz))
     {
       throw logging::IDBExcept(logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_AGGREGATION_TOO_BIG),
@@ -984,7 +1066,7 @@ class RowGroupStorage
   RowGroupStorage* clone(uint16_t gen) const
   {
     auto* ret = new RowGroupStorage(fTmpDir, fRowGroupOut, fMaxRows);
-    ret->fRGDatas.clear();
+    ret->clearRGDatas();
     ret->fLRU.reset(fLRU->clone());
     ret->fMM.reset(fMM->clone());
     ret->fUniqId = fUniqId;
@@ -1029,6 +1111,26 @@ class RowGroupStorage
   }
 
  private:
+  /** @brief getNextRGData() for a storage that hands its RGDatas over to another one.
+   *
+   *    Detaches fRowGroupOut from the returned RGData: the receiving storage detaches only its
+   *    own RowGroup when it frees it. Also detaches if loading it fails, as unwinding frees it.
+   */
+  bool takeNextRGData(std::unique_ptr<RGData>& rgdata, std::string& fname)
+  {
+    try
+    {
+      bool more = getNextRGData(rgdata, fname);
+      forgetRG(rgdata.get());
+      return more;
+    }
+    catch (...)
+    {
+      forgetRG(rgdata.get());
+      throw;
+    }
+  }
+
   /** @brief Get next available RGData and fill filename of the dump if it's
    *         not in the memory.
    *
@@ -1118,6 +1220,9 @@ class RowGroupStorage
 
         if (pos == 0)
         {
+          // every row is finalized: drop it. rgdata is freed by the next iteration or by the caller
+          fMM->release(rgDataSize(*rgdata));
+          forgetRG(rgdata.get());
           fLRU->remove(rgid);
           unlink(makeRGFilename(rgid).c_str());
           continue;
@@ -1129,9 +1234,7 @@ class RowGroupStorage
 
       if (rgdata)
       {
-        fRowGroupOut->setData(rgdata.get());
-        int64_t memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
-        fMM->release(memSz);
+        fMM->release(rgDataSize(*rgdata));
         unlink(makeRGFilename(rgid).c_str());
       }
       else
@@ -1199,7 +1302,7 @@ class RowGroupStorage
     rgdata->deserialize(bs, fRowGroupOut->getDataSize(fMaxRows));
 
     fRowGroupOut->setData(rgdata.get());
-    auto memSz = fRowGroupOut->getSizeWithStrings(fMaxRows);
+    auto memSz = rgDataSize(*rgdata);
 
     if (!fMM->acquire(memSz))
     {
@@ -1219,10 +1322,18 @@ class RowGroupStorage
       return;
 
     fLRU->remove(rgid);
-    fRowGroupOut->setData(rgdata.get());
-    fMM->release(fRowGroupOut->getSizeWithStrings(fMaxRows));
+    fMM->release(rgDataSize(*rgdata));
 
-    saveRG(rgid, rgdata.get());
+    try
+    {
+      saveRG(rgid, rgdata.get());
+    }
+    catch (...)
+    {
+      forgetRG(rgdata.get());  // rgdata is freed by unwinding
+      throw;
+    }
+    forgetRG(rgdata.get());  // rgdata is freed on return
   }
 
   /** @brief Dump RGData to disk.
@@ -1261,6 +1372,29 @@ class RowGroupStorage
     close(fd);
   }
 #endif
+
+  /** @brief Memory an RGData of this storage holds: the fixed-size rows plus its strings.
+   *
+   *    Reads rgd itself rather than fRowGroupOut, which may point at another RGData.
+   */
+  int64_t rgDataSize(const RGData& rgd) const
+  {
+    return fRowGroupOut->getDataSize(fMaxRows) + (rgd.strings ? rgd.strings->getSize() : 0);
+  }
+
+  /** @brief Detach fRowGroupOut if it points at rgd, which is about to be freed. */
+  void forgetRG(const RGData* rgd) const
+  {
+    if (rgd && fRowGroupOut->getRGData() == rgd)
+      fRowGroupOut->detachData();
+  }
+
+  /** @brief Free every RGData in memory, detaching fRowGroupOut from them first. */
+  void clearRGDatas()
+  {
+    detachRowGroup();
+    fRGDatas.clear();
+  }
 
   /** @brief Create dump filename.
    */
@@ -1671,9 +1805,14 @@ void RowAggStorage::dump()
   if (!fEnabledDiskAggregation)
     return;
 
-  constexpr const int freeMemLimit = 50ULL * 1024ULL * 1024ULL;
+  constexpr int64_t freeMemLimit = 50LL * 1024LL * 1024LL;
 
-  const int64_t leaveFree = fNumOfInputRGPerThread * fRowGroupOut->getRowSize() * getBucketSize();
+  // Keep room for one more input batch: fNumOfInputRGPerThread rowgroups whose rows may all be new
+  // groups, each needing an output row and a hash bucket. Acquires are not strict with disk
+  // aggregation on, so this loop is what keeps the aggregation within its memory limit.
+  const int64_t leaveFree =
+      std::max<int64_t>(freeMemLimit, fNumOfInputRGPerThread *
+                                          (fRowGroupOut->getDataSize(fMaxRows) + fMaxRows * getBucketSize()));
   uint64_t freeAttempts{0};
   int64_t freeMem = 0;
   while (true)
@@ -2078,20 +2217,10 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
         fKeysStorage = fStorage.get();
       continue;
     }
-    std::unique_ptr<RowPosHashStorage> prevHashes;
-    size_t prevSize;
-    size_t prevMask;
-    size_t prevMaxSize;
-    size_t prevHashMultiplier;
-    uint32_t prevInfoInc;
-    uint32_t prevInfoHashShift;
-    std::unique_ptr<uint8_t[]> prevInfo;
 
     std::unique_ptr<RowGroupStorage> prevRowStorage;
     std::unique_ptr<RowGroupStorage> prevRealKeyRowStorage;
     RowGroupStorage* prevKeyRowStorage{nullptr};
-
-    auto elems = calcSizeWithBuffer(fCurData->fMask + 1);
 
     for (uint16_t prevGen = 0; prevGen < curGen; ++prevGen)
     {
@@ -2104,94 +2233,65 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
       else
         prevKeyRowStorage = prevRowStorage.get();
 
-      loadGeneration(prevGen, prevSize, prevMask, prevMaxSize, prevHashMultiplier, prevInfoInc,
-                     prevInfoHashShift, prevInfo);
-      prevHashes = fCurData->fHashes->clone(prevMask + 1, prevGen, true);
-
-      // iterate over current generation rows
-      uint64_t idx{};
-      uint32_t info{};
-      for (;; next(info, idx))
+      if (fExtKeys)
       {
-        nextExisting(info, idx);
+        fKeysRowGroup->initRow(&tmpKeyRow);
+      }
+      auto& prevRow = fExtKeys ? tmpKeyRow : tmpRow;
 
-        if (idx >= elems)
+      // iterate over rows in prev generation
+      for (uint64_t rowidx = 0; prevKeyRowStorage->getRowForFinalization(rowidx, prevRow); ++rowidx)
+      {
+        auto [rgid, rid] = rowIdxToGidRid(rowidx, prevKeyRowStorage->getRowsPerRG());
+        if (rgid != 0 && rid == 0)
         {
-          // done finalizing generation
-          break;
-        }
-
-        const auto& pos = fCurData->fHashes->get(idx);
-        if (fKeysStorage->isFinalized(pos.idx))
-        {
-          // this row was already merged into newer generation, skip it
-          continue;
-        }
-
-        // now try to find row in the previous generation
-        auto [pinfo, pidx] =
-            rowHashToIdx(pos.hash, prevMask, prevHashMultiplier, prevInfoInc, prevInfoHashShift);
-
-        while (pinfo < prevInfo[pidx])
-        {
-          ++pidx;
-          pinfo += prevInfoInc;
-        }
-        if (prevInfo[pidx] != pinfo)
-        {
-          // there is no such row
-          continue;
-        }
-
-        auto ppos = prevHashes->get(pidx);
-        while (prevInfo[pidx] == pinfo && pos.hash != ppos.hash)
-        {
-          // hashes are not equal => collision, try all matched rows
-          ++pidx;
-          pinfo += prevInfoInc;
-          ppos = prevHashes->get(pidx);
-        }
-        if (prevInfo[pidx] != pinfo || pos.hash != ppos.hash)
-        {
-          // no matches
-          continue;
-        }
-
-        bool found = false;
-        auto& keyRow = fExtKeys ? fKeyRow : rowOut;
-        fKeysStorage->getRow(pos.idx, keyRow);
-        while (!found && prevInfo[pidx] == pinfo)
-        {
-          // try to find exactly match in case of hash collision
-          if (UNLIKELY(pos.hash != ppos.hash))
+          // start next RGData. At this point we don't need the previous one and can free the data
+          // as it has no changes to dump
+          prevKeyRowStorage->dropRGData(rgid - 1);
+          if (fExtKeys)
           {
-            // hashes are not equal => no such row
-            ++pidx;
-            pinfo += prevInfoInc;
-            ppos = prevHashes->get(pidx);
-            continue;
+            // with external keys the values live in their own storage, filled in step with the keys
+            prevRowStorage->dropRGData(rgid - 1);
+          }
+        }
+
+        if (prevKeyRowStorage->isFinalized(rowidx))
+        {
+          continue;
+        }
+
+        // TODO: store hashes in the RowGroupStorage?
+        uint64_t hash = hashRow(prevRow, fLastKeyCol);
+        auto [info, idx] = rowHashToIdx(hash);
+        nextWhileLess(info, idx);
+        constexpr uint64_t NOTFOUND_IDX = -1;
+        uint64_t curidx = NOTFOUND_IDX;
+        while (info == fCurData->fInfo[idx])
+        {
+          auto& pos = fCurData->fHashes->get(idx);
+          if (pos.hash == hash)
+          {
+            auto& keyRow = fExtKeys ? fKeyRow : rowOut;
+            fKeysStorage->getRow(pos.idx, keyRow);
+            if (prevRow.equals(keyRow, fLastKeyCol))
+            {
+              // Hallelujah!
+              curidx = pos.idx;
+              break;
+            }
           }
 
-          prevKeyRowStorage->getRow(ppos.idx, fExtKeys ? tmpKeyRow : tmpRow);
-          if (!keyRow.equals(fExtKeys ? tmpKeyRow : tmpRow, fLastKeyCol))
-          {
-            ++pidx;
-            pinfo += prevInfoInc;
-            ppos = prevHashes->get(pidx);
-            continue;
-          }
-          found = true;
+          next(info, idx);
         }
 
-        if (!found)
+        if (curidx == NOTFOUND_IDX)
         {
           // nothing was found, go to the next row
           continue;
         }
 
-        if (UNLIKELY(prevKeyRowStorage->isFinalized(ppos.idx)))
+        if (UNLIKELY(fKeysStorage->isFinalized(curidx)))
         {
-          // just to be sure, it can NEVER happen
           continue;
         }
 
@@ -2202,15 +2302,15 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
         // 4 Mark the prev generation row as finalized
         if (fExtKeys)
         {
-          prevRowStorage->getRow(ppos.idx, tmpRow);
-          fStorage->getRow(pos.idx, rowOut);
+          prevRowStorage->getRow(rowidx, tmpRow);
+          fStorage->getRow(curidx, rowOut);
         }
         mergeFunc(tmpRow);
         genUpdated = true;
-        prevKeyRowStorage->markFinalized(ppos.idx);
+        prevKeyRowStorage->markFinalized(rowidx);
         if (fExtKeys)
         {
-          prevRowStorage->markFinalized(ppos.idx);
+          prevRowStorage->markFinalized(rowidx);
         }
       }
 
@@ -2233,14 +2333,15 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
         fKeysStorage->dumpAll(false);
     }
 
-    // swap current generation N with the prev generation N-1
-    fCurData->fSize = prevSize;
-    fCurData->fMask = prevMask;
-    fCurData->fMaxSize = prevMaxSize;
-    fCurData->fInfoInc = prevInfoInc;
-    fCurData->fInfoHashShift = prevInfoHashShift;
-    fCurData->fInfo = std::move(prevInfo);
-    fCurData->fHashes = std::move(prevHashes);
+    // load previous generation (reusing RowGroupStorages)
+    loadGeneration(curGen - 1);
+    auto oh = std::move(fCurData->fHashes);
+    fCurData->fHashes = oh->clone(0, curGen - 1, true);
+
+    // dumpAll() above left the rowgroups on this generation's RGDatas, which are freed here
+    fStorage->detachRowGroup();
+    if (fExtKeys)
+      fRealKeysStorage->detachRowGroup();
     fStorage = std::move(prevRowStorage);
     if (fExtKeys)
     {
