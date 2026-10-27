@@ -175,7 +175,11 @@ select_pkg_format() {
   local distro="${1,,}"
 
   case "$distro" in
-    *rocky*|*rhel*|*fedora*|*centos*|*alma*|*opensuse*|*suse*|*oracle*|*amazon*)
+    *opensuse*|*suse*|*sles*)
+      echo "ERROR: building MariaDB ColumnStore on OpenSUSE/SUSE/SLES is not supported (distro: $1)." >&2
+      exit 2
+      ;;
+    *rocky*|*rhel*|*fedora*|*centos*|*alma*|*oracle*|*amazon*)
       export PKG_FORMAT="rpm"
       ;;
     *)
@@ -617,19 +621,25 @@ is_rocky_version() {
     return 1
   fi
 
-  if [[ "$image" == *"rockylinux"* || "$image" == *"rocky"* ]]; then
-    if [[ -n "$version" ]]; then
-      if [[ "$image" == *":$version"* ]]; then
-        return 0 # matches Rocky Linux with version
+  # Only RHEL-compatible distros share Rocky's major-version scheme (8, 9, 10, ...).
+  # Fedora (40/41/...) and Amazon Linux (2/2023) have their own schemes and must
+  # NOT be matched here, otherwise `is_rocky_version <fedora:41> 9` would mis-fire.
+  local lower="${image,,}"
+  case "$lower" in
+    *rocky*|*rhel*|*centos*|*alma*|*oracle*)
+      if [[ -n "$version" ]]; then
+        if [[ "$lower" == *":$version"* ]]; then
+          return 0 # matches RHEL-compatible distro with the requested major
+        else
+          return 1 # RHEL-compatible distro but wrong major
+        fi
       else
-        return 1 # Rocky Linux but wrong version
+        return 0 # matches any RHEL-compatible distro, any version
       fi
-    else
-      return 0 # matches Rocky Linux, any version
-    fi
-  fi
+      ;;
+  esac
 
-  return 1 # not Rocky Linux
+  return 1 # not a RHEL-compatible distro
 }
 
 is_rocky_version_ge() {
@@ -681,7 +691,7 @@ set_cnf_path() {
   # TODO: fix check: instead of 'rocky' the RPM/DEB check should be used
   # TODO: check paths in all new versions (it can be also /etc/mariadb/mariadb.conf.d, /etc/mariadb.conf.d
   case "$DISTRO" in
-    *rocky*|*rhel*|*fedora*|*centos*|*alma*|*opensuse*|*suse*|*oracle*|*amazon*)
+    *rocky*|*rhel*|*fedora*|*centos*|*alma*|*oracle*|*amazon*)
       echo "/etc/my.cnf.d/"
       ;;
     *)
