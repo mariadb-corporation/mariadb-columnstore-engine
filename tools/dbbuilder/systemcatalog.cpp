@@ -727,13 +727,16 @@ SystemCatalog::UpgradeState SystemCatalog::checkUpgradeCandidate(int oid, int re
 
   bool matches = (extents.size() == refExtents.size());
 
-  for (const auto& e : extents)
+  if (matches)
   {
-    auto it = refStatus.find(extentPos(e));
-
-    if (it == refStatus.end() || (e.status == BRM::EXTENTUNAVAILABLE && it->second != BRM::EXTENTUNAVAILABLE))
+    for (const auto& e : extents)
     {
-      matches = false;
+      auto it = refStatus.find(extentPos(e));
+
+      if (it == refStatus.end() || (e.status == BRM::EXTENTUNAVAILABLE && it->second != BRM::EXTENTUNAVAILABLE))
+      {
+        matches = false;
+      }
     }
   }
 
@@ -759,7 +762,7 @@ int SystemCatalog::removeUpgradeLeftovers(int oid, string& detail)
   try
   {
     FileOp fileOp;
-    rc = fileOp.deleteFiles(vector<int32_t>{oid});
+    rc = fileOp.existsDefaultFile(oid) ? fileOp.deleteFiles(vector<int32_t>{oid}) : NO_ERROR;
   }
   catch (const exception& ex)
   {
