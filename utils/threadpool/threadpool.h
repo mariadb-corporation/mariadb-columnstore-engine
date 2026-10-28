@@ -250,6 +250,7 @@ class ThreadPool
   /** @brief wait on all the threads to complete
    */
   EXPORT void wait();
+  EXPORT bool waitFor(boost::chrono::microseconds timeout_us);
 
   /** @brief Wait for a specific thread
    */
