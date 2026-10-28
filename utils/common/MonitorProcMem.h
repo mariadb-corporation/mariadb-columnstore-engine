@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -50,8 +51,8 @@ class MonitorProcMem
    * @param msgLog (in) message logger to log msg to
    * @param sec    (in) number of seconds between memory checks
    */
-  explicit MonitorProcMem(size_t maxPct, size_t memChk, uint32_t subsystemID, unsigned sec = 1)
-   : fPid(getpid()), fMaxPct(maxPct), fSleepSec(sec), fSubsystemID(subsystemID), fPageSize(getpagesize())
+  explicit MonitorProcMem(size_t maxPct, size_t memChk, uint32_t subsystemID, std::atomic<bool>* dieFlag, unsigned sec = 1)
+   : fPid(getpid()), fMaxPct(maxPct), fSleepSec(sec), fSubsystemID(subsystemID), fPageSize(getpagesize()), fDieFlag(dieFlag)
   {
     fMemPctCheck = memChk;
     fMemTotal = memTotal();
@@ -114,6 +115,7 @@ class MonitorProcMem
   static uint64_t fMemFree;
   static int fMemPctCheck;
   mutable CGroupConfigurator cg;
+  std::atomic<bool>* fDieFlag;
 };
 
 }  // namespace utils

@@ -118,7 +118,7 @@ class WriteEngineWrapper : public WEObj
    * @brief Performs static/global initialization for BRMWrapper.
    * Should be called once from the main thread.
    */
-  EXPORT static void init(unsigned subSystemID);
+  EXPORT static void init(unsigned subSystemID, std::atomic<bool>* dieFlag);
 
   /**
    * @brief Build a index from an oid file (NOTE: this is write engine internal used function, just for test

@@ -763,7 +763,7 @@ class PackageHandler
 namespace ddlprocessor
 {
 DDLProcessor::DDLProcessor(int packageMaxThreads, int packageWorkQueueSize)
- : fPackageMaxThreads(packageMaxThreads), fPackageWorkQueueSize(packageWorkQueueSize), fMqServer(DDLProcName)
+ : fPackageMaxThreads(packageMaxThreads), fPackageWorkQueueSize(packageWorkQueueSize), fMqServer(DDLProcName), fDie(false)
 {
   fDdlPackagepool.setMaxThreads(fPackageMaxThreads);
   fDdlPackagepool.setQueueSize(fPackageWorkQueueSize);
@@ -805,12 +805,16 @@ void DDLProcessor::process()
 
   try
   {
-    for (;;)
+    while (!fDie.load(std::memory_order_relaxed))
     {
       try
       {
-        ios = fMqServer.accept();
-        fDdlPackagepool.invoke(PackageHandler(fQtc, &dbrm, ios, concurrentSupport, &debugLevel));
+        timespec timeout = {1, 0};
+        ios = fMqServer.accept(&timeout);
+        if (ios.isOpen())
+        {
+          fDdlPackagepool.invoke(PackageHandler(fQtc, &dbrm, ios, concurrentSupport, &debugLevel));
+        }
       }
       catch (...)
       {
@@ -845,6 +849,11 @@ void DDLProcessor::process()
 
   // wait for all the threads to exit
   fDdlPackagepool.wait();
+
+  if (fDie.load(std::memory_order_relaxed))
+  {
+    exit(1);
+  }
 }
 
 int DDLProcessor::commitTransaction(uint32_t txnID, std::string& errorMsg)
