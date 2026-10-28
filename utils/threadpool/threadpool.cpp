@@ -20,6 +20,8 @@
  *
  *
  ***********************************************************************/
+#include <boost/chrono/duration.hpp>
+#include <boost/chrono/system_clocks.hpp>
 #include <stdexcept>
 #include <iostream>
 using namespace std;
@@ -150,6 +152,28 @@ void ThreadPool::wait()
     fThreadAvailable.wait(lock1);
     // cerr << "woke!" << endl;
   }
+}
+
+bool ThreadPool::waitFor(boost::chrono::microseconds timeout_us)
+{
+  auto start = boost::chrono::steady_clock::now();
+  boost::mutex::scoped_lock lock(fMutex);
+
+  while (waitingFunctorsSize > 0)
+  {
+    auto now = boost::chrono::steady_clock::now();
+    timeout_us -= boost::chrono::duration_cast<boost::chrono::microseconds>(now - start);
+    start = now;
+    if (timeout_us <= boost::chrono::microseconds{0})
+    {
+      return false;
+    }
+    if (fThreadAvailable.wait_for(lock, timeout_us) == boost::cv_status::timeout)
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 void ThreadPool::join(uint64_t thrHandle)

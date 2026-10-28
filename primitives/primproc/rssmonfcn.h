@@ -17,16 +17,20 @@
 
 #pragma once
 
-#include <iostream>
+#include <atomic>
 
 #include "MonitorProcMem.h"
 
 namespace exemgr
 {
+
+void startRssMon(size_t maxPct, std::atomic<bool>* dieFlag, int pauseSeconds);
+
 class RssMonFcn : public utils::MonitorProcMem
 {
  public:
-  RssMonFcn(size_t maxPct, int pauseSeconds) : MonitorProcMem(maxPct, 0, 21, pauseSeconds)
+  RssMonFcn(size_t maxPct, std::atomic<bool>* dieFlag, int pauseSeconds)
+    : MonitorProcMem(maxPct, 0, 21, dieFlag, pauseSeconds)
   {
   }
 
