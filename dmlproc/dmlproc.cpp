@@ -586,8 +586,6 @@ int ServiceDMLProc::Child()
     return 1;
   }
 
-  WriteEngine::WriteEngineWrapper::init(WriteEngine::SUBSYSTEM_ID_DMLPROC);
-
   // Initialize the charset library
   MY_INIT("DMLProc");
 
@@ -646,6 +644,7 @@ int ServiceDMLProc::Child()
   }
 
   DMLServer dmlserver(serverThreads, serverQueueSize, &dbrm);
+  WriteEngine::WriteEngineWrapper::init(WriteEngine::SUBSYSTEM_ID_DMLPROC, dmlserver.getShutdownFlagPtr());
 
   NotifyServiceStarted();
 

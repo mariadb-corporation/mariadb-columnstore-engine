@@ -292,7 +292,7 @@ bool WEDataLoader::setupCpimport()  // fork the cpimport
     fpSysLog->logMsg(errMsgArgs, logging::LOG_TYPE_ERROR, logging::M0000);
 
     if (aRet == -1)
-      exit(-1);
+      _exit(-1);
   }
   else  // parent
   {
