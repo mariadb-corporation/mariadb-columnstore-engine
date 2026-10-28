@@ -2257,7 +2257,8 @@ namespace primitiveprocessor
 PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int processorWeight,
                                  int processorQueueSize, bool rotatingDestination, uint32_t BRPBlocks,
                                  int BRPThreads, int cacheCount, int maxBlocksPerRead, int readAheadBlocks,
-                                 uint32_t deleteBlocks, bool ptTrace, double prefetch, uint64_t smallSide)
+                                 uint32_t deleteBlocks, bool ptTrace, double prefetch, uint64_t smallSide,
+                                 int maxPct, int aggPct, std::atomic<bool>* dieFlag)
  : fServerThreads(serverThreads)
  , fServerQueueSize(serverQueueSize)
  , fProcessorWeight(processorWeight)
@@ -2268,6 +2269,9 @@ PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int pro
  , fPTTrace(ptTrace)
  , fPrefetchThreshold(prefetch)
  , fPMSmallSide(smallSide)
+ , fMaxPct(maxPct)
+ , fAggPct(aggPct)
+ , fDieFlag(dieFlag)
 {
   fCacheCount = cacheCount;
   fServerpool.setMaxThreads(fServerThreads);
@@ -2299,7 +2303,7 @@ PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int pro
             "downward."
          << endl;
     mlp->logMessage(logging::M0045, logging::Message::Args(), true);
-    exit(1);
+    exit(1); // it's ok to use exit(3) here, PrimitiveServer ctor called only from the main thread
   }
 }
 
@@ -2358,7 +2362,14 @@ void PrimitiveServer::start(Service* service, utils::USpaceSpinLock& startupRace
         }
       });
 
-  fServerpool.wait();
+  //...Start the thread to monitor our memory usage
+  new boost::thread(utils::MonitorProcMem(fMaxPct, fAggPct, 28, fDieFlag));
+
+  bool allDone = false;
+  while (!allDone && !fDieFlag->load(std::memory_order_relaxed))
+  {
+    allDone = fServerpool.waitFor(boost::chrono::seconds{1});
+  }
 
   cerr << "PrimitiveServer::start() exiting!" << endl;
 }

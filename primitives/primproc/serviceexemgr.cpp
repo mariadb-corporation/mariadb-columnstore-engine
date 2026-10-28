@@ -82,11 +82,11 @@
 #include "statistics.h"
 #include "serviceexemgr.h"
 #include "sqlfrontsessionthread.h"
+#include "rssmonfcn.h"
 
 namespace exemgr
 {
 ServiceExeMgr* globServiceExeMgr = nullptr;
-void startRssMon(size_t maxPct, int pauseSeconds);
 
 void added_a_pm(int)
 {
@@ -382,12 +382,6 @@ int ServiceExeMgr::Child()
   FEMsgHandler::threadPool.setMaxThreads(serverThreads);
   FEMsgHandler::threadPool.setName("FEMsgHandler");
 
-  if (maxPct > 0)
-  {
-    // Defined in rssmonfcn.cpp
-    exemgr::startRssMon(maxPct, pauseSeconds);
-  }
-
   setpriority(PRIO_PROCESS, 0, priority);
 
   std::string teleServerHost(rm_->getConfig()->getConfig("QueryTele", "Host"));
@@ -430,15 +424,23 @@ int ServiceExeMgr::Child()
     std::cerr << "Cannot load statistics from file " << std::endl;
   }
 
-  for (;;)
+  if (maxPct > 0)
+  {
+    exemgr::startRssMon(maxPct, fDieFlag, pauseSeconds);
+  }
+
+  while (!fDieFlag->load(std::memory_order_relaxed))
   {
     messageqcpp::IOSocket ios;
-    ios = mqs->accept();
-    exeMgrThreadPool.invoke(exemgr::SQLFrontSessionThread(ios, dec_, rm_));
+    timespec timeout = {1, 0};
+    ios = mqs->accept(&timeout);
+    if (ios.isOpen())
+    {
+      exeMgrThreadPool.invoke(exemgr::SQLFrontSessionThread(ios, dec_, rm_));
+    }
   }
 
   exeMgrThreadPool.wait();
-
-  return 0;
+  return fDieFlag->load(std::memory_order_relaxed) ? 1 : 0;
 }
 }  // namespace exemgr

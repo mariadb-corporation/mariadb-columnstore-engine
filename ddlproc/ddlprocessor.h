@@ -23,6 +23,7 @@
 /** @file */
 #pragma once
 
+#include <atomic>
 #include "ddlproc.h"
 #include "threadpool.h"
 #include "calpontsystemcatalog.h"
@@ -75,7 +76,11 @@ class DDLProcessor
     fPackageWorkQueueSize = workQueueSize;
   }
 
- protected:
+  inline std::atomic<bool>* getDieFlagPtr()
+  {
+    return &fDie;
+  }
+
  private:
   /** @brief ctor
    */
@@ -93,6 +98,7 @@ class DDLProcessor
   WriteEngine::WEClients* fWEClient;
   uint32_t fPMCount;
   querytele::QueryTeleClient fQtc;
+  std::atomic<bool> fDie;
 };
 
 }  // namespace ddlprocessor
