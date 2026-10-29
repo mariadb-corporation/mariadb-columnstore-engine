@@ -172,13 +172,20 @@ detect_distro() {
 }
 
 select_pkg_format() {
-  local distro="$1"
+  local distro="${1,,}"
 
-  if [[ "$distro" == *rocky* ]]; then
-    export PKG_FORMAT="rpm"
-  else
-    export PKG_FORMAT="deb"
-  fi
+  case "$distro" in
+    *opensuse*|*suse*|*sles*)
+      echo "ERROR: building MariaDB ColumnStore on OpenSUSE/SUSE/SLES is not supported (distro: $1)." >&2
+      exit 2
+      ;;
+    *rocky*|*rhel*|*redhat*|*fedora*|*alma*|*oracle*|*amazon*|*amzn*)
+      export PKG_FORMAT="rpm"
+      ;;
+    *)
+      export PKG_FORMAT="deb"
+      ;;
+  esac
 }
 
 menuStr=""
@@ -605,59 +612,59 @@ change_ubuntu_mirror_in_docker() {
   execInnerDocker "$container_name" "$docker_funcs; change_ubuntu_mirror ${region}"
 }
 
-is_rocky_version() {
-  local image="$1"
-  local version="$2"
-
-  if [[ -z "$image" ]]; then
-    echo "Usage: is_rocky_version <image> [version]"
-    return 1
-  fi
-
-  if [[ "$image" == *"rockylinux"* || "$image" == *"rocky"* ]]; then
-    if [[ -n "$version" ]]; then
-      if [[ "$image" == *":$version"* ]]; then
-        return 0 # matches Rocky Linux with version
-      else
-        return 1 # Rocky Linux but wrong version
-      fi
-    else
-      return 0 # matches Rocky Linux, any version
-    fi
-  fi
-
-  return 1 # not Rocky Linux
+# Prints the distro family for an image tag: rhel|rocky|alma|oracle|fedora|amazon|ubuntu|debian.
+# Returns 1 (and prints "unknown") if the image doesn't match a known family.
+get_distro_family() {
+  local image="${1,,}"
+  case "$image" in
+    *rocky*)         echo "rocky"  ;;
+    *alma*)          echo "alma"   ;;
+    *oracle*)        echo "oracle" ;;
+    *rhel*|*redhat*) echo "rhel"   ;;
+    *fedora*)        echo "fedora" ;;
+    *amazon*|*amzn*) echo "amazon" ;;
+    *ubuntu*)        echo "ubuntu" ;;
+    *debian*)        echo "debian" ;;
+    *) echo "unknown"; return 1 ;;
+  esac
 }
 
-is_rocky_version_ge() {
+# Prints the integer major version parsed from the image tag (part after ':', before '.').
+# Returns 1 if no tag is present or the major is non-numeric.
+get_distro_major() {
+  local image="$1"
+  local tag="${image##*:}"
+  [[ "$tag" == "$image" ]] && return 1
+  local major="${tag%%.*}"
+  [[ "$major" =~ ^[0-9]+$ ]] || return 1
+  echo "$major"
+}
+
+# True iff the image is RHEL-compatible: shares the RHEL major-version scheme (8/9/10/...)
+# and the dnf repo structure (powertools on 8, crb on 9+). Covers RHEL, Rocky, AlmaLinux, Oracle.
+# Fedora (40/41/...) and Amazon Linux (2/2023) have their own schemes and are NOT included.
+is_rhel_compatible() {
+  local family
+  family=$(get_distro_family "$1") || return 1
+  case "$family" in
+    rhel|rocky|alma|oracle) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# True iff the image is RHEL-compatible AND its major version >= min_version.
+is_rhel_compatible_ge() {
   local image="$1"
   local min_version="$2"
-
   if [[ -z "$image" || -z "$min_version" ]]; then
-    echo "Usage: is_rocky_version_ge <image> <min_version>"
+    echo "Usage: is_rhel_compatible_ge <image> <min_version>"
     return 1
   fi
-
-  # First check if it's Rocky Linux at all
-  if ! is_rocky_version "$image"; then
-    return 1
-  fi
-
-  # Extract the version from the tag (after colon)
-  local tag="${image##*:}"
-  if [[ "$tag" == "$image" ]]; then
-    return 1 # no tag -> cannot compare
-  fi
-
-  # Major version (before dot if any)
-  local major="${tag%%.*}"
-
-  if [[ "$major" =~ ^[0-9]+$ && "$min_version" =~ ^[0-9]+$ ]]; then
-    ((major >= min_version))
-    return $?
-  fi
-
-  return 1
+  is_rhel_compatible "$image" || return 1
+  local major
+  major=$(get_distro_major "$image") || return 1
+  [[ "$min_version" =~ ^[0-9]+$ ]] || return 1
+  (( major >= min_version ))
 }
 
 is_majors_equal() {
@@ -677,9 +684,12 @@ set_cnf_path() {
   # Set config path prefix based on distro
   # TODO: fix check: instead of 'rocky' the RPM/DEB check should be used
   # TODO: check paths in all new versions (it can be also /etc/mariadb/mariadb.conf.d, /etc/mariadb.conf.d
-  if [[ "$DISTRO" == *rocky* ]]; then
-    echo "/etc/my.cnf.d/"
-  else
-    echo "/etc/mysql/mariadb.conf.d/50-"
-  fi
+  case "$DISTRO" in
+    *rocky*|*rhel*|*redhat*|*fedora*|*alma*|*oracle*|*amazon*|*amzn*)
+      echo "/etc/my.cnf.d/"
+      ;;
+    *)
+      echo "/etc/mysql/mariadb.conf.d/50-"
+      ;;
+  esac
 }
