@@ -24,18 +24,17 @@
    node that had done the delete live gave out different LBIDs for the same
    request, and the controller set DBRM read-only on the mismatch.
 
-   The extent map lives in shared memory under fixed keys (BRM_UID is not
-   compiled in), so these tests use the real segments: they refuse to run next
-   to a live ColumnStore, take the leftovers of an earlier run off the names
-   before the first extent map is made, and must not run in parallel with
-   anything else that uses an extent map (RUN_SERIAL in tests/CMakeLists.txt).
+   The extent map lives in shared memory under keys derived from ShmKeys, so
+   these tests give their ExtentMap keys of their own: a key range picked from
+   the pid of the test process, away from the one a ColumnStore on this host
+   uses. Nothing of the real extent map is touched, and the segments are
+   removed again when the suite ends.
  */
 
 #include <dirent.h>
 #include <unistd.h>
 
 #include <cstdlib>
-#include <fstream>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -61,38 +60,24 @@ constexpr int OidC = 3003;
 constexpr int OidD = 3004;
 const std::vector<int> TestOids{OidA, OidB, OidC, OidD};
 
-// A ColumnStore process on this host maps the same fixed-key segments.
-std::string liveColumnStoreProcess()
-{
-  static const std::vector<std::string> names{"PrimProc", "controllernode",  "workernode", "DMLProc",
-                                              "DDLProc",  "WriteEngineServ", "ExeMgr",     "mariadbd"};
-  std::unique_ptr<DIR, int (*)(DIR*)> proc(opendir("/proc"), closedir);
-
-  if (!proc)
-    return "";
-
-  while (dirent* entry = readdir(proc.get()))
-  {
-    std::ifstream comm(std::string("/proc/") + entry->d_name + "/comm");
-    std::string name;
-
-    if (comm && std::getline(comm, name))
-    {
-      for (const auto& n : names)
-      {
-        if (name == n)
-          return name;
-      }
-    }
-  }
-
-  return "";
-}
-
-// Every object of the extent map, its free list and its index, whatever slot.
-void removeExtentMapSegments()
+// Keys of this run's own segments: the usual ranges under a BRM_UID taken from
+// the pid, so no segment of a ColumnStore on this host is shared.
+ShmKeys testShmKeys()
 {
   ShmKeys keys;
+  const uint32_t uid = 0x800 | (static_cast<uint32_t>(getpid()) & 0x7ff);
+
+  for (uint32_t* base :
+       {&keys.KEYRANGE_EXTENTMAP_BASE, &keys.KEYRANGE_EMFREELIST_BASE, &keys.KEYRANGE_EXTENTMAP_INDEX_BASE})
+    *base = (*base & 0xfffff) | (uid << 20);
+
+  return keys;
+}
+
+// Every object of the test's extent map, its free list and its index, whatever slot.
+void removeExtentMapSegments()
+{
+  const ShmKeys keys = testShmKeys();
   std::vector<std::string> prefixes;
 
   for (unsigned base :
@@ -143,17 +128,10 @@ class ExtentMapFreeListTest : public ::testing::Test
   // Before the first ExtentMap of the process maps anything.
   static void SetUpTestSuite()
   {
-    std::string live = liveColumnStoreProcess();
-
-    if (!live.empty())
-    {
-      sSkipReason = live + " is running and uses the same extent map segments";
-      return;
-    }
-
-    // Creating an extent asks OamCache for the DBRoot count, which needs an
-    // installed config and module file. A package build has neither.
-    for (const char* path : {"/etc/columnstore/Columnstore.xml", "/var/lib/columnstore/local/module"})
+    // Creating an extent reads the files-per-partition and extents-per-file
+    // settings, which need an installed config. A package build has none. The
+    // DBRoots don't come from OamCache (see SetUp), so no module file is needed.
+    for (const char* path : {"/etc/columnstore/Columnstore.xml"})
     {
       if (access(path, R_OK) != 0)
       {
@@ -164,6 +142,13 @@ class ExtentMapFreeListTest : public ::testing::Test
 
     removeExtentMapSegments();
     idbdatafile::IDBPolicy::init(false, false, "", 0);
+    sSegmentsMade = true;
+  }
+
+  static void TearDownTestSuite()
+  {
+    if (sSegmentsMade)
+      removeExtentMapSegments();
   }
 
   void SetUp() override
@@ -171,7 +156,8 @@ class ExtentMapFreeListTest : public ::testing::Test
     if (!sSkipReason.empty())
       GTEST_SKIP() << sSkipReason;
 
-    fEM.reset(new ExtentMap());
+    fEM.reset(new ExtentMap(testShmKeys()));
+    fEM->setDbRoots({DBRoot});
     deleteTestOids();
 
     char dir[] = "/tmp/mcol6605-XXXXXX";
@@ -190,8 +176,11 @@ class ExtentMapFreeListTest : public ::testing::Test
       return;
 
     deleteTestOids();
-    unlink((fDir + "/em").c_str());
-    rmdir(fDir.c_str());
+    if (!fDir.empty())
+    {
+      unlink((fDir + "/em").c_str());
+      rmdir(fDir.c_str());
+    }
   }
 
   // One column extent for oid; returns its first LBID.
@@ -241,11 +230,13 @@ class ExtentMapFreeListTest : public ::testing::Test
   }
 
   static std::string sSkipReason;
+  static bool sSegmentsMade;
   std::unique_ptr<ExtentMap> fEM;
   std::string fDir;
 };
 
 std::string ExtentMapFreeListTest::sSkipReason;
+bool ExtentMapFreeListTest::sSegmentsMade = false;
 
 }  // namespace
 

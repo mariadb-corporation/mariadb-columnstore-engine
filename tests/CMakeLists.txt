@@ -170,12 +170,12 @@ if(WITH_UNITTESTS)
     add_test(NAME columnstore:brm_em_standalone COMMAND brm_em_standalone)
     set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
 
-    # MCOL-6605: the extent map's fixed shm keys, so nothing may run alongside
+    # MCOL-6605: runs on shm segments of its own, see mcol6605-tests.cpp
     add_executable(mcol6605_tests mcol6605-tests.cpp)
     add_dependencies(mcol6605_tests googletest)
     columnstore_link(mcol6605_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
     gtest_add_tests(TARGET mcol6605_tests TEST_PREFIX columnstore: TEST_LIST mcol6605_test_list)
-    set_tests_properties(${mcol6605_test_list} PROPERTIES RUN_SERIAL TRUE SKIP_REGULAR_EXPRESSION "\\[  SKIPPED \\]")
+    set_tests_properties(${mcol6605_test_list} PROPERTIES SKIP_REGULAR_EXPRESSION "\\[  SKIPPED \\]")
 
     if(NOT DEFINED WITH_MSAN) # CPPUnit is not build from sources
         add_executable(comparators_tests comparators-tests.cpp)
