@@ -441,6 +441,8 @@ construct_cmake_flags() {
     if [[ $ASAN = true ]]; then
         warn "Building with Address Sanitizer "
         MDB_CMAKE_FLAGS+=(-DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
+        message "Setting vm.mmap_rnd_bits=28 for ASAN support"
+        sysctl vm.mmap_rnd_bits=28
     fi
 
     if [[ $TSAN = true ]]; then
