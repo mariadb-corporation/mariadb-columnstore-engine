@@ -667,6 +667,16 @@ ExtentMap::ExtentMap()
 #endif
 }
 
+ExtentMap::ExtentMap(const ShmKeys& shmKeys) : ExtentMap()
+{
+  fShmKeys = shmKeys;
+}
+
+void ExtentMap::setDbRoots(const DBRootVec& dbRoots)
+{
+  fDbRootsOverride = dbRoots;
+}
+
 ExtentMap::~ExtentMap()
 {
   PmDbRootMap_t::iterator iter = fPmDbRootMap.begin();
@@ -1740,6 +1750,13 @@ void ExtentMap::loadVersion4or5(T* in, bool upgradeV4ToV5)
 
 }
 
+static std::atomic<bool> logFreeList{false};
+
+void ExtentMap::setLogFreeList(bool enable)
+{
+  logFreeList.store(enable, std::memory_order_relaxed);
+}
+
 // Logs the free list as a checksum of its ranges in LBID order, so nodes that
 // loaded the same image can be compared from their logs. Slot order is left
 // out on purpose: allocation doesn't depend on it.
@@ -1825,14 +1842,21 @@ void ExtentMap::load(const string& filename, bool /* fixFL */)
   {
     load(in.get());
 
-    // The load has taken; a failure to log it must not report it as failed.
-    try
+    if (logFreeList.load(std::memory_order_relaxed))
     {
-      logFreeListSummary(filename, fFreeList, fFLHeader->capacity, fExtentMapRBTree->size());
-    }
-    catch (const std::exception& e)
-    {
-      cerr << "ExtentMap::load(): could not log the free list summary: " << e.what() << endl;
+      // The load has taken; a failure to log it must not report it as failed.
+      try
+      {
+        if (fFreeList && fFLHeader && fExtentMapRBTree)
+        {
+          logFreeListSummary(filename, fFreeList,
+                             fFLHeader->capacity, fExtentMapRBTree->size());
+        }
+      }
+      catch (const std::exception& e)
+      {
+        cerr << "ExtentMap::load(): could not log the free list summary: " << e.what() << endl;
+      }
     }
   }
 
@@ -6489,6 +6513,9 @@ unsigned ExtentMap::getExtentsPerSegmentFile()
 //------------------------------------------------------------------------------
 unsigned ExtentMap::getDbRootCount()
 {
+  if (fDbRootsOverride)
+    return fDbRootsOverride->size();
+
   oam::OamCache* oamcache = oam::OamCache::makeOamCache();
   unsigned int rootCnt = oamcache->getDBRootCount();
 
@@ -6508,6 +6535,9 @@ void ExtentMap::getPmDbRoots(int pm, vector<int>& dbRootVec)
 
 DBRootVec ExtentMap::getAllDbRoots()
 {
+  if (fDbRootsOverride)
+    return *fDbRootsOverride;
+
   DBRootVec dbRootResultVec;
   oam::OamCache* oamcache = oam::OamCache::makeOamCache();
   // NB The routine uses int for dbroot id that contradicts with the type used here, namely uint16_t
