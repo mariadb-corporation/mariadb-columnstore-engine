@@ -441,6 +441,8 @@ construct_cmake_flags() {
     if [[ $ASAN = true ]]; then
         warn "Building with Address Sanitizer "
         MDB_CMAKE_FLAGS+=(-DWITH_ASAN=ON -DWITH_COLUMNSTORE_ASAN=ON -DWITH_COLUMNSTORE_REPORT_PATH=${REPORT_PATH})
+        message "Setting vm.mmap_rnd_bits=28 for ASAN support"
+        sysctl vm.mmap_rnd_bits=28
     fi
 
     if [[ $TSAN = true ]]; then
@@ -746,7 +748,11 @@ fix_config_files() {
         if grep -q ASAN $MDB_SERVICE_FILE; then
             warn "MDB Server has ASAN options in $MDB_SERVICE_FILE, check it's compatibility"
         else
+            mkdir -p /etc/columnstore
+            cp "$SCRIPT_LOCATION"/lsan.supp /etc/columnstore/lsan.supp
+            chmod 0644 /etc/columnstore/lsan.supp
             echo Environment="'ASAN_OPTIONS=abort_on_error=$SANITIZERS_ABORT_ON_ERROR:disable_coredump=0,print_stats=false,detect_odr_violation=0,check_initialization_order=0,detect_stack_use_after_return=0,atexit=false,log_path=${REPORT_PATH}/asan.mariadb'" >>$MDB_SERVICE_FILE
+            echo Environment="'LSAN_OPTIONS=suppressions=/etc/columnstore/lsan.supp,print_suppressions=0'" >>$MDB_SERVICE_FILE
             message "ASAN options were added to $MDB_SERVICE_FILE"
         fi
     fi
