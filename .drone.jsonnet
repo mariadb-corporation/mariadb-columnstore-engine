@@ -973,7 +973,7 @@ local AllPipelines =
   //   <key>      runs smoke + cmapi + mtr + upgrade
   //   <key>Regr  runs the regression chain only
   [
-    Pipeline(b, platform, triggeringEvent, a, server, spec.flag, "", ["cmapi test", "upgrade", "test400.sh"], spec.testSet)
+    Pipeline(b, platform, triggeringEvent, a, server, spec.flag, "", ["cmapi test", "upgrade", "test400.sh", "mtr"], spec.testSet)
     for a in ["amd64"]
     for b in std.objectFields(platforms)
     for platform in ["ubuntu:24.04"]

@@ -422,7 +422,11 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool&
   if (!field->field || !field->db_name.str || strlen(field->db_name.str) == 0)
     return nullOnError(gwi, funcName);
 
-  SimpleColumn* sc = buildSimpleColumn(field, gwi);
+  // Own `sc` locally; only release ownership when it is adopted by SRCP below.
+  // Subsequent uses only read *sc (PseudoColumn copies from it), so the raw
+  // pointer can safely go out of scope at function end.
+  std::unique_ptr<SimpleColumn> sc_owner(buildSimpleColumn(field, gwi));
+  SimpleColumn* sc = sc_owner.get();
 
   if (!sc)
     return nullOnError(gwi, funcName);
@@ -437,7 +441,7 @@ execplan::ReturnedColumn* buildPseudoColumn(Item* item, gp_walk_info& gwi, bool&
   // put arg col to column map
   if (gwi.clauseType == SELECT || gwi.clauseType == GROUP_BY)  // select clause
   {
-    SRCP srcp(sc);
+    SRCP srcp(sc_owner.release());
     gwi.columnMap.insert(CalpontSelectExecutionPlan::ColumnMap::value_type(sc->columnName(), srcp));
     gwi.tableMap[make_aliastable(sc->schemaName(), sc->tableName(), sc->tableAlias(), sc->isColumnStore())] =
         make_pair(1, field->cached_table);

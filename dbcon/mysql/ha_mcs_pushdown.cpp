@@ -422,6 +422,13 @@ derived_handler* create_columnstore_derived_handler(THD* thd, TABLE_LIST* table_
   if (thd->stmt_arena && thd->stmt_arena->is_stmt_execute())
     return handler;
 
+  // SHOW CREATE opens tables via open_tables_only_view_structure() and
+  // discards the derived_handler without destroying it (server-side lifetime
+  // gap) — don't build one when the query isn't actually going to execute.
+  if (thd->lex->sql_command == SQLCOM_SHOW_CREATE ||
+      thd->lex->sql_command == SQLCOM_SHOW_CREATE_DB)
+    return handler;
+
   // MCOL-1482 Disable derived_handler if the multi-table update
   // statement contains a non-columnstore table.
   if (ha_mcs_common::isUpdateHasForeignTable(thd))

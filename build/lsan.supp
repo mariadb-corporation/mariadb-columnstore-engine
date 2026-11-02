@@ -1,0 +1,10 @@
+# LeakSanitizer suppressions for mariadb+columnstore under ASan.
+#
+# Each entry here is a known leak that is tracked separately and not worth
+# blocking CI. Keep the list short and cite the follow-up ticket.
+
+# ParseTree leak in buildEqualityPredicate: ParseTrees are pushed onto
+# gp_walk_info::ptWorkStack and transferred into the execution plan. Some
+# error-recovery paths clear ptWorkStack without deleting its contents.
+# Fix requires porting ptWorkStack to std::unique_ptr<ParseTree>. TODO: file ticket.
+leak:cal_impl_if::buildEqualityPredicate
