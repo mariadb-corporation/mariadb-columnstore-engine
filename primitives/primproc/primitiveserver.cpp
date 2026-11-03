@@ -2299,7 +2299,8 @@ PrimitiveServer::PrimitiveServer(int serverThreads, int serverQueueSize, int pro
             "downward."
          << endl;
     mlp->logMessage(logging::M0045, logging::Message::Args(), true);
-    exit(1);
+    // _exit(), not exit(): don't run static destructors under the other threads (MCOL-6603).
+    _exit(1);
   }
 }
 

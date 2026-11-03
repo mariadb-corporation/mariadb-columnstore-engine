@@ -42,14 +42,11 @@ class UpdatePackageProcessor : public DMLPackageProcessor
   UpdatePackageProcessor(BRM::DBRM* aDbrm, uint32_t sid) : DMLPackageProcessor(aDbrm, sid)
   {
   }
-  /** @brief process an UpdateDMLPackage
-   *
-   * @param cpackage the UpdateDMLPackage to process
-   */
-  EXPORT DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage);
 
  protected:
  private:
+  DMLResult processPackageInternal(dmlpackage::CalpontDMLPackage& cpackage) override;
+
   /** @brief send execution plan to ExeMgr and fetch rows
    *
    * @param cpackage the UpdateDMLPackage to process

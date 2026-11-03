@@ -1,0 +1,39 @@
+#!/bin/bash
+# ExecStopPost of mcs-workernode: decide whether to remove the BRM shared memory (MCS-2031).
+#
+# Clearing it while PrimProc/WriteEngineServer/DMLProc/DDLProc keep running leaves them on the unlinked
+# segments: they never see the reload and fail queries on extents allocated afterwards ("Blocks are
+# missing", "Data file does not exist"). So keep the segments when one of them is alive; load_brm then
+# loads through the existing metadata area, and a writer that died holding the update mutex is recovered
+# by the next writer (EOWNERDEAD). mariadbd is not counted: it outlives a cluster stop.
+#
+# Clear when no such process is alive (cluster stop), when one runs a replaced binary (upgrade: the
+# layout may have changed), or when MCS_WORKER_STOP_CLEARSHM=always (systemd.env).
+
+readers="PrimProc WriteEngineServer DMLProc DDLProc"
+alive=""
+replaced=""
+
+for name in $readers; do
+    for pid in $(pidof "$name"); do
+        alive="$alive $name[$pid]"
+        exe=$(readlink "/proc/$pid/exe" 2>/dev/null) || exe="(unreadable)"
+        case "$exe" in
+            *" (deleted)" | "(unreadable)") replaced="$replaced $name[$pid]" ;;
+        esac
+    done
+done
+
+if [ "${MCS_WORKER_STOP_CLEARSHM:-}" = always ]; then
+    reason="MCS_WORKER_STOP_CLEARSHM=always"
+elif [ -z "$alive" ]; then
+    reason="no other BRM process is running"
+elif [ -n "$replaced" ]; then
+    reason="replaced or unreadable binary:$replaced"
+else
+    echo "Keeping the BRM shared memory (worker result ${SERVICE_RESULT:-?}): still in use by$alive."
+    exit 0
+fi
+
+echo "Clearing the BRM shared memory (worker result ${SERVICE_RESULT:-?}): $reason."
+@ENGINE_BINDIR@/clearShm > /dev/null 2>&1

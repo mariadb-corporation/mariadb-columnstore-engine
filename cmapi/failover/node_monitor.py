@@ -42,6 +42,9 @@ class NodeMonitor:
         self.stop()
 
     def start(self):
+        # Responses missed while the monitor was stopped (e.g. during a cluster
+        # stop) must not count against nodes now.
+        self._hbHistory.clear()
         self._agentComm.start()
         self._hb.start()
         self.shared_storage_monitor.start()
@@ -101,6 +104,7 @@ class NodeMonitor:
         logged_idleness_msg = False
         logged_active_msg = False
         inStandbyMode = False
+        inMaintenance = False
         while not self._die:
             # these things would normally go at the end of the loop; doing it here
             # to reduce line count & chance of missing something as we add more code
@@ -118,6 +122,27 @@ class NodeMonitor:
 
             # remove nodes from history that have been removed from the cluster
             self._removeRemovedNodes(desiredNodes)
+
+            # A cluster stop/start sets the maintenance flag in every node's
+            # config before it stops any services, and the nodes stop at
+            # different speeds (the primary waits for DMLProc). Silent peers
+            # are expected then, so make no membership changes.
+            if self._config.inMaintenance():
+                if not inMaintenance:
+                    self._logger.info(
+                        'Cluster is in maintenance, failover is on hold'
+                    )
+                    self._agentComm.holdMembershipChanges(True)
+                    inMaintenance = True
+                continue
+            elif inMaintenance:
+                self._logger.info(
+                    'Cluster left maintenance, failover resumes with a '
+                    'fresh heartbeat history'
+                )
+                self._hbHistory.clear()
+                self._agentComm.holdMembershipChanges(False)
+                inMaintenance = False
 
             # if there are less than 3 nodes in the cluster or shared storage is OFF,
             # failover must not perform any actions. Keep the thread alive but idle,
