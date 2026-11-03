@@ -20,6 +20,7 @@
 #include <iostream>
 #include <algorithm>
 #include <map>
+//#include <tuple>
 #include <assert.h>
 #include <sys/time.h>
 using namespace std;
@@ -47,7 +48,10 @@ struct ExtentPos
   uint16_t segNum;
   uint32_t blockOff;
 
-  auto operator<=>(const ExtentPos&) const = default;
+  bool operator<(const ExtentPos& o) const
+  {
+    return std::tie(dbRoot, partNum, segNum, blockOff) < std::tie(o.dbRoot, o.partNum, o.segNum, o.blockOff);
+  }
 };
 
 ExtentPos extentPos(const BRM::EMEntry& e)
