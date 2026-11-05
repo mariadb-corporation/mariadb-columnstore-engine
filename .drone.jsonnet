@@ -8,11 +8,11 @@ local servers = {
 };
 
 local platforms = {
-  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:11", "ubuntu:22.04"],
+  [current_branch]: ["debian:11"],
 };
 
 local platforms_arm = {
-  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:11", "ubuntu:22.04"],
+  [current_branch]: ["debian:11"],
 };
 
 local builddir = "verylongdirnameforverystrangecpackbehavior";
