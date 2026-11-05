@@ -107,6 +107,7 @@ if [[ "$RESULT" == *rocky* ]]; then
     execInnerDockerWithRetry "$CONTAINER_NAME" 'yum update -y && yum install -y cracklib-dicts diffutils elfutils epel-release findutils iproute gawk gcc-c++ gdb hostname lz4 patch perl procps-ng rsyslog sudo tar wget which'
 else
     change_ubuntu_mirror_in_docker "$CONTAINER_NAME" "us"
+    repoint_debian_bullseye_archive_in_docker "$CONTAINER_NAME"
     execInnerDockerWithRetry "$CONTAINER_NAME" 'apt update -y && apt install -y elfutils findutils iproute2 g++ gawk gdb hostname liblz4-tool patch procps rsyslog sudo tar wget'
 fi
 
