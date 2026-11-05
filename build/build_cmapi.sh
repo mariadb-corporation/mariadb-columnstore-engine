@@ -54,7 +54,19 @@ install_deps() {
   if [[ "$PKG_FORMAT" == "rpm" ]]; then
     retry_eval 5 "dnf update -q -y && dnf install -q -y epel-release wget zstd findutils gcc cmake make rpm-build redhat-lsb-core libarchive"
   else
-    retry_eval 5 "apt-get update -qq -o Dpkg::Use-Pty=0 && apt-get install -qq -o Dpkg::Use-Pty=0 wget zstd findutils gcc cmake make dpkg-dev lsb-release"
+    APT_PRELUDE=""
+    if [[ "$OS" == "debian:11"* ]]; then
+      # Debian 11 (bullseye) reached EOL on 2026-08-31; repoint to archive.debian.org
+      # so apt stops 404-ing on pruned +deb11uN package files.
+      APT_PRELUDE="printf '%s\n' \
+          'deb http://archive.debian.org/debian bullseye main' \
+          'deb http://archive.debian.org/debian bullseye-updates main' \
+          'deb http://archive.debian.org/debian-security bullseye-security main' \
+          > /etc/apt/sources.list && \
+        rm -rf /var/lib/apt/lists/* && \
+        echo 'Acquire::Check-Valid-Until \"false\";' > /etc/apt/apt.conf.d/99archive && "
+    fi
+    retry_eval 5 "${APT_PRELUDE}apt-get update -qq -o Dpkg::Use-Pty=0 && apt-get install -qq -o Dpkg::Use-Pty=0 wget zstd findutils gcc cmake make dpkg-dev lsb-release"
   fi
 
   if [ "$(arch)" == "x86_64" ]; then

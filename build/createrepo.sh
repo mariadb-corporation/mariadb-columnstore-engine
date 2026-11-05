@@ -61,7 +61,19 @@ if [[ $(compgen -G "./${RESULT}/*.rpm") ]]; then
   retry_eval 5 "dnf install -q -y createrepo"
   createrepo "./${RESULT}"
 else
-  retry_eval 5 "apt update && apt install -y dpkg-dev"
+  APT_PRELUDE=""
+  if [[ -r /etc/os-release ]] && grep -q 'VERSION_CODENAME=bullseye' /etc/os-release; then
+    # Debian 11 (bullseye) reached EOL on 2026-08-31; repoint to archive.debian.org
+    # so apt stops 404-ing on pruned +deb11uN package files.
+    APT_PRELUDE="printf '%s\n' \
+        'deb http://archive.debian.org/debian bullseye main' \
+        'deb http://archive.debian.org/debian bullseye-updates main' \
+        'deb http://archive.debian.org/debian-security bullseye-security main' \
+        > /etc/apt/sources.list && \
+      rm -rf /var/lib/apt/lists/* && \
+      echo 'Acquire::Check-Valid-Until \"false\";' > /etc/apt/apt.conf.d/99archive && "
+  fi
+  retry_eval 5 "${APT_PRELUDE}apt update && apt install -y dpkg-dev"
   dpkg-scanpackages "${RESULT}" | gzip >"./${RESULT}/Packages.gz"
 fi
 

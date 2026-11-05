@@ -132,6 +132,19 @@ install_deps() {
 
     elif [[ "$OS" == "debian:11"* ]] || [[ "$OS" == "debian:12"* ]] || [[ "$OS" == "ubuntu:20.04"* ]] || [[ "$OS" == "ubuntu:22.04"* ]] || [[ "$OS" == "ubuntu:24.04"* ]]; then
         command="${DEB_BUILD_DEPS}"
+        if [[ "$OS" == "debian:11"* ]]; then
+            # Debian 11 (bullseye) reached EOL on 2026-08-31; packages were moved to
+            # archive.debian.org. Repoint sources before apt-get update so the stale
+            # index does not keep requesting pruned +deb11uN files (404s).
+            command="printf '%s\n' \
+                'deb http://archive.debian.org/debian bullseye main' \
+                'deb http://archive.debian.org/debian bullseye-updates main' \
+                'deb http://archive.debian.org/debian-security bullseye-security main' \
+                > /etc/apt/sources.list && \
+              rm -rf /var/lib/apt/lists/* && \
+              echo 'Acquire::Check-Valid-Until \"false\";' > /etc/apt/apt.conf.d/99archive && \
+              ${command}"
+        fi
     else
         echo "Unsupported OS: $OS"
         exit 17
