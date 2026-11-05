@@ -600,3 +600,24 @@ change_ubuntu_mirror_in_docker() {
 
   execInnerDocker "$container_name" "$docker_funcs; change_ubuntu_mirror ${region}"
 }
+
+# Debian 11 (bullseye) reached EOL on 2026-08-31; packages were moved to
+# archive.debian.org. Repoint sources before any apt-get update/install so the
+# stale index does not keep requesting pruned +deb11uN files (404s).
+#
+# Emits the shell snippet that performs the repoint. Use when the caller needs
+# to embed the command inside a larger string (e.g. retry_eval, docker exec).
+debian_bullseye_archive_prelude() {
+  printf '%s' "printf '%s\n' \
+      'deb http://archive.debian.org/debian bullseye main' \
+      'deb http://archive.debian.org/debian bullseye-updates main' \
+      'deb http://archive.debian.org/debian-security bullseye-security main' \
+      > /etc/apt/sources.list && \
+    rm -rf /var/lib/apt/lists/* && \
+    echo 'Acquire::Check-Valid-Until \"false\";' > /etc/apt/apt.conf.d/99archive"
+}
+
+repoint_debian_bullseye_archive_in_docker() {
+  local container_name=$1
+  execInnerDocker "$container_name" "if [ -r /etc/os-release ] && grep -q 'VERSION_CODENAME=bullseye' /etc/os-release; then $(debian_bullseye_archive_prelude); fi"
+}

@@ -26,6 +26,7 @@ prepare_environment() {
   echo "Preparing for cmapi test run..."
 
   if [[ "$PKG_FORMAT" == "deb" ]]; then
+    repoint_debian_bullseye_archive_in_docker "$CONTAINER_NAME"
     execInnerDocker $CONTAINER_NAME "apt-get clean && apt-get update -y && apt-get install -y mariadb-columnstore-cmapi"
   else
     execInnerDocker $CONTAINER_NAME "yum update -y && yum install -y MariaDB-columnstore-cmapi"
