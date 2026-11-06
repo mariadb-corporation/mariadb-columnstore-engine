@@ -1103,6 +1103,20 @@ void WEDataLoader::onReceiveError(ByteStream& Ibs)
 void WEDataLoader::onReceiveCmdLineArgs(ByteStream& Ibs)
 {
   Ibs >> fCmdLineStr;
+
+  // Give this PM its own BRM report file: with a shared SystemTempFileDir the PMs would otherwise
+  // overwrite each other's report (MCOL-6604). Done here, which always runs before cpimport is forked.
+  const string::size_type rPos = fCmdLineStr.find(" -R ");
+
+  if (rPos != string::npos)
+  {
+    const string::size_type nameBeg = rPos + 4;
+    const string::size_type nameEnd = fCmdLineStr.find(' ', nameBeg);
+    const string rptName = perPmBrmRptFileName(fCmdLineStr.substr(nameBeg, nameEnd - nameBeg));
+    fCmdLineStr.replace(nameBeg, nameEnd == string::npos ? string::npos : nameEnd - nameBeg, rptName);
+    fBrmRptFileName = rptName;
+  }
+
   cout << "CMD LINE ARGS came in " << fCmdLineStr << endl;
 
   if (fpSysLog)
@@ -1205,9 +1219,28 @@ void WEDataLoader::onReceiveStartCpimport()
 
 //-----------------------------------------------------------------------------
 
+// Append "_pm<N>" before the ".rpt" extension; idempotent so a repeated call keeps the same name.
+string WEDataLoader::perPmBrmRptFileName(const string& name) const
+{
+  const string suffix = "_pm" + std::to_string(static_cast<int>(fPmId));
+  const string ext = ".rpt";
+  string base = name;
+
+  if (base.size() >= ext.size() && base.compare(base.size() - ext.size(), ext.size(), ext) == 0)
+    base.erase(base.size() - ext.size());
+
+  if (base.size() >= suffix.size() && base.compare(base.size() - suffix.size(), suffix.size(), suffix) == 0)
+    return base + ext;
+
+  return base + suffix + ext;
+}
+
+//-----------------------------------------------------------------------------
+
 void WEDataLoader::onReceiveBrmRptFileName(ByteStream& Ibs)
 {
   Ibs >> fBrmRptFileName;
+  fBrmRptFileName = perPmBrmRptFileName(fBrmRptFileName);
   cout << "Brm Rpt Filename Arrived " << fBrmRptFileName << endl;
 
   // BUG 4645
