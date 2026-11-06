@@ -16,6 +16,7 @@
    MA 02110-1301, USA. */
 
 #include <thread>
+#include <unistd.h>
 
 #include "rssmonfcn.h"
 #include "serviceexemgr.h"
@@ -40,7 +41,8 @@ namespace exemgr
           args.add((int)pct);
           args.add((int)fMaxPct);
           msgLog.logMessage(logging::LOG_TYPE_CRITICAL, ServiceExeMgr::logRssTooBig, args, logging::LoggingID(16));
-          exit(1);
+          // _exit(), not exit(): don't run static destructors under the other threads (MCOL-6603).
+          _exit(1);
         }
 
         if (statementsRunningCount->cur() == 0)
@@ -50,7 +52,7 @@ namespace exemgr
           args.add((int)pct);
           args.add((int)fMaxPct);
           msgLog.logMessage(logging::LOG_TYPE_WARNING, ServiceExeMgr::logRssTooBig, args, logging::LoggingID(16));
-          exit(1);
+          _exit(1);
         }
 
         std::cerr << "Too much memory allocated, but stmts running" << std::endl;
