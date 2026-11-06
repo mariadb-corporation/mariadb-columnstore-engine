@@ -25,6 +25,7 @@
  */
 #pragma once
 
+#include <atomic>
 #include <string>
 #include <sstream>
 #include <exception>
@@ -183,7 +184,7 @@ class ServicePrimProc : public Service, public Opt
   }
 
  private:
-  ServicePrimProc() : Service("PrimProc"), Opt(0, false)
+  ServicePrimProc() : Service("PrimProc"), Opt(0, false), fDie(false)
   {
   }
 
@@ -192,4 +193,5 @@ class ServicePrimProc : public Service, public Opt
   std::atomic_flag startupRaceFlag_{false};
   boost::shared_ptr<threadpool::FairThreadPool> primServerThreadPool;
   boost::shared_ptr<threadpool::FairThreadPool> OOBThreadPool;
+  std::atomic<bool> fDie;
 };

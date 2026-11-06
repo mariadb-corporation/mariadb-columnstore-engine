@@ -24,6 +24,7 @@
 /** @file */
 #pragma once
 
+#include <atomic>
 #include <map>
 #include <unordered.h>
 
@@ -108,10 +109,10 @@ class PrimitiveServer
   /** @brief ctor
    */
   PrimitiveServer(int serverThreads, int serverQueueSize, int processorWeight, int processorQueueSize,
-                  bool rotatingDestination, uint32_t BRPBlocks = (1024 * 1024 * 2), int BRPThreads = 64,
-                  int cacheCount = 8, int maxBlocksPerRead = 128, int readAheadBlocks = 256,
-                  uint32_t deleteBlocks = 0, bool ptTrace = false, double prefetchThreshold = 0,
-                  uint64_t pmSmallSide = 0);
+                  bool rotatingDestination, uint32_t BRPBlocks, int BRPThreads,
+                  int cacheCount, int maxBlocksPerRead, int readAheadBlocks,
+                  uint32_t deleteBlocks, bool ptTrace, double prefetchThreshold,
+                  uint64_t pmSmallSide, int maxPct, int aggPct, std::atomic<bool>* dieFlag);
 
   /** @brief dtor
    */
@@ -176,6 +177,9 @@ class PrimitiveServer
   bool fRotatingDestination;
   bool fPTTrace;
   double fPrefetchThreshold;
+  int fMaxPct;
+  int fAggPct;
+  std::atomic<bool>* fDieFlag;
 };
 
 }  // namespace primitiveprocessor

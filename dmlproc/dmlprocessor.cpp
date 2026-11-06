@@ -1287,7 +1287,7 @@ int DMLServer::start()
     cout << "DMLProc is ready..." << endl;
 
     const static struct timespec timeout = {1, 100};  // roughly 1 second TO
-    for (;;)
+    while (!fShutdownFlag.load(std::memory_order_relaxed))
     {
       ios = fMqServer->accept(&timeout);
       // MCS polls in a loop watching for a pending shutdown
