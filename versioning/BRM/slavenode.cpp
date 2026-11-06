@@ -50,11 +50,22 @@ class Opt
   const char* m_progname;
   const char* m_nodename;
   bool m_fg;
+  bool m_verbose;
 
  public:
+  // workernode <nodename> [fg] [-v|--verbose]
   Opt(int argc, char** argv)
-   : m_progname(argv[0]), m_nodename(argc > 1 ? argv[1] : nullptr), m_fg(argc > 2 && string(argv[2]) == "fg")
+   : m_progname(argv[0]), m_nodename(argc > 1 ? argv[1] : nullptr), m_fg(false), m_verbose(false)
   {
+    for (int i = 2; i < argc; i++)
+    {
+      const string arg(argv[i]);
+
+      if (arg == "fg")
+        m_fg = true;
+      else if (arg == "-v" || arg == "--verbose")
+        m_verbose = true;
+    }
   }
 };
 
@@ -121,6 +132,8 @@ void ServiceWorkerNode::setupChildSignalHandlers()
 
 int ServiceWorkerNode::Child()
 {
+  ExtentMap::setLogFreeList(m_verbose);
+
   setupChildSignalHandlers();
 
   ShmKeys keys;
