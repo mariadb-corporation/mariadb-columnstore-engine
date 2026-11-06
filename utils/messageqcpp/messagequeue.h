@@ -242,6 +242,17 @@ class MessageQueueClient
   {
     fIsAvailable = isAvailable;
   }
+  /** @brief when false, read()/write() on a closed socket throw SocketClosed instead of reconnecting;
+   * only connect() opens it again. */
+  void autoReconnect(const bool b)
+  {
+    fAutoReconnect = b;
+  }
+  /** @brief bound connect()'s TCP handshake (ms); 0 = block until the OS gives up (default) */
+  void tcpConnectTimeout(const int ms)
+  {
+    fClientSock.tcpConnectTimeout(ms);
+  }
   EXPORT const std::string moduleName() const
   {
     return fModuleName;
@@ -316,6 +327,7 @@ class MessageQueueClient
   bool fIsAvailable;
   bool atTheSameHost_;
   std::string fModuleName;
+  bool fAutoReconnect = true;
 };
 
 inline IOSocket& MessageQueueServer::clientSock() const
