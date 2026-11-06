@@ -20,6 +20,9 @@
 #include "resourcemanager.h"
 #include "rowgroup.h"
 #include "idbcompress.h"
+#include <atomic>
+#include <chrono>
+#include <memory>
 #include <random>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -40,6 +43,41 @@ uint64_t hashRow(const rowgroup::Row& r, std::size_t lastCol);
 constexpr const size_t MaxConstStrSize = 2048ULL;
 constexpr const size_t MaxConstStrBufSize = MaxConstStrSize << 1;
 
+/** @brief Progress of one query step's disk-based aggregation, for the log.
+ *
+ *    Shared by all bucket aggregators of the step (they are clones of one aggregator) and by their
+ *    storages, so the counters cover the whole step and the progress lines are throttled for the
+ *    whole step, not per bucket. Every line carries the session ID.
+ */
+struct DiskAggLog
+{
+  explicit DiskAggLog(uint32_t sessionId) : fSessionId(sessionId)
+  {
+  }
+
+  /** @brief Log msg now */
+  void log(const std::string& msg) const;
+  /** @brief Log the counters if PROGRESS_INTERVAL passed since the last progress line */
+  void progress(const char* phase);
+
+  static constexpr std::chrono::seconds PROGRESS_INTERVAL{60};
+
+  const uint32_t fSessionId;
+  const std::chrono::steady_clock::time_point fStart{std::chrono::steady_clock::now()};
+  // steady_clock ticks of the last progress line
+  std::atomic<int64_t> fLastProgress{fStart.time_since_epoch().count()};
+  std::atomic<uint32_t> fSpilling{0};     // storages (buckets) that spilled
+  std::atomic<uint32_t> fGenerations{0};  // new generations started, all buckets
+  std::atomic<uint64_t> fRGsWritten{0};
+  std::atomic<uint64_t> fBytesWritten{0};  // before compression
+  std::atomic<uint64_t> fRGsRead{0};
+  std::atomic<uint64_t> fBytesRead{0};
+  std::atomic<uint32_t> fFinalizing{0};  // buckets that started the final merge
+  std::atomic<uint32_t> fFinalized{0};
+  std::atomic<uint64_t> fRowsMerged{0};
+};
+using DiskAggLogPtr = std::shared_ptr<DiskAggLog>;
+
 class RowAggStorage
 {
  public:
@@ -58,6 +96,9 @@ class RowAggStorage
   }
 
   ~RowAggStorage();
+
+  /** @brief Log disk-based aggregation progress to log (nullptr: don't) */
+  void setDiskAggLog(DiskAggLogPtr log);
 
   static uint16_t getMaxRows(bool enabledDiskAgg)
   {
@@ -97,7 +138,7 @@ class RowAggStorage
    */
   std::unique_ptr<RGData> getNextRGData();
 
-  /** @brief TODO
+  /** @brief Merge generations together
    *
    * @param mergeFunc
    * @param rowOut
@@ -304,6 +345,9 @@ class RowAggStorage
   std::string makeDumpFilename(int32_t gen = -1) const;
 
  private:
+  /** @brief Log the first spill of this storage and the progress so far */
+  void noteSpill();
+
   static constexpr size_t INIT_SIZE{sizeof(uint64_t)};
   static constexpr uint32_t INIT_INFO_BITS{5};
   static constexpr uint8_t INIT_INFO_INC{1U << INIT_INFO_BITS};
@@ -352,6 +396,8 @@ class RowAggStorage
   std::random_device fRD;
   std::mt19937 fRandGen;
   std::uniform_int_distribution<uint8_t> fRandDistr;
+  DiskAggLogPtr fLog;
+  bool fSpilled{false};
 };
 
 }  // namespace rowgroup
