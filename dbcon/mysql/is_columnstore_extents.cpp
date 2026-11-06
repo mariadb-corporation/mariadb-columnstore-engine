@@ -294,6 +294,6 @@ int is_columnstore_extents_plugin_init(void* p)
 {
   ST_SCHEMA_TABLE* schema = (ST_SCHEMA_TABLE*)p;
   schema->fields_info = is_columnstore_extents_fields;
-  schema->fill_table = is_columnstore_extents_fill;
+  schema->fill_table = is_columnstore_fill_guarded<is_columnstore_extents_fill>;
   return 0;
 }
