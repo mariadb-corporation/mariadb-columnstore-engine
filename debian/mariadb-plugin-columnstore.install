@@ -35,6 +35,7 @@ usr/bin/mariadb-columnstore-stop.sh
 usr/bin/mcs-savebrm.py
 usr/bin/mcs-loadbrm.py
 usr/bin/mcs-stop-controllernode.sh
+usr/bin/mcs-workernode-stop-shm.sh
 usr/bin/mcs-load-brm-from-file
 usr/bin/mcs-load-em
 usr/bin/mcs-shmem-locks
