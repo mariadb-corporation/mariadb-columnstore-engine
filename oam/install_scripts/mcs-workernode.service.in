@@ -13,7 +13,9 @@ LimitCORE=@CORE_DUMPS@
 
 Environment="@WORKERNODE_ALLOC_CONFIG@"
 ExecStart=@ENGINE_BINDIR@/workernode DBRM_Worker%i
-ExecStopPost=@ENGINE_BINDIR@/mcs-savebrm.py
+# "-": a failed save must not skip clearShm, or the next load_brm runs
+# against this worker's shared memory (MCOL-6608).
+ExecStopPost=-@ENGINE_BINDIR@/mcs-savebrm.py
 ExecStopPost=/usr/bin/env bash -c "clearShm > /dev/null 2>&1"
 
 Restart=on-failure
