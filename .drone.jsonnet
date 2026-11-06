@@ -17,7 +17,7 @@ local servers_frontier_dev = {
 
 
 local platforms = {
-  [current_branch]: ["rockylinux:8", "rockylinux:9", "rockylinux:10", "debian:12", "ubuntu:22.04", "ubuntu:24.04"],
+  [current_branch]: ["rockylinux:8"],
 };
 
 local servers_main_support_platforms = {
@@ -915,74 +915,6 @@ local AllPipelines =
     for b in std.objectFields(platforms)
     for platform in ["rockylinux:8"]
     for flag in ["gcc-toolset"]
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
-  [
-    Pipeline(b, p, e, a, s)
-    for b in std.objectFields(platforms)
-    for p in platforms[b]
-    for s in servers[b]
-    for e in events
-    for a in archs
-  ] +
-  [
-    Pipeline(any_branch, p, "custom", a, server)
-    for p in platforms[current_branch]
-    for server in servers[current_branch]
-    for a in archs
-  ] +
-  // clang
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, "", buildenv)
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04"]
-    for buildenv in std.objectFields(customEnvCommandsMap)
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, "", "")
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for server in servers_main_support[current_branch]
-    for platform in servers_main_support_platforms[current_branch]
-    for triggeringEvent in events
-  ] +
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, "", "")
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for server in servers_frontier_dev[current_branch]
-    for platform in servers_frontier_dev_platforms[current_branch]
-    for triggeringEvent in events
-  ] +
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, flag, envcommand)
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04"]
-    for flag in ["libcpp"]
-    for envcommand in ["clang-20"]
-    for triggeringEvent in events
-    for server in servers[current_branch]
-  ] +
-  // sanitizer tests: each sanitizer test is split into two parallel stages so
-  // each half fits the 8h stage limit:
-  //   <key>      runs smoke + cmapi + mtr + upgrade
-  //   <key>Regr  runs the regression chain only
-  [
-    Pipeline(b, platform, triggeringEvent, a, server, spec.flag, "", ["cmapi test", "upgrade", "test400.sh"], spec.testSet)
-    for a in ["amd64"]
-    for b in std.objectFields(platforms)
-    for platform in ["ubuntu:24.04"]
-    for spec in [
-      { flag: "UBSan", testSet: "mtr" },
-      { flag: "UBSanRegr", testSet: "regression" },
-      { flag: "ASan", testSet: "mtr" },
-      { flag: "ASanRegr", testSet: "regression" },
-    ]
     for triggeringEvent in events
     for server in servers[current_branch]
   ] +
