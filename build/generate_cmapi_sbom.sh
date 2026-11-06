@@ -107,8 +107,7 @@ install_cyclonedx_cli() {
     *)              echo "cyclonedx-cli: unsupported arch $ARCH"; exit 1 ;;
   esac
   echo "Installing cyclonedx-cli ${CDXCLI_VERSION}..."
-  curl -sSfL -o /usr/local/bin/cyclonedx \
-    "https://github.com/CycloneDX/cyclonedx-cli/releases/download/v${CDXCLI_VERSION}/cyclonedx-${dl_arch}"
+  retry_eval 5 "curl -sSfL -o /usr/local/bin/cyclonedx 'https://github.com/CycloneDX/cyclonedx-cli/releases/download/v${CDXCLI_VERSION}/cyclonedx-${dl_arch}'"
   chmod +x /usr/local/bin/cyclonedx
 }
 

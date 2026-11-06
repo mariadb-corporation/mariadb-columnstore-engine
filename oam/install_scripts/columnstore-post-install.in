@@ -80,6 +80,8 @@ if [ -z "$(pgrep -x mariadbd)" ];then
     # Startup mysqld
     systemctl --no-pager cat mariadb.service > /dev/null 2>&1
     if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
+        # unmask in case a previous major-version package left it masked
+        systemctl unmask mariadb.service > /dev/null 2>&1 || true
         systemctl start mariadb.service
     else
         /usr/bin/mysqld_safe &
@@ -264,6 +266,7 @@ rm -f $lockdir/columnstore
 # Restart MDB to enable plugin
 systemctl --no-pager cat mariadb.service > /dev/null 2>&1
 if [ $? -eq 0 ] && [ $(running_systemd) -eq 0 ]; then
+    systemctl unmask mariadb.service > /dev/null 2>&1 || true
     systemctl restart mariadb.service > /dev/null 2>&1
 else
     pkill mysqld > /dev/null 2>&1
