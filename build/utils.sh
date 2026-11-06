@@ -172,13 +172,16 @@ detect_distro() {
 }
 
 select_pkg_format() {
-  local distro="$1"
+  local distro="${1,,}"
 
-  if [[ "$distro" == *rocky* ]]; then
-    export PKG_FORMAT="rpm"
-  else
-    export PKG_FORMAT="deb"
-  fi
+  case "$distro" in
+    *rocky*|*rhel*|*fedora*|*centos*|*alma*|*opensuse*|*suse*|*oracle*|*amazon*)
+      export PKG_FORMAT="rpm"
+      ;;
+    *)
+      export PKG_FORMAT="deb"
+      ;;
+  esac
 }
 
 menuStr=""
@@ -677,9 +680,12 @@ set_cnf_path() {
   # Set config path prefix based on distro
   # TODO: fix check: instead of 'rocky' the RPM/DEB check should be used
   # TODO: check paths in all new versions (it can be also /etc/mariadb/mariadb.conf.d, /etc/mariadb.conf.d
-  if [[ "$DISTRO" == *rocky* ]]; then
-    echo "/etc/my.cnf.d/"
-  else
-    echo "/etc/mysql/mariadb.conf.d/50-"
-  fi
+  case "$DISTRO" in
+    *rocky*|*rhel*|*fedora*|*centos*|*alma*|*opensuse*|*suse*|*oracle*|*amazon*)
+      echo "/etc/my.cnf.d/"
+      ;;
+    *)
+      echo "/etc/mysql/mariadb.conf.d/50-"
+      ;;
+  esac
 }
