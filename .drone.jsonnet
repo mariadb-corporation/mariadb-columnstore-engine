@@ -8,7 +8,7 @@ local servers = {
 };
 
 local platforms = {
-  [current_branch]: ["debian:11"],
+  [current_branch]: ["rockylinux:8", "rockylinux:9", "debian:11", "ubuntu:22.04"],
 };
 
 local platforms_arm = {
