@@ -563,7 +563,9 @@ void RowAggregation::addRowGroup(const RowGroup* pRows)
     }
   }
 
-  fRowGroupOut->setDBRoot(pRows->getDBRoot());
+  // The disk-based storage detaches fRowGroupOut when it saves or frees the RGData it points at.
+  if (fRowGroupOut->getRGData())
+    fRowGroupOut->setDBRoot(pRows->getDBRoot());
 
   Row rowIn;
   pRows->initRow(&rowIn);
@@ -2336,6 +2338,7 @@ void RowAggregation::loadResult(messageqcpp::ByteStream& bs)
     ++sz;
     fRowGroupOut->setData(rgd.get());
     fRowGroupOut->serializeRGData(rgdbs);
+    fRowGroupOut->detachData();  // rgd is freed here
   }
 
   if (sz == 0)
@@ -2345,6 +2348,7 @@ void RowAggregation::loadResult(messageqcpp::ByteStream& bs)
     fRowGroupOut->setData(&rgd);
     fRowGroupOut->resetRowGroup(0);
     fRowGroupOut->serializeRGData(rgdbs);
+    fRowGroupOut->detachData();
   }
   bs << sz;
   bs.append(rgdbs.buf(), rgdbs.length());
@@ -4062,6 +4066,11 @@ bool RowAggregationUM::nextRowGroup()
   {
     // load the top result set
     fRowGroupOut->setData(fCurRGData.get());
+  }
+  else
+  {
+    // the previous fCurRGData, which fRowGroupOut pointed at, was just freed
+    fRowGroupOut->detachData();
   }
 
   return more;
