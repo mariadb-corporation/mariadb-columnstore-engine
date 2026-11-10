@@ -158,6 +158,13 @@ class Socket
    */
   virtual void connectionTimeout(const struct ::timespec* timeout) = 0;
 
+  /** set how long connect() may wait for the TCP handshake (ms); 0 = block until the OS gives up
+   *
+   */
+  virtual void tcpConnectTimeout(int /*ms*/)
+  {
+  }
+
   /** set the connection protocol to be synchronous
    *
    */
