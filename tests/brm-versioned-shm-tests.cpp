@@ -35,6 +35,7 @@
  */
 
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <atomic>
 #include <cstring>
@@ -81,6 +82,8 @@ enum TestRange
   RangeCrashTimeout,
   RangeNestedOuter,
   RangeNestedInner,
+  RangeStaleSlot,
+  RangeStaleSlotRelease,
   RangeCount
 };
 
@@ -913,3 +916,52 @@ TYPED_TEST(VersionedShmTest, ConcurrentPinsNeverSeeAHalfWrittenArea)
 }
 
 }  // namespace
+
+// 11. A slot's old object that can't be removed - in production it is root's,
+//     left by a BRM tool run as root, and /dev/shm only lets its owner remove
+//     it - is an error that names it, not a create that fails with "File
+//     exists" and no clue why (MCOL-6672). A directory under the name stands
+//     in for root's object: removing it fails (EISDIR) whoever runs the test
+TYPED_TEST(VersionedShmTest, CreateDataAreaThrowsWhenStaleSegmentCantBeRemoved)
+{
+  using SegmentType = TypeParam;
+  unsigned base = this->use(RangeStaleSlot);
+  std::string name = ShmKeys::keyToName(this->dataAreaKey(1));
+  std::string path = "/dev/shm/" + name;
+  rmdir(path.c_str());  // a failed earlier run's
+  ASSERT_EQ(0, mkdir(path.c_str(), 0700)) << strerror(errno);
+
+  typename SegmentType::Impl writer(base, SegmentType::InitialSize);
+  std::string what;
+
+  try
+  {
+    writer.beginUpdate(SegmentType::InitialSize);
+  }
+  catch (const std::exception& e)
+  {
+    what = e.what();
+  }
+
+  rmdir(path.c_str());
+  EXPECT_NE(std::string::npos, what.find("can't remove")) << "message: " << what;
+  EXPECT_NE(std::string::npos, what.find(name)) << "message: " << what;
+}
+
+// 12. The failed update leaves the update mutex free: once the object is out of
+//     the way, the next writer gets in and publishes
+TYPED_TEST(VersionedShmTest, MutexReleasedAfterThrow)
+{
+  using SegmentType = TypeParam;
+  unsigned base = this->use(RangeStaleSlotRelease);
+  std::string path = "/dev/shm/" + ShmKeys::keyToName(this->dataAreaKey(1));
+  rmdir(path.c_str());  // a failed earlier run's
+  ASSERT_EQ(0, mkdir(path.c_str(), 0700)) << strerror(errno);
+
+  typename SegmentType::Impl writer(base, SegmentType::InitialSize);
+  EXPECT_ANY_THROW(writer.beginUpdate(SegmentType::InitialSize));
+  ASSERT_EQ(0, rmdir(path.c_str())) << strerror(errno);
+
+  EXPECT_EQ(1u, this->publish(writer, this->markerFor(1)));
+  EXPECT_EQ(this->markerFor(1), this->readMarker(writer.pin()));
+}
