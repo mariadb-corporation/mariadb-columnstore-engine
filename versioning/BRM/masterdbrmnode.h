@@ -175,6 +175,18 @@ class MasterDBRMNode
   void msgProcessor();
   void distribute(messageqcpp::ByteStream* msg);
   void undo() noexcept;
+
+  /* Drops and remakes the connection to every worker. The caller holds slaveLock. Returns true when all
+     are connected. */
+  bool resetWorkerConnections();
+
+  /* After a read error from a worker, reconnects every worker and ends the halt. Returns true when it
+     did. */
+  bool reconnectWorkersAfterNetError();
+
+  // Sends OWNER_CHECK to every worker; fails without asking any while halted
+  int askWorkersOwnerCheck(messageqcpp::ByteStream& cmd, std::vector<messageqcpp::ByteStream*>* responses,
+                           bool& readErrFlag);
   void confirm();
   void sendError(messageqcpp::IOSocket* dest, uint8_t err) const noexcept;
   int gatherResponses(uint8_t cmd, uint32_t msgCmdLength, std::vector<messageqcpp::ByteStream*>* responses,
@@ -260,6 +272,12 @@ class MasterDBRMNode
   ThreadParams* params;
   std::atomic<bool> die;
   std::atomic<bool> halting;
+  // halting was set by a read error from a worker, not by a HALT command
+  std::atomic<bool> haltedOnNetError{false};
+  // a read error left replies unread on some connection; reset them all before the next command
+  std::atomic<bool> workerSocketsDirty{false};
+  // doHalt() took slaveLock, so doResume() has it to release
+  std::atomic<bool> haltHoldsSlaveLock{false};
   bool reloadCmd;
   mutable bool readOnly;
   mutable bool waitToFinishJobs{false};
