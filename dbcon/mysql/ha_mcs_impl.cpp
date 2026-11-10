@@ -3246,9 +3246,10 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
 
         if (dup2(ci->fdt[0], 0) < 0)  // make stdin be the reading end of the pipe
         {
-          setError(current_thd, ER_INTERNAL_ERROR, "dup2 failed");
-          ci->singleInsert = true;
-          exit(1);
+          // The child shares no state with the parent: setting an error on the
+          // parent's THD here does nothing. _exit() skips static destructors,
+          // which can hang on threads that did not survive fork() (MCOL-6603).
+          _exit(1);
         }
 
         close(ci->fdt[0]);  // will trigger an EOF on stdin
@@ -3266,10 +3267,7 @@ void ha_mcs_impl_start_bulk_insert(ha_rows rows, TABLE* table, bool is_cache_ins
             << "; Check file and try invoking locally.";
         cout << oss.str();
 
-        setError(current_thd, ER_INTERNAL_ERROR, "Forking process cpimport failed.");
-        ci->singleInsert = true;
-        ha_mcs_impl::log_this(thd, "End SQL statement", logging::LOG_TYPE_DEBUG, tid2sid(thd->thread_id));
-        exit(1);
+        _exit(1);
       }
       else  // parent
       {

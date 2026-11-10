@@ -21,6 +21,7 @@
  *****************************************************************************/
 
 #include <sys/types.h>
+#include <unistd.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -67,7 +68,8 @@ void MonitorProcMem::operator()() const
         msg.format(args);
         logging::Logger logger(logid.fSubsysID);
         logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
-        exit(1);
+        // _exit(), not exit(): don't run static destructors under the other threads (MCOL-6603).
+        _exit(1);
       }
     }
 
