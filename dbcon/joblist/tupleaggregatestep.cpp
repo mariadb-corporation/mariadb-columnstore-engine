@@ -332,6 +332,7 @@ TupleAggregateStep::TupleAggregateStep(const SP_ROWAGG_UM_t& agg, const RowGroup
 {
   fRowGroupData.reinit(fRowGroupOut);
   fRowGroupOut.setData(&fRowGroupData);
+  fAggregator->logDiskAggregation(fSessionId);
   fAggregator->setInputOutput(fRowGroupIn, &fRowGroupOut);
 
   // decide if this needs to be multi-threaded
@@ -657,6 +658,7 @@ bool TupleAggregateStep::setPmHJAggregation(JobStep* step)
     fAggregatorUM->expression(fAggregator->expression());
     fAggregatorUM->constantAggregate(fAggregator->constantAggregate());
     fAggregator = fAggregatorUM;
+    fAggregator->logDiskAggregation(fSessionId);
     fRowGroupIn = fRowGroupPMHJ;
     fAggregator->setInputOutput(fRowGroupIn, &fRowGroupOut);
     bps->setAggregateStep(fAggregatorPM, fRowGroupPMHJ);
