@@ -1,59 +1,54 @@
 import logging
+import os
 import re
 import shlex
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from cmapi_server.constants import DEFAULT_MCS_CONF_PATH
 from cmapi_server.exceptions import CEJError, CMAPIBasicError
 from cmapi_server.helpers import get_cej_info
-from mcs_node_control.models.node_config import NodeConfig
 from cmapi_server.process_dispatchers.base import BaseDispatcher
+from mcs_node_control.models.node_config import NodeConfig
 
+
+# Seconds to wait for the local MariaDB connection in the plugin precheck.
+PLUGINS_QUERY_CONNECT_TIMEOUT = 10
 
 # Registry of MariaDB plugins that the install_es auto-upgrader does NOT
 # handle. If any of these are ACTIVE on the local node the precheck aborts
 # the upgrade and instructs the operator how to proceed manually.
 #
 # Keys are compared case-insensitively against PLUGIN_NAME as reported by
-# information_schema.PLUGINS. Currently focused on external storage engines
-# shipped as separate mariadb-plugin-* packages; extend as needed.
-UNSUPPORTED_PLUGINS_AUTOUPGRADE: Dict[str, str] = {
-    'SPIDER': (
-        "UNINSTALL SONAME 'ha_spider.so'; stop MariaDB; upgrade the "
-        "mariadb-plugin-spider package to a version matching the target "
-        "ES release; start MariaDB; INSTALL SONAME 'ha_spider.so'."
-    ),
-    'CONNECT': (
-        "UNINSTALL SONAME 'ha_connect.so'; stop MariaDB; upgrade the "
-        "mariadb-plugin-connect package to a version matching the target "
-        "ES release; start MariaDB; INSTALL SONAME 'ha_connect.so'."
-    ),
-    'SPHINX': (
-        "UNINSTALL SONAME 'ha_sphinx.so'; stop MariaDB; upgrade the "
-        "mariadb-plugin-sphinx package to a version matching the target "
-        "ES release; start MariaDB; INSTALL SONAME 'ha_sphinx.so'."
-    ),
-    'OQGRAPH': (
-        "UNINSTALL SONAME 'ha_oqgraph.so'; stop MariaDB; upgrade the "
-        "mariadb-plugin-oqgraph package to a version matching the target "
-        "ES release; start MariaDB; INSTALL SONAME 'ha_oqgraph.so'."
-    ),
-    'MROONGA': (
-        "UNINSTALL SONAME 'ha_mroonga.so'; stop MariaDB; upgrade the "
-        "mariadb-plugin-mroonga package to a version matching the target "
-        "ES release; start MariaDB; INSTALL SONAME 'ha_mroonga.so'."
-    ),
-    'ROCKSDB': (
-        "UNINSTALL SONAME 'ha_rocksdb.so'; stop MariaDB; upgrade the "
-        "mariadb-plugin-rocksdb package to a version matching the target "
-        "ES release; start MariaDB; INSTALL SONAME 'ha_rocksdb.so'."
-    ),
-    'S3': (
-        "UNINSTALL SONAME 'ha_s3.so'; stop MariaDB; upgrade the "
-        "mariadb-plugin-s3 package to a version matching the target ES "
-        "release; start MariaDB; INSTALL SONAME 'ha_s3.so'."
-    ),
+# information_schema.PLUGINS. Values are (package name, plugin library).
+# Currently focused on external storage engines shipped as separate
+# mariadb-plugin-* packages; extend as needed.
+UNSUPPORTED_PLUGINS_AUTOUPGRADE: Dict[str, Tuple[str, str]] = {
+    'SPIDER': ('mariadb-plugin-spider', 'ha_spider.so'),
+    'CONNECT': ('mariadb-plugin-connect', 'ha_connect.so'),
+    'SPHINX': ('mariadb-plugin-sphinx', 'ha_sphinx.so'),
+    'OQGRAPH': ('mariadb-plugin-oqgraph', 'ha_oqgraph.so'),
+    'MROONGA': ('mariadb-plugin-mroonga', 'ha_mroonga.so'),
+    'ROCKSDB': ('mariadb-plugin-rocksdb', 'ha_rocksdb.so'),
+    'S3': ('mariadb-plugin-s3', 'ha_s3.so'),
 }
+
+
+def get_plugin_upgrade_instructions(plugin_name: str) -> Optional[str]:
+    """Return manual upgrade instructions for an unsupported plugin.
+
+    :param plugin_name: PLUGIN_NAME from information_schema.PLUGINS
+    :return: instructions string or None if the plugin is not in
+             UNSUPPORTED_PLUGINS_AUTOUPGRADE
+    """
+    entry = UNSUPPORTED_PLUGINS_AUTOUPGRADE.get(plugin_name.upper())
+    if entry is None:
+        return None
+    package, soname = entry
+    return (
+        f"UNINSTALL SONAME '{soname}'; stop MariaDB; upgrade the {package} "
+        "package to a version matching the target ES release; start "
+        f"MariaDB; INSTALL SONAME '{soname}'."
+    )
 
 
 class PreInstallManager:
@@ -111,11 +106,10 @@ class PreInstallManager:
         """Return list of ACTIVE plugins on the local MariaDB node.
 
         Uses CrossEngineSupport credentials from Columnstore.xml (same as
-        `helpers.system_ready`). Plugin registration is stored in the
-        mysql.plugin system table so a single-node query is sufficient
-        for a Columnstore cluster (mysql.plugin is server-local, but
-        Columnstore cluster nodes share plugin state via replication or
-        identical package layout by convention).
+        `helpers.system_ready`). Only the local node is queried: the CEJ
+        user is commonly restricted to 127.0.0.1, so remote nodes can't be
+        reached reliably with it. Columnstore cluster nodes are expected to
+        have an identical set of MariaDB plugins installed.
 
         :return: list of (PLUGIN_NAME, PLUGIN_TYPE) tuples
         :raises CMAPIBasicError: if the query cannot be executed
@@ -136,17 +130,23 @@ class PreInstallManager:
             "FROM information_schema.PLUGINS "
             "WHERE PLUGIN_STATUS='ACTIVE';"
         )
+        # Password goes through MYSQL_PWD env var, so it never shows up in
+        # the process list or in exec_command error logs.
         cmd = (
             f'/usr/bin/mariadb -h {shlex.quote(host)} '
             f'-P {shlex.quote(str(port))} '
             f'-u {shlex.quote(username)} '
-            f'--password={shlex.quote(password)} '
+            f'--connect-timeout={PLUGINS_QUERY_CONNECT_TIMEOUT} '
             f'-sN -e {shlex.quote(query)}'
         )
-        # silent=True: we log our own message on failure and don't want the
-        # password-bearing command line dumped into logs on error.
-        success, output = BaseDispatcher.exec_command(cmd, silent=True)
+        env = {**os.environ, 'MYSQL_PWD': password}
+        success, output = BaseDispatcher.exec_command(
+            cmd, silent=True, env=env
+        )
         if not success:
+            logging.error(
+                'Plugin precheck query failed: %s', output.strip()
+            )
             raise CMAPIBasicError(
                 'Failed to query information_schema.PLUGINS on local '
                 'MariaDB node. Ensure MariaDB is running and '
@@ -176,7 +176,7 @@ class PreInstallManager:
         active = PreInstallManager._get_active_plugins(config)
         detected: List[Tuple[str, str, str]] = []
         for name, ptype in active:
-            instructions = UNSUPPORTED_PLUGINS_AUTOUPGRADE.get(name.upper())
+            instructions = get_plugin_upgrade_instructions(name)
             if instructions is not None:
                 detected.append((name, ptype, instructions))
 

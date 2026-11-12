@@ -27,7 +27,7 @@ from cmapi_server.constants import (
 from cmapi_server.controllers.api_clients import (
     ClusterControllerClient, NodeControllerClient
 )
-from cmapi_server.exceptions import CEJError, CMAPIBasicError
+from cmapi_server.exceptions import CEJError
 from cmapi_server.handlers.cej import CEJPasswordHandler
 from cmapi_server.helpers import get_active_nodes, get_cej_info, get_config_parser, get_current_key
 from cmapi_server.managers.transaction import TransactionManager
@@ -40,10 +40,12 @@ from mcs_cluster_tool.helpers import cook_sh_arg
 from mcs_cluster_tool.install_es_helpers import (
     INSTALL_ES_CMAPI_UPGRADE_SLEEP,
     INSTALL_ES_LONG_TRANSACTION_TIMEOUT,
+    Precheck,
     build_node_status_table,
     call_upgrade_agents_on_all_nodes,
     get_current_versions,
     run_node_step_on_cluster,
+    run_prechecks,
     setup_install_es_logging,
     stop_upgrade_agents_on_cluster,
     validate_cej_preupgrade,
@@ -728,30 +730,52 @@ def install_es(
         else:
             post_output.append(msg)
 
-    # Pre-upgrade check: make sure CEJ (Cross-Engine Join) credentials are
-    # valid before touching anything. Newer versions refuse to start the
-    # cluster with broken/empty CEJ credentials, so a currently-working
-    # installation with invalid credentials must be fixed before upgrading.
-    validate_cej_preupgrade(console)
-
-    # Validate token and resolve target version
-    target_version = validate_es_token_and_version(
-        node_api_client, token, target_version, console
+    # Prechecks: fail fast, before anything in the cluster is touched.
+    # Non-interactive only: the live progress bar must be stopped before any
+    # typer.confirm() prompt (see replication handling below).
+    prechecks = [
+        # Newer versions refuse to start the cluster with broken/empty CEJ
+        # credentials, so a currently-working installation with invalid
+        # credentials must be fixed before upgrading.
+        Precheck(
+            'Validating Cross-Engine Join credentials...',
+            'Cross-Engine Join credentials are valid',
+            lambda: validate_cej_preupgrade(console),
+        ),
+        Precheck(
+            'Validating ES token and target version...',
+            'ES token and target version are valid',
+            lambda: validate_es_token_and_version(
+                node_api_client, token, target_version, console
+            ),
+        ),
+        Precheck(
+            'Checking gtid_strict_mode...',
+            'gtid_strict_mode is disabled',
+            PreInstallManager.check_gtid_strict_mode,
+        ),
+        Precheck(
+            'Checking installed MariaDB plugins...',
+            'No plugins blocking auto-upgrade found',
+            PreInstallManager.check_installed_plugins,
+        ),
+        Precheck(
+            'Retrieving currently installed versions...',
+            'Currently installed versions retrieved',
+            lambda: get_current_versions(
+                cluster_api_client, console, ignore_mismatch
+            ),
+        ),
+        Precheck(
+            'Checking replication status...',
+            'Replication status checked',
+            lambda: precheck_replication(active_nodes, console),
+        ),
+    ]
+    _, target_version, _, _, versions, replication_ok = run_prechecks(
+        console, prechecks
     )
 
-    # Prechecks: fail fast, before the cluster is stopped.
-    console.print('Running pre-upgrade checks...', style='green')
-    try:
-        PreInstallManager.check_gtid_strict_mode()
-        PreInstallManager.check_installed_plugins()
-    except CMAPIBasicError as exc:
-        console.print('[red]Pre-upgrade check failed:[/red]')
-        console.print(exc.message)
-        raise typer.Exit(code=1)
-    console.print('[green]Pre-upgrade checks passed ✓[/green]')
-
-    # Retrieve current versions (handles mismatch display)
-    versions = get_current_versions(cluster_api_client, console, ignore_mismatch)
     mdb_curr_ver = versions['server_version']
     mcs_curr_ver = versions['columnstore_version']
     cmapi_curr_ver = versions['cmapi_version']
@@ -763,7 +787,6 @@ def install_es(
     table.add_row(mdb_curr_ver, mcs_curr_ver, cmapi_curr_ver)
     console.print(table)
 
-    replication_ok = precheck_replication(active_nodes, console)
     if not replication_ok:
         proceed = typer.confirm(
             'Replication issues detected on one or more nodes. '
