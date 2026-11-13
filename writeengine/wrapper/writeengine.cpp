@@ -128,7 +128,7 @@ WriteEngineWrapper::~WriteEngineWrapper()
 
 /**@brief Perform upfront initialization
  */
-/* static */ void WriteEngineWrapper::init(unsigned subSystemID)
+/* static */ void WriteEngineWrapper::init(unsigned subSystemID, std::atomic<bool>* dieFlag)
 {
   SimpleSysLog::instance()->setLoggingID(logging::LoggingID(subSystemID));
   Config::initConfigCache();
@@ -164,7 +164,7 @@ WriteEngineWrapper::~WriteEngineWrapper()
   //--------------------------------------------------------------------------
   if (maxPct > 0 || IDBPolicy::useHdfs())
   {
-    new boost::thread(utils::MonitorProcMem(maxPct, checkPct, subSystemID));
+    new boost::thread(utils::MonitorProcMem(maxPct, checkPct, subSystemID, dieFlag));
   }
 }
 

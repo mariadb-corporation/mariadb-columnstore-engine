@@ -21,6 +21,7 @@
  *******************************************************************************/
 
 #include <unistd.h>
+#include <atomic>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -92,7 +93,7 @@ class ServiceWriteEngine : public Service, public Opt
   void setupChildSignalHandlers();
 
  public:
-  ServiceWriteEngine(const Opt& opt) : Service("WriteEngine"), Opt(opt)
+  ServiceWriteEngine(const Opt& opt) : Service("WriteEngine"), Opt(opt), fDie(false)
   {
   }
   void LogErrno() override
@@ -108,6 +109,9 @@ class ServiceWriteEngine : public Service, public Opt
   {
     return m_fg ? Child() : RunForking();
   }
+
+ private:
+  std::atomic<bool> fDie;
 };
 
 void added_a_pm(int)
@@ -171,9 +175,6 @@ int ServiceWriteEngine::Child()
 {
   setupChildSignalHandlers();
 
-  // Init WriteEngine Wrapper (including Config Columnstore.xml cache)
-  WriteEngine::WriteEngineWrapper::init(WriteEngine::SUBSYSTEM_ID_WE_SRV);
-
   // Initialize the charset library
   MY_INIT("WriteEngineServer");
 
@@ -187,7 +188,9 @@ int ServiceWriteEngine::Child()
   boost::scoped_ptr<MessageQueueServer> mqs;
   bool tellUser = true;
 
-  for (;;)
+  WriteEngine::WriteEngineWrapper::init(WriteEngine::SUBSYSTEM_ID_WE_SRV, &fDie);
+
+  while (!fDie.load(std::memory_order_relaxed))
   {
     try
     {
@@ -231,6 +234,11 @@ int ServiceWriteEngine::Child()
         return 2;
       }
     }
+  }
+
+  if (fDie.load(std::memory_order_relaxed))
+  {
+    exit(1);
   }
 
   int err = 0;
@@ -282,22 +290,26 @@ int ServiceWriteEngine::Child()
 
   BRM::DBRM dbrm;
 
-  for (;;)
+  while (!fDie.load(std::memory_order_relaxed))
   {
     try  // BUG 4834 -
     {
-      ios = mqs->accept();
+      timespec timeout = {1, 0};
+      ios = mqs->accept(&timeout);
       // tp.invoke(ReadThread(ios));
-      ReadThreadFactory::CreateReadThread(tp, ios, dbrm);
+      if (ios.isOpen())
       {
-        /*				logging::Message::Args args;
-                                        logging::Message message;
-                                        string aMsg("WriteEngineServer : New incoming connection");
-                                        args.add(aMsg);
-                                        message.format(args);
-                                        logging::LoggingID lid(SUBSYSTEM_ID_WE_SRV);
-                                        logging::MessageLog ml(lid);
-                                        ml.logInfoMessage( message ); */
+        ReadThreadFactory::CreateReadThread(tp, ios, dbrm);
+        {
+          /* logging::Message::Args args;
+             logging::Message message;
+             string aMsg("WriteEngineServer : New incoming connection");
+             args.add(aMsg);
+             message.format(args);
+             logging::LoggingID lid(SUBSYSTEM_ID_WE_SRV);
+             logging::MessageLog ml(lid);
+             ml.logInfoMessage( message ); */
+        }
       }
     }
     catch (std::exception& ex)  // BUG 4834 - log the exception

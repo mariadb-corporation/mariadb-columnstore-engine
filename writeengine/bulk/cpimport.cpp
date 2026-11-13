@@ -619,7 +619,9 @@ int main(int argc, char** argv)
     //--------------------------------------------------------------------------
     if (idbdatafile::IDBPolicy::useHdfs())
     {
-      new boost::thread(utils::MonitorProcMem(0, checkPct, SUBSYSTEM_ID_WE_BULK));
+      // dieFlag is nullptr so monitor does not check the total memory consumption,
+      // just updates free memory size to check it later with isMemAvailable
+      new boost::thread(utils::MonitorProcMem(0, checkPct, SUBSYSTEM_ID_WE_BULK, nullptr));
     }
 
     rc = BRMWrapper::getInstance()->newCpimportJob(cpimportJobId);

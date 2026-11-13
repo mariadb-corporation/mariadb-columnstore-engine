@@ -23,6 +23,7 @@
 /** @file */
 #pragma once
 
+#include <atomic>
 #include <boost/scoped_ptr.hpp>
 #include "threadpool.h"
 #include "messagequeue.h"
@@ -107,6 +108,10 @@ class DMLServer
  public:
   DMLServer(int packageMaxThreads, int packageWorkQueueSize, BRM::DBRM* aDbrm);
 
+  // not copyable
+  DMLServer(const DMLServer& rhs) = delete;
+  DMLServer& operator=(const DMLServer& rhs) = delete;
+
   ~DMLServer()
   {
   }
@@ -155,17 +160,18 @@ class DMLServer
     fShutdownFlag = true;
   }
 
- private:
-  // not copyable
-  DMLServer(const DMLServer& rhs);
-  DMLServer& operator=(const DMLServer& rhs);
+  inline std::atomic<bool>* getShutdownFlagPtr()
+  {
+    return &fShutdownFlag;
+  }
 
+ private:
   int fPackageMaxThreads;    /** @brief max number of threads to process dml packages */
   int fPackageWorkQueueSize; /** @brief max number of packages waiting in the work queue */
 
   boost::scoped_ptr<messageqcpp::MessageQueueServer> fMqServer;
   BRM::DBRM* fDbrm;
-  bool fShutdownFlag;
+  std::atomic<bool> fShutdownFlag;
 
  public:
   /** @brief the thread pool for processing dml packages

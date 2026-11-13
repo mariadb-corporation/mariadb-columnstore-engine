@@ -250,6 +250,7 @@ class ThreadPool
   /** @brief wait on all the threads to complete
    */
   EXPORT void wait();
+  EXPORT bool waitFor(boost::chrono::microseconds timeout_us);
 
   /** @brief Wait for a specific thread
    */
@@ -363,7 +364,7 @@ class ThreadPool
   boost::mutex fInitMutex;
   boost::mutex fPruneMutex;
   boost::condition_variable fPruneThreadEnd;
-  boost::thread* fPruneThread;
+  boost::thread* fPruneThread{nullptr};
   std::stack<boost::thread::id> fPruneThreads;  // A list of stale thread IDs to be joined
 };
 
