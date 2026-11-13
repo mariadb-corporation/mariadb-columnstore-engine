@@ -1,0 +1,6 @@
+DROP DATABASE IF EXISTS MCOL_6534;
+CREATE DATABASE MCOL_6534;
+CREATE TABLE t(x integer) ENGINE=COLUMNSTORE;
+SELECT AVG(x) FILTER (WHERE x > 3) FROM t;
+ERROR 42000: The storage engine for the table doesn't support The syntax or the data type(s) is not supported by Columnstore. Please check the Columnstore syntax guide for supported syntax or data types.
+DROP DATABASE MCOL_6534;
