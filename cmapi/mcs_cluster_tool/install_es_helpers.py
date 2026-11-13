@@ -5,12 +5,19 @@ import os
 import re
 import time
 from collections import Counter
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Any, Callable, List
 
 import requests
 import typer
 from rich.console import Console
-from rich.progress import Progress
+from rich.markup import escape
+from rich.progress import (
+    BarColumn, MofNCompleteColumn, Progress, ProgressColumn, SpinnerColumn,
+    Task, TextColumn, TimeElapsedColumn,
+)
+from rich.text import Text
 from rich.table import Table
 
 from cmapi_server.constants import (
@@ -44,6 +51,98 @@ def setup_install_es_logging() -> None:
     for logger_name in ('', 'mcs_cli'):
         current_logger = logging.getLogger(logger_name)
         current_logger.addHandler(new_handler)
+
+
+class _OverallOnlyColumn(ProgressColumn):
+    """Render the wrapped column only for tasks marked with ``overall``."""
+
+    def __init__(self, column: ProgressColumn) -> None:
+        self.column = column
+        super().__init__()
+
+    def render(self, task: Task):
+        if task.fields.get('overall'):
+            return self.column.render(task)
+        return Text('')
+
+
+@dataclass
+class Precheck:
+    """Single pre-upgrade check run by :func:`run_prechecks`.
+
+    :param description: text shown while the check is running.
+    :param done_description: text shown after the check passed.
+    :param func: callable performing the check. It may raise
+        ``CMAPIBasicError`` (message is printed and install_es exits) or
+        ``typer.Exit`` (the check already printed its own error).
+    """
+    description: str
+    done_description: str
+    func: Callable[[], Any]
+
+
+def run_prechecks(console: Console, checks: List[Precheck]) -> List[Any]:
+    """Run pre-upgrade checks displaying a progress bar.
+
+    Shows an overall ``N/M`` bar plus one spinner line per check that turns
+    into a green check mark or a red cross. Stops on the first failure.
+    Must not be used for interactive checks (prompts), because the live
+    progress display would interfere with user input.
+
+    :param console: Rich console to render the progress on.
+    :param checks: ordered list of checks to run.
+    :return: list with results of each check ``func`` in the same order.
+    :raises typer.Exit: with code 1 if any check fails.
+    """
+    logger = logging.getLogger('mcs_cli')
+    results: List[Any] = []
+    with Progress(
+        SpinnerColumn(),
+        TextColumn('[progress.description]{task.description}'),
+        _OverallOnlyColumn(BarColumn()),
+        _OverallOnlyColumn(MofNCompleteColumn()),
+        TimeElapsedColumn(),
+        console=console,
+    ) as progress:
+        overall = progress.add_task(
+            '[bold]Pre-upgrade checks', total=len(checks), overall=True
+        )
+        for check in checks:
+            task_id = progress.add_task(f'  {check.description}', total=None)
+            logger.info('Precheck: %s', check.description)
+            try:
+                results.append(check.func())
+            except BaseException as exc:
+                progress.update(
+                    task_id, description=f'  [red]{check.description} ✗',
+                    total=1, completed=1,
+                )
+                progress.update(
+                    overall, description='[bold red]Pre-upgrade checks failed ✗'
+                )
+                progress.stop()
+                if isinstance(exc, CMAPIBasicError):
+                    logger.error(
+                        'Precheck "%s" failed: %s',
+                        check.description, exc.message,
+                    )
+                    console.print('[red]ERROR:[/red] Pre-upgrade check failed:')
+                    console.print(f'[red]{escape(exc.message)}[/red]')
+                    console.print(
+                        '[yellow]Nothing has been changed yet. Fix the issue '
+                        'and retry.[/yellow]'
+                    )
+                    raise typer.Exit(code=1) from exc
+                raise
+            progress.update(
+                task_id, description=f'  [green]{check.done_description} ✓',
+                total=1, completed=1,
+            )
+            progress.advance(overall)
+        progress.update(
+            overall, description='[bold green]Pre-upgrade checks passed ✓'
+        )
+    return results
 
 
 def validate_es_token_and_version(

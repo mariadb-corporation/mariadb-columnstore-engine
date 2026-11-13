@@ -1,8 +1,54 @@
 import logging
+import os
 import re
+import shlex
+from typing import Dict, List, Optional, Tuple
 
-from cmapi_server.exceptions import CMAPIBasicError
+from cmapi_server.constants import DEFAULT_MCS_CONF_PATH
+from cmapi_server.exceptions import CEJError, CMAPIBasicError
+from cmapi_server.helpers import get_cej_info
 from cmapi_server.process_dispatchers.base import BaseDispatcher
+from mcs_node_control.models.node_config import NodeConfig
+
+
+# Seconds to wait for the local MariaDB connection in the plugin precheck.
+PLUGINS_QUERY_CONNECT_TIMEOUT = 10
+
+# Registry of MariaDB plugins that the install_es auto-upgrader does NOT
+# handle. If any of these are ACTIVE on the local node the precheck aborts
+# the upgrade and instructs the operator how to proceed manually.
+#
+# Keys are compared case-insensitively against PLUGIN_NAME as reported by
+# information_schema.PLUGINS. Values are (package name, plugin library).
+# Currently focused on external storage engines shipped as separate
+# mariadb-plugin-* packages; extend as needed.
+UNSUPPORTED_PLUGINS_AUTOUPGRADE: Dict[str, Tuple[str, str]] = {
+    'SPIDER': ('mariadb-plugin-spider', 'ha_spider.so'),
+    'CONNECT': ('mariadb-plugin-connect', 'ha_connect.so'),
+    'SPHINX': ('mariadb-plugin-sphinx', 'ha_sphinx.so'),
+    'OQGRAPH': ('mariadb-plugin-oqgraph', 'ha_oqgraph.so'),
+    'MROONGA': ('mariadb-plugin-mroonga', 'ha_mroonga.so'),
+    'ROCKSDB': ('mariadb-plugin-rocksdb', 'ha_rocksdb.so'),
+    'S3': ('mariadb-plugin-s3', 'ha_s3.so'),
+}
+
+
+def get_plugin_upgrade_instructions(plugin_name: str) -> Optional[str]:
+    """Return manual upgrade instructions for an unsupported plugin.
+
+    :param plugin_name: PLUGIN_NAME from information_schema.PLUGINS
+    :return: instructions string or None if the plugin is not in
+             UNSUPPORTED_PLUGINS_AUTOUPGRADE
+    """
+    entry = UNSUPPORTED_PLUGINS_AUTOUPGRADE.get(plugin_name.upper())
+    if entry is None:
+        return None
+    package, soname = entry
+    return (
+        f"UNINSTALL SONAME '{soname}'; stop MariaDB; upgrade the {package} "
+        "package to a version matching the target ES release; start "
+        f"MariaDB; INSTALL SONAME '{soname}'."
+    )
 
 
 class PreInstallManager:
@@ -52,3 +98,101 @@ class PreInstallManager:
                         )
                         logging.error(message)
                         raise CMAPIBasicError(message)
+
+    @staticmethod
+    def _get_active_plugins(
+        config: str = DEFAULT_MCS_CONF_PATH,
+    ) -> List[Tuple[str, str]]:
+        """Return list of ACTIVE plugins on the local MariaDB node.
+
+        Uses CrossEngineSupport credentials from Columnstore.xml (same as
+        `helpers.system_ready`). Only the local node is queried: the CEJ
+        user is commonly restricted to 127.0.0.1, so remote nodes can't be
+        reached reliably with it. Columnstore cluster nodes are expected to
+        have an identical set of MariaDB plugins installed.
+
+        :return: list of (PLUGIN_NAME, PLUGIN_TYPE) tuples
+        :raises CMAPIBasicError: if the query cannot be executed
+        """
+        nc = NodeConfig()
+        root = nc.get_current_config_root(config)
+        try:
+            host, port, username, password = get_cej_info(root)
+        except CEJError as exc:
+            raise CMAPIBasicError(
+                'Cannot detect installed MariaDB plugins: '
+                'CrossEngineSupport credentials are missing or invalid. '
+                f'Details: {exc}'
+            ) from exc
+
+        query = (
+            "SELECT PLUGIN_NAME, PLUGIN_TYPE "
+            "FROM information_schema.PLUGINS "
+            "WHERE PLUGIN_STATUS='ACTIVE';"
+        )
+        # Password goes through MYSQL_PWD env var, so it never shows up in
+        # the process list or in exec_command error logs.
+        cmd = (
+            f'/usr/bin/mariadb -h {shlex.quote(host)} '
+            f'-P {shlex.quote(str(port))} '
+            f'-u {shlex.quote(username)} '
+            f'--connect-timeout={PLUGINS_QUERY_CONNECT_TIMEOUT} '
+            f'-sN -e {shlex.quote(query)}'
+        )
+        env = {**os.environ, 'MYSQL_PWD': password}
+        success, output = BaseDispatcher.exec_command(
+            cmd, silent=True, env=env
+        )
+        if not success:
+            logging.error(
+                'Plugin precheck query failed: %s', output.strip()
+            )
+            raise CMAPIBasicError(
+                'Failed to query information_schema.PLUGINS on local '
+                'MariaDB node. Ensure MariaDB is running and '
+                'CrossEngineSupport credentials are valid before running '
+                'install_es.'
+            )
+
+        plugins: List[Tuple[str, str]] = []
+        for line in output.splitlines():
+            parts = line.split('\t')
+            if len(parts) >= 2 and parts[0]:
+                plugins.append((parts[0].strip(), parts[1].strip()))
+        return plugins
+
+    @staticmethod
+    def check_installed_plugins(
+        config: str = DEFAULT_MCS_CONF_PATH,
+    ) -> None:
+        """Detect ACTIVE plugins not supported by install_es auto-upgrade.
+
+        Raises CMAPIBasicError listing every unsupported plugin along
+        with per-plugin manual upgrade instructions. Bundled MariaDB
+        engines (InnoDB, Aria, MyISAM, Columnstore, standard auth
+        plugins, etc.) are ignored — only plugins present in
+        UNSUPPORTED_PLUGINS_AUTOUPGRADE are reported.
+        """
+        active = PreInstallManager._get_active_plugins(config)
+        detected: List[Tuple[str, str, str]] = []
+        for name, ptype in active:
+            instructions = get_plugin_upgrade_instructions(name)
+            if instructions is not None:
+                detected.append((name, ptype, instructions))
+
+        if not detected:
+            logging.info(
+                'Plugin precheck: no unsupported plugins detected.'
+            )
+            return
+
+        lines = [
+            'Detected MariaDB plugins that install_es cannot upgrade '
+            'automatically. Upgrade each of them manually, then re-run '
+            'install_es:'
+        ]
+        for name, ptype, instructions in detected:
+            lines.append(f'  - {name} ({ptype}): {instructions}')
+        message = '\n'.join(lines)
+        logging.error(message)
+        raise CMAPIBasicError(message)
