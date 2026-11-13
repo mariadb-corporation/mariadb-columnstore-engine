@@ -23,7 +23,10 @@ set(ignored
 set(CPACK_RPM_columnstore-engine_USER_FILELIST ${ignored})
 
 macro(columnstore_add_rpm_deps)
-    list(APPEND CPACK_RPM_columnstore-engine_PACKAGE_REQUIRES ${ARGN})
+    set(CPACK_RPM_columnstore_engine_PACKAGE_REQUIRES 
+        "${CPACK_RPM_columnstore_engine_PACKAGE_REQUIRES};${ARGN}" 
+        CACHE INTERNAL "RPM dependencies for ColumnStore"
+    )
 endmacro()
 
 columnstore_add_rpm_deps("snappy" "jemalloc" "procps-ng" "gawk")
