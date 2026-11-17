@@ -17,6 +17,7 @@
     ".*:!^storage/rocksdb/rocksdb/.*:Old facebook rocksdb repo, we have no control over it",
     "MEMORY_LEAK_C:!.*unittest/.*:Test-only issue",
     "MEMORY_LEAK_C:!.*dbcon/ddlpackage/ddl-scan.cpp:Flex-generated scanner, buffers freed via ddllex_destroy/yy_delete_buffer",
-    "MEMORY_LEAK_C:!.*dbcon/dmlpackage/dml-scan.cpp:Flex-generated scanner, buffers freed via dmllex_destroy/yy_delete_buffer"
+    "MEMORY_LEAK_C:!.*dbcon/dmlpackage/dml-scan.cpp:Flex-generated scanner, buffers freed via dmllex_destroy/yy_delete_buffer",
+    "MEMORY_LEAK_C:!.*tools/rebuildEM/picosat.c:Vendored PicoSAT; realloc(b, 0) in resize() frees the block (new_size == 0 path), false positive"
   ]
 }
