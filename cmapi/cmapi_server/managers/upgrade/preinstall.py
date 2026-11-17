@@ -22,6 +22,8 @@ PLUGINS_QUERY_CONNECT_TIMEOUT = 10
 # information_schema.PLUGINS. Values are (package name, plugin library).
 # Currently focused on external storage engines shipped as separate
 # mariadb-plugin-* packages; extend as needed.
+# NOTE: the S3 engine is not listed: its package (MariaDB-s3-engine /
+# mariadb-plugin-s3) is upgraded automatically, see MDB_EXTRA_PACKAGES.
 UNSUPPORTED_PLUGINS_AUTOUPGRADE: Dict[str, Tuple[str, str]] = {
     'SPIDER': ('mariadb-plugin-spider', 'ha_spider.so'),
     'CONNECT': ('mariadb-plugin-connect', 'ha_connect.so'),
@@ -29,7 +31,6 @@ UNSUPPORTED_PLUGINS_AUTOUPGRADE: Dict[str, Tuple[str, str]] = {
     'OQGRAPH': ('mariadb-plugin-oqgraph', 'ha_oqgraph.so'),
     'MROONGA': ('mariadb-plugin-mroonga', 'ha_mroonga.so'),
     'ROCKSDB': ('mariadb-plugin-rocksdb', 'ha_rocksdb.so'),
-    'S3': ('mariadb-plugin-s3', 'ha_s3.so'),
 }
 
 

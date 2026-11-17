@@ -434,6 +434,16 @@ dispatcher.connect(
 )
 
 
+# /_version/node/check-extra-packages (GET)
+dispatcher.connect(
+    name = 'node_check_extra_packages',
+    route = f'/cmapi/{_version}/node/check-extra-packages',
+    action = 'check_extra_packages',
+    controller = NodeController(),
+    conditions = {'method': ['GET']}
+)
+
+
 # /_version/node/upgrade-mdb-mcs (PUT)
 dispatcher.connect(
     name = 'node_upgrade_mdb_mcs',

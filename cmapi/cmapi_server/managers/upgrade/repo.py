@@ -11,7 +11,10 @@ import requests
 from cmapi_server.constants import (
     ES_REPO, ES_REPO_PRIORITY_PREFS,
     ES_TOKEN_VERIFY_URL,
+    ES_UNSUPPORTED_REPO,
+    ES_UNSUPPORTED_VERIFY_URL,
     ES_VERIFY_URL,
+    MDB_UNSUPPORTED_REPO_PACKAGES,
     MDB_GPG_KEY_URL,
     MDB_LATEST_RELEASES_URL,
     REQUEST_TIMEOUT,
@@ -20,6 +23,7 @@ from cmapi_server.constants import (
     get_pkg_type,
 )
 from cmapi_server.exceptions import CMAPIBasicError
+from cmapi_server.managers.upgrade.packages import get_installed_packages
 from cmapi_server.managers.upgrade.utils import ComparableVersion
 from cmapi_server.process_dispatchers.base import BaseDispatcher
 
@@ -486,9 +490,59 @@ class MariaDBESRepoManager:
                     'Failed to move %s: %s', repo_path, exc
                 )
 
+    def _need_unsupported_repo(self) -> bool:
+        """Check if the ES "unsupported" repo should be configured.
+
+        It is needed only when packages shipped exclusively there
+        (MDB_UNSUPPORTED_REPO_PACKAGES, e.g. MariaDB-test) are installed on
+        this node, and only if the repo has the target MariaDB version.
+        Otherwise the repo is not added: the missing packages are reported
+        by the extra packages check later.
+        """
+        installed = get_installed_packages(
+            MDB_UNSUPPORTED_REPO_PACKAGES.for_pkg_type(self.pkg_type),
+            self.pkg_type,
+        )
+        if not installed:
+            return False
+        if self.pkg_type == PkgType.DEB:
+            verify_url = ES_UNSUPPORTED_VERIFY_URL.deb.format(
+                token=self.token,
+                mdb_version=self.mariadb_version,
+                os_version=self.os_version,
+            )
+        else:
+            verify_url = ES_UNSUPPORTED_VERIFY_URL.rhel.format(
+                token=self.token,
+                mdb_version=self.mariadb_version,
+                os_major_version=self.os_version.split('.', maxsplit=1)[0],
+                arch=self.arch,
+            )
+        try:
+            response = requests.get(verify_url, timeout=REQUEST_TIMEOUT)
+        except requests.RequestException as exc:
+            logging.warning(
+                'Failed to check MariaDB ES unsupported repo for %s: %s',
+                self.mariadb_version, exc,
+            )
+            return False
+        if not response.ok:
+            logging.warning(
+                'MariaDB ES unsupported repo has no version %s for this OS '
+                '(HTTP %s). Packages %s will not be upgraded.',
+                self.mariadb_version, response.status_code, installed,
+            )
+            return False
+        logging.info(
+            'Packages %s are installed, adding MariaDB ES unsupported repo.',
+            installed,
+        )
+        return True
+
     def setup_repo(self):
         """Set up the MariaDB Enterprise repository based on OS type."""
         self.check_mdb_version_exists()
+        add_unsupported_repo = self._need_unsupported_repo()
         if self.pkg_type == PkgType.DEB:
             repo_file = '/etc/apt/sources.list.d/mariadb.list'
             self._cleanup_stale_deb_repos(repo_file)
@@ -498,6 +552,12 @@ class MariaDBESRepoManager:
                 mdb_version=self.mariadb_version,
                 os_version=self.os_version
             )
+            if add_unsupported_repo:
+                repo_data += ES_UNSUPPORTED_REPO.deb.format(
+                    token=self.token,
+                    mdb_version=self.mariadb_version,
+                    os_version=self.os_version,
+                )
             with open(repo_file, 'w', encoding='utf-8') as f:
                 f.write(repo_data)
             # Set permissions to 640
@@ -520,6 +580,14 @@ class MariaDBESRepoManager:
                 arch=self.arch,
                 gpg_key_url=MDB_GPG_KEY_URL
             )
+            if add_unsupported_repo:
+                repo_data += ES_UNSUPPORTED_REPO.rhel.format(
+                    token=self.token,
+                    mdb_version=self.mariadb_version,
+                    os_major_version=self.os_version.split('.', maxsplit=1)[0],
+                    arch=self.arch,
+                    gpg_key_url=MDB_GPG_KEY_URL,
+                )
             with open(repo_file, 'w', encoding='utf-8') as f:
                 f.write(repo_data)
             subprocess.run(['rpm', '--import', MDB_GPG_KEY_URL], check=True)
