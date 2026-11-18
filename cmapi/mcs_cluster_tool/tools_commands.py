@@ -748,6 +748,7 @@ def install_es(
             lambda: validate_es_token_and_version(
                 node_api_client, token, target_version, console
             ),
+            name='target_version',
         ),
         Precheck(
             'Checking gtid_strict_mode...',
@@ -765,16 +766,19 @@ def install_es(
             lambda: get_current_versions(
                 cluster_api_client, console, ignore_mismatch
             ),
+            name='versions',
         ),
         Precheck(
             'Checking replication status...',
             'Replication status checked',
             lambda: precheck_replication(active_nodes, console),
+            name='replication_ok',
         ),
     ]
-    _, target_version, _, _, versions, replication_ok = run_prechecks(
-        console, prechecks
-    )
+    precheck_results = run_prechecks(console, prechecks)
+    target_version = precheck_results['target_version']
+    versions = precheck_results['versions']
+    replication_ok = precheck_results['replication_ok']
 
     mdb_curr_ver = versions['server_version']
     mcs_curr_ver = versions['columnstore_version']

@@ -7,7 +7,7 @@ import time
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Callable, List
+from typing import Any, Callable, Dict, List, Optional
 
 import requests
 import typer
@@ -75,13 +75,16 @@ class Precheck:
     :param func: callable performing the check. It may raise
         ``CMAPIBasicError`` (message is printed and install_es exits) or
         ``typer.Exit`` (the check already printed its own error).
+    :param name: optional key under which the result of ``func`` is
+        returned by :func:`run_prechecks`. Unnamed check results are dropped.
     """
     description: str
     done_description: str
     func: Callable[[], Any]
+    name: Optional[str] = None
 
 
-def run_prechecks(console: Console, checks: List[Precheck]) -> List[Any]:
+def run_prechecks(console: Console, checks: List[Precheck]) -> Dict[str, Any]:
     """Run pre-upgrade checks displaying a progress bar.
 
     Shows an overall ``N/M`` bar plus one spinner line per check that turns
@@ -91,11 +94,19 @@ def run_prechecks(console: Console, checks: List[Precheck]) -> List[Any]:
 
     :param console: Rich console to render the progress on.
     :param checks: ordered list of checks to run.
-    :return: list with results of each check ``func`` in the same order.
+    :return: dict mapping each named check's ``name`` to its result.
+    :raises ValueError: if two checks share the same ``name``.
     :raises typer.Exit: with code 1 if any check fails.
     """
+    names = [check.name for check in checks if check.name is not None]
+    duplicates = {name for name in names if names.count(name) > 1}
+    if duplicates:
+        raise ValueError(f'Duplicate precheck names: {sorted(duplicates)}')
+
     logger = logging.getLogger('mcs_cli')
-    results: List[Any] = []
+    results: Dict[str, Any] = {}
+    failed_check: Optional[Precheck] = None
+    failed_exc: Optional[BaseException] = None
     with Progress(
         SpinnerColumn(),
         TextColumn('[progress.description]{task.description}'),
@@ -111,8 +122,9 @@ def run_prechecks(console: Console, checks: List[Precheck]) -> List[Any]:
             task_id = progress.add_task(f'  {check.description}', total=None)
             logger.info('Precheck: %s', check.description)
             try:
-                results.append(check.func())
+                result = check.func()
             except BaseException as exc:
+                failed_check, failed_exc = check, exc
                 progress.update(
                     task_id, description=f'  [red]{check.description} ✗',
                     total=1, completed=1,
@@ -120,28 +132,34 @@ def run_prechecks(console: Console, checks: List[Precheck]) -> List[Any]:
                 progress.update(
                     overall, description='[bold red]Pre-upgrade checks failed ✗'
                 )
-                progress.stop()
-                if isinstance(exc, CMAPIBasicError):
-                    logger.error(
-                        'Precheck "%s" failed: %s',
-                        check.description, exc.message,
-                    )
-                    console.print('[red]ERROR:[/red] Pre-upgrade check failed:')
-                    console.print(f'[red]{escape(exc.message)}[/red]')
-                    console.print(
-                        '[yellow]Nothing has been changed yet. Fix the issue '
-                        'and retry.[/yellow]'
-                    )
-                    raise typer.Exit(code=1) from exc
-                raise
+                break
+            if check.name is not None:
+                results[check.name] = result
             progress.update(
                 task_id, description=f'  [green]{check.done_description} ✓',
                 total=1, completed=1,
             )
             progress.advance(overall)
-        progress.update(
-            overall, description='[bold green]Pre-upgrade checks passed ✓'
-        )
+        else:
+            progress.update(
+                overall, description='[bold green]Pre-upgrade checks passed ✓'
+            )
+
+    # Report the failure only after the live display has been closed.
+    if failed_exc is not None:
+        if isinstance(failed_exc, CMAPIBasicError):
+            logger.error(
+                'Precheck "%s" failed: %s',
+                failed_check.description, failed_exc.message,
+            )
+            console.print('[red]ERROR:[/red] Pre-upgrade check failed:')
+            console.print(f'[red]{escape(failed_exc.message)}[/red]')
+            console.print(
+                '[yellow]Nothing has been changed yet. Fix the issue '
+                'and retry.[/yellow]'
+            )
+            raise typer.Exit(code=1) from failed_exc
+        raise failed_exc
     return results
 
 

@@ -79,13 +79,33 @@ class TestRunPrechecks(unittest.TestCase):
     def setUp(self):
         self.console = Console(quiet=True)
 
-    def test_all_pass_returns_results_in_order(self):
+    def test_all_pass_returns_named_results(self):
         checks = [
-            h.Precheck('a', 'a ok', lambda: 1),
-            h.Precheck('b', 'b ok', lambda: None),
-            h.Precheck('c', 'c ok', lambda: 'x'),
+            h.Precheck('a', 'a ok', lambda: 1, name='res_a'),
+            h.Precheck('b', 'b ok', lambda: 'dropped'),
+            h.Precheck('c', 'c ok', lambda: None, name='res_c'),
         ]
-        self.assertEqual(h.run_prechecks(self.console, checks), [1, None, 'x'])
+        self.assertEqual(
+            h.run_prechecks(self.console, checks),
+            {'res_a': 1, 'res_c': None},
+        )
+
+    def test_duplicate_names_rejected_before_running(self):
+        called = []
+        checks = [
+            h.Precheck('a', 'a ok', lambda: called.append('a'), name='x'),
+            h.Precheck('b', 'b ok', lambda: called.append('b'), name='x'),
+        ]
+        with self.assertRaises(ValueError):
+            h.run_prechecks(self.console, checks)
+        self.assertEqual(called, [])
+
+    def test_non_cmapi_error_is_reraised(self):
+        def fail():
+            raise RuntimeError('unexpected')
+
+        with self.assertRaises(RuntimeError):
+            h.run_prechecks(self.console, [h.Precheck('a', 'a ok', fail)])
 
     def test_cmapi_error_exits_and_stops(self):
         called = []
