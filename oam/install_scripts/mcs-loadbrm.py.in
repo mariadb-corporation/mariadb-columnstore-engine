@@ -2,9 +2,11 @@
 """
 Works with python 3.4 and higher.
 """
+import base64
 import configparser
 import fcntl
 import glob
+import hashlib
 import json
 import logging
 import os
@@ -42,6 +44,10 @@ UNREASONABLE_DELAY = 600
 LOCALHOST = '127.0.0.1'
 API_VERSION = '0.4.0'
 API_PORT = '8640'
+META_ELEMS = ('em', 'journal', 'vbbm', 'vss')
+PULL_ATTEMPTS = 5
+PULL_DEADLINE = 180  # seconds; no new attempt after this
+CMAPI_WAIT_ATTEMPTS = 6
 
 
 def get_api_key():
@@ -63,7 +69,7 @@ def get_unverified_context():
     return ctx
 
 
-def cmapi_available(host=LOCALHOST):
+def cmapi_available(host=LOCALHOST, timeout=HALF_A_MINUTE):
     """Check if CMAPI server is running.
 
     :param host: host address to check
@@ -78,7 +84,7 @@ def cmapi_available(host=LOCALHOST):
     request = Request(method='POST', url=url)
     ctx = get_unverified_context()
     try:
-        with urlopen(request, context=ctx, timeout=HALF_A_MINUTE) as req:
+        with urlopen(request, context=ctx, timeout=timeout) as req:
             _ = req.read().decode('utf-8')
     except HTTPError as exc:
         if exc.code == 404:
@@ -249,6 +255,118 @@ def get_meta(conf_root, meta_type):
     # return content in bytes
     return response
 
+
+def wait_for_cmapi(host):
+    """Wait for CMAPI on host, which may still be starting.
+
+    :param host: host address to check
+    :type host: str
+    :return: is CMAPI running or not
+    :rtype: bool
+    """
+    for attempt in range(1, CMAPI_WAIT_ATTEMPTS + 1):
+        if cmapi_available(host, timeout=5):
+            return True
+        if attempt < CMAPI_WAIT_ATTEMPTS:
+            logging.warning(
+                'CMAPI on the primary {} is not answering (attempt {} of {}), '
+                'retrying in 5 s.'.format(host, attempt, CMAPI_WAIT_ATTEMPTS)
+            )
+            time.sleep(5)
+    return False
+
+
+def get_bundle(conf_root):
+    """Get all BRM files of one save generation from the primary and verify them.
+
+    :param conf_root: xml config root element
+    :type conf_root: xml.etree.ElementTree.ElementTree
+    :raises ValueError: if a file doesn't match its size or sha256
+    :return: generation name and the files by meta type
+    :rtype: tuple
+    """
+    bundle = json.loads(get_meta(conf_root, 'bundle'))
+    files = {}
+    for meta_type in META_ELEMS:
+        entry = bundle['files'][meta_type]
+        data = base64.b64decode(entry['data'], validate=True)
+        if (
+            len(data) != entry['size']
+            or hashlib.sha256(data).hexdigest() != entry['sha256']
+        ):
+            raise ValueError(
+                '{} from the primary failed verification: {} bytes, sha256 '
+                '{}; expected {} bytes, sha256 {}.'.format(
+                    meta_type, len(data), hashlib.sha256(data).hexdigest(),
+                    entry['size'], entry['sha256']
+                )
+            )
+        files[meta_type] = data
+    if not files['em']:
+        raise ValueError('The primary sent an empty extent map.')
+    return bundle['generation'], files
+
+
+def pull_brm_files(conf_root):
+    """Pull the BRM files from the primary, retrying with backoff.
+
+    If the primary's CMAPI is older and has no bundle endpoint, the files are
+    pulled one by one as before, without verification.
+
+    :param conf_root: xml config root element
+    :type conf_root: xml.etree.ElementTree.ElementTree
+    :raises RuntimeError: if every attempt failed
+    :return: the files by meta type
+    :rtype: dict
+    """
+    error = None
+    deadline = time.time() + PULL_DEADLINE
+    for attempt in range(1, PULL_ATTEMPTS + 1):
+        try:
+            generation, files = get_bundle(conf_root)
+            logging.info(
+                'Pulled BRM generation {} from the primary ({}).'.format(
+                    generation,
+                    ', '.join(
+                        '{} {} bytes'.format(meta_type, len(data))
+                        for meta_type, data in files.items()
+                    )
+                )
+            )
+            return files
+        except HTTPError as exc:
+            if exc.code == 404:
+                logging.warning(
+                    'CMAPI on the primary has no BRM bundle endpoint. Pulling '
+                    'the files one by one, unverified.'
+                )
+                files = {
+                    meta_type: get_meta(conf_root, meta_type)
+                    for meta_type in META_ELEMS
+                }
+                if not files['em']:
+                    raise ValueError('The primary sent an empty extent map.')
+                return files
+            error = exc
+        except Exception as exc:
+            error = exc
+        delay = 2 ** (attempt - 1)
+        if attempt < PULL_ATTEMPTS and time.time() + delay < deadline:
+            logging.warning(
+                'Pulling BRM files from the primary failed (attempt {} of {}): '
+                '{!r}. Retrying in {} s.'.format(
+                    attempt, PULL_ATTEMPTS, error, delay
+                )
+            )
+            time.sleep(delay)
+        else:
+            break
+    raise RuntimeError(
+        'Could not pull the BRM files from the primary in {} attempts. '
+        'Last error: {!r}'.format(attempt, error)
+    )
+
+
 def read_from_sm_with_retry(brm_path):
     func_name = 'read_from_sm_with_retry'
     result = ''
@@ -361,6 +479,7 @@ if __name__ == '__main__':
         brm = '{}_current'.format(dbrmroot)
         if is_multinode:
             is_primary = False
+            pulled = False
             try:
                 is_primary = is_node_primary(config_root)
                 primary_address = config_root.find(
@@ -368,18 +487,17 @@ if __name__ == '__main__':
                 ).text
                 # Download BRM files from the primary node via CMAPI.
                 if not is_primary:
-                    if cmapi_available(primary_address):
-                        meta_elems = ['em', 'journal', 'vbbm', 'vss']
-                        for meta_type in meta_elems:
-                            meta_data = get_meta(config_root, meta_type)
-                            # Store BRM files locally to load them up
-                            dbrmroot = BYPASS_SM_PATH
-                            if not os.path.exists(dbrmroot):
-                                os.makedirs(dbrmroot)
-                                if use_systemd:
-                                    os.system('chown -R {}:{} {}'.format(USER, GROUP, COLUMNSTORE_TMP_DIR))
-                                    shutil.chown(dbrmroot, USER, GROUP)
+                    if wait_for_cmapi(primary_address):
+                        files = pull_brm_files(config_root)
+                        # Store BRM files locally to load them up
+                        dbrmroot = BYPASS_SM_PATH
+                        if not os.path.exists(dbrmroot):
+                            os.makedirs(dbrmroot)
+                            if use_systemd:
+                                os.system('chown -R {}:{} {}'.format(USER, GROUP, COLUMNSTORE_TMP_DIR))
+                                shutil.chown(dbrmroot, USER, GROUP)
 
+                        for meta_type, meta_data in files.items():
                             current_name = '{}_{}'.format(dbrmroot, meta_type)
 
                             logging.info(
@@ -390,10 +508,29 @@ if __name__ == '__main__':
                             path = Path(current_name)
                             path.write_bytes(meta_data)
                             shutil.chown(current_name, USER, GROUP)
-                        else:
-                            logging.info(
-                                'Cmapi is not running on primary node. Skip loading metafiles.'
+                        pulled = True
+                    else:
+                        # On S3, reading data1 through this node's SM could
+                        # take dbroot1 from the primary, so only local
+                        # storage falls back.
+                        if not s3_enabled:
+                            brm_saves_current = read_from_disk(brm)
+                        if not brm_saves_current:
+                            logging.error(
+                                'CMAPI on the primary {} is unreachable and '
+                                'there is no local save to load instead. Not '
+                                'starting with an empty BRM.'.format(
+                                    primary_address
+                                )
                             )
+                            sys.exit(1)
+                        logging.error(
+                            'CMAPI on the primary {} is unreachable. Loading '
+                            'the local save {} names instead, which may be '
+                            'older than the primary\'s.'.format(
+                                primary_address, brm
+                            )
+                        )
             except Exception as exc:
                 logging.error(
                     'Failed to detect primary or load BRM data from the primary node.',
@@ -410,7 +547,7 @@ if __name__ == '__main__':
                     )
                 else:
                     brm_saves_current = read_from_disk(brm)
-            else:
+            elif pulled:
                 brm_saves_current = b'BRM_saves\n'
         else:
             brm_saves_current = read_from_disk(brm)
