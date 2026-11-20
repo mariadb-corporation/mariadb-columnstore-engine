@@ -1365,7 +1365,19 @@ typename BRMVersionedShmImplT<AreaPolicy>::DataAreaPin BRMVersionedShmImplT<Area
     forgetSlotLocked(slot);
   }
 
-  bi::shared_memory_object::remove(name.c_str());
+  // The create below fails with "File exists" if this doesn't remove it, so
+  // say why: in /dev/shm only the owner can, and it is root's when a BRM
+  // tool run as root created it
+  if (!bi::shared_memory_object::remove(name.c_str()) && errno != ENOENT)
+  {
+    int removeErrno = errno;
+    ostringstream os;
+    os << "BRM: can't remove the old shared memory object " << name
+       << " to make a new one: " << strerror(removeErrno)
+       << ". It is probably owned by another user, e.g. root from a BRM tool; "
+       << "remove it as that user (clearShm) and retry";
+    throw runtime_error(os.str());
+  }
 
   DataAreaPin area(AreaPolicy::create(name, size, unrestrictedPerms()));
 
