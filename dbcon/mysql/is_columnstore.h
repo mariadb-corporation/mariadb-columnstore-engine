@@ -17,11 +17,35 @@
 
 #pragma once
 
+#include <exception>
+
 int is_columnstore_extents_plugin_init(void* p);
 int is_columnstore_files_plugin_init(void* p);
 int is_columnstore_tables_plugin_init(void* p);
 int is_columnstore_partitions_plugin_init(void* p);
 int is_columnstore_columns_plugin_init(void* p);
+
+// Use as ST_SCHEMA_TABLE::fill_table. An exception that escapes a fill function
+// into mysqld aborts the whole server (e.g. syscat lookups throw while PrimProc
+// is down), so turn it into a query error the client can read instead.
+template <int (*fill)(THD*, TABLE_LIST*, COND*)>
+int is_columnstore_fill_guarded(THD* thd, TABLE_LIST* tables, COND* cond)
+{
+  try
+  {
+    return fill(thd, tables, cond);
+  }
+  catch (std::exception& e)
+  {
+    thd->raise_error_printf(ER_INTERNAL_ERROR, e.what());
+  }
+  catch (...)
+  {
+    thd->raise_error_printf(ER_INTERNAL_ERROR, "Unknown exception in a ColumnStore information_schema table");
+  }
+
+  return 1;
+}
 
 class InformationSchemaCond
 {
