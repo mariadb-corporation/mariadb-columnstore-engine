@@ -102,6 +102,13 @@ if(WITH_UNITTESTS)
     target_link_libraries(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
     add_test(NAME columnstore:brm_em_standalone COMMAND brm_em_standalone)
     set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
+
+    # MCOL-6608: the replay test uses the BRM's fixed shm keys, so nothing may run alongside
+    add_executable(mcol6608_tests mcol6608-tests.cpp)
+    add_dependencies(mcol6608_tests googletest)
+    columnstore_link(mcol6608_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
+    gtest_add_tests(TARGET mcol6608_tests TEST_PREFIX columnstore: TEST_LIST mcol6608_test_list)
+    set_tests_properties(${mcol6608_test_list} PROPERTIES RUN_SERIAL TRUE SKIP_REGULAR_EXPRESSION "\\[  SKIPPED \\]")
 endif()
 # -Werror=sign-compare
 if(WITH_MICROBENCHMARKS AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))
