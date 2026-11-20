@@ -15,7 +15,7 @@ LimitNOFILE=65536
 LimitNPROC=65536
 LimitCORE=@CORE_DUMPS@
 
-ExecStartPre=/usr/bin/env bash -c "ldconfig -p | grep -m1 libjemalloc > /dev/null || echo 'Please install jemalloc to avoid ColumnStore performance degradation and unexpected service interruptions.'"
+ExecStartPre=/usr/bin/env bash -c "rpm -qa | grep jemalloc; ldconfig -p; ldconfig -p | grep -m1 libjemalloc > /dev/null || echo 'Please install jemalloc to avoid ColumnStore performance degradation and unexpected service interruptions.'"
 ExecStart=/usr/bin/env bash -c "@PRIMPROC_ALLOC_CONFIG@ @LD_PRELOAD_STRING@ exec @ENGINE_BINDIR@/PrimProc"
 
 Restart=on-failure
