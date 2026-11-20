@@ -279,15 +279,9 @@ void number_int_value(const string& data, cscDataType typeCode,
 
   intVal = dataconvert::string_to_ll<T>(intStr, pushwarning);
 
-  if (intVal == 0 && isNegative)
-  {
-    if (roundup == 1)
-      roundup = 0;
-  }
-  else
-  {
-    intVal += intVal >= 0 ? roundup : -roundup;
-  }
+  // Apply rounding direction from the original sign, including "-0.x".
+  // This keeps behavior consistent with InnoDB for boundary cases like -0.5 -> -1.
+  intVal += isNegative ? -roundup : roundup;
 
   switch (typeCode)
   {
