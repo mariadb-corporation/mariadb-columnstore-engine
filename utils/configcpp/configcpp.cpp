@@ -38,6 +38,7 @@ namespace fs = boost::filesystem;
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <climits>
 #include <unistd.h>
 #include <stdio.h>
 #include <libxml/xmlmemory.h>
@@ -621,6 +622,16 @@ std::string Config::getTempFileDir(Config::TempDirPurpose what)
     prefix.assign("/tmp/columnstore_tmp_files");
   }
   prefix.append("/");
+
+  // One subtree per host: ExeMgr wipes these directories on start, and SystemTempFileDir may be
+  // on storage that several nodes share.
+  char host[HOST_NAME_MAX + 1] = {};
+  if (gethostname(host, sizeof(host) - 1) != 0 || host[0] == '\0')
+  {
+    throw runtime_error("Config::getTempFileDir: gethostname() failed");
+  }
+  prefix.append(host).append("/");
+
   switch (what)
   {
     case TempDirPurpose::Joins: return prefix.append("joins/");
