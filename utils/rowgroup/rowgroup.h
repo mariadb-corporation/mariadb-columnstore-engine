@@ -210,6 +210,31 @@ class StringStore
   bool fUseOnlyLongStrings = false;
   boost::mutex fMutex;
   std::optional<allocators::CountingAllocator<StringStoreBufType>> alloc{};
+
+  uint64_t storeStringAlloc(const uint8_t* data, uint32_t length);
+
+  // cached stored string offset.
+  struct Stored
+  {
+    uint64_t offset; // stored offset. These with std::numeric_limits<uint64_t>::max() are free to use.
+    uint64_t hash;   // part of hash to quickly check.
+    // logically valid (empty), memset friendly (all ones).
+    Stored()
+      : offset(std::numeric_limits<uint64_t>::max()), hash(0xffffffffffffffffUL)
+    { }
+    bool isEmpty() const
+    {
+      return offset == std::numeric_limits<uint64_t>::max();
+    }
+    Stored(uint64_t _offset, uint64_t _hash) : offset(_offset), hash(_hash) { }
+  };
+  struct TinyLRU
+  {
+    static const int size = 8;
+    Stored lru[size];
+  };
+  static const uint32_t LRUCount = 1024;
+  TinyLRU fLRUs[LRUCount];
 };
 
 // Where we store user data for UDA(n)F
