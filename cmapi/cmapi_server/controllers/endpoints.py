@@ -1447,7 +1447,10 @@ class ClusterController:
                 base_url=f'https://{node}:{CMAPI_PORT}'
             )
             node_response = client.upgrade_mdb_mcs(
-                mariadb_version=mdb_version, columnstore_version=mcs_version
+                mariadb_version=mdb_version, columnstore_version=mcs_version,
+                ignore_unavailable_extras=bool(
+                    request_body.get('ignore_unavailable_extras', False)
+                ),
             )
             logging.debug(f'Upgrade MDB and MCS completed on {node}')
             all_responses[node] = node_response
@@ -2102,6 +2105,40 @@ class NodeController:
         return response
 
     @cherrypy.tools.timeit()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
+    def check_extra_packages(self, mariadb_version=None):
+        """Handler for /node/check-extra-packages (GET) endpoint.
+
+        Detects optional MariaDB packages installed on the node and which of
+        them have no target MariaDB version in the configured repositories.
+        Has to be called after /node/install-repo.
+        """
+        func_name = 'node_check_extra_packages'
+        log_begin(module_logger, func_name)
+        if not mariadb_version:
+            raise_422_error(
+                module_logger, func_name,
+                'Missing required argument: mariadb_version.'
+            )
+        os_name, _ = AppManager.get_distro_info()
+        try:
+            packages_manager = PackagesManager(
+                os_name=os_name, mdb_version=mariadb_version,
+                mcs_version='latest'
+            )
+            result = packages_manager.check_extra_packages()
+        except CMAPIBasicError as err:
+            raise_422_error(
+                module_logger, func_name,
+                f'Error while checking extra packages. Details: {err.message}',
+                exc_info=False
+            )
+        response = {'timestamp': str(datetime.now()), **result}
+        module_logger.debug(f'{func_name} returns {str(response)}')
+        return response
+
+    @cherrypy.tools.timeit()
     @cherrypy.tools.json_in()
     @cherrypy.tools.json_out()
     @cherrypy.tools.validate_api_key()  # pylint: disable=no-member
@@ -2113,6 +2150,9 @@ class NodeController:
         request_body = request.json
         mdb_version = request_body.get('mariadb_version', None)
         mcs_version = request_body.get('columnstore_version', None)
+        ignore_unavailable_extras = bool(
+            request_body.get('ignore_unavailable_extras', False)
+        )
         if not mdb_version or not mcs_version:
             raise_422_error(
                 module_logger, func_name,
@@ -2124,7 +2164,9 @@ class NodeController:
                 os_name=os_name, mdb_version=mdb_version,
                 mcs_version=mcs_version
             )
-            packages_manager.upgrade_mdb_and_mcs()
+            upgrade_result = packages_manager.upgrade_mdb_and_mcs(
+                ignore_unavailable_extras=ignore_unavailable_extras
+            )
         except CMAPIBasicError as err:
             raise_422_error(
                 module_logger, func_name,
@@ -2134,7 +2176,7 @@ class NodeController:
                 ),
                 exc_info=False
             )
-        response = {'timestamp': str(datetime.now())}
+        response = {'timestamp': str(datetime.now()), **upgrade_result}
         module_logger.debug(f'{func_name} returns {str(response)}')
         return response
 
