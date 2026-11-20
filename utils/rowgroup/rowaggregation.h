@@ -420,6 +420,16 @@ class RowAggregation : public messageqcpp::Serializeable
     initialize();
   }
 
+  /** @brief Log disk-based aggregation progress, naming sessionId.
+   *
+   *    Call before clone(): the clones (the bucket aggregators) share the log.
+   */
+  void logDiskAggregation(uint32_t sessionId)
+  {
+    setDiskAggLog(std::make_shared<DiskAggLog>(sessionId));
+  }
+  virtual void setDiskAggLog(const DiskAggLogPtr& log);
+
   /** @brief Define content of data to be joined
    *
    *    This method must be call after setInputOutput() for PM hashjoin case.
@@ -581,6 +591,7 @@ class RowAggregation : public messageqcpp::Serializeable
   rowgroup::RowGroup fNullRowGroup;
 
   std::unique_ptr<RowAggStorage> fRowAggStorage;
+  DiskAggLogPtr fDiskAggLog;
 
   // for support PM aggregation after PM hashjoin
   std::vector<RowGroup>* fSmallSideRGs;
@@ -866,6 +877,7 @@ class RowAggregationDistinct : public RowAggregationUMP2
   void addAggregator(const boost::shared_ptr<RowAggregation>& agg, const RowGroup& rg);
 
   void setInputOutput(const RowGroup& pRowGroupIn, RowGroup* pRowGroupOut) override;
+  void setDiskAggLog(const DiskAggLogPtr& log) override;
 
   virtual void doDistinctAggregation();
   virtual void doDistinctAggregation_rowVec(std::vector<std::pair<Row::Pointer, uint64_t>>& inRows);
@@ -972,6 +984,7 @@ class RowAggregationMultiDistinct : public RowAggregationDistinct
                         const std::vector<SP_ROWAGG_FUNC_t>& funct);
 
   void setInputOutput(const RowGroup& pRowGroupIn, RowGroup* pRowGroupOut) override;
+  void setDiskAggLog(const DiskAggLogPtr& log) override;
   using RowAggregationDistinct::addRowGroup;
   void addRowGroup(const RowGroup* pRowGroupIn) override;
 

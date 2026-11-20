@@ -519,6 +519,7 @@ RowAggregation::RowAggregation(const vector<SP_ROWAGG_GRPBY_t>& rowAggGroupByCol
 
 RowAggregation::RowAggregation(const RowAggregation& rhs)
  : fRowGroupOut(nullptr)
+ , fDiskAggLog(rhs.fDiskAggLog)
  , fSmallSideRGs(nullptr)
  , fLargeSideRG(nullptr)
  , fSmallSideCount(0)
@@ -563,7 +564,9 @@ void RowAggregation::addRowGroup(const RowGroup* pRows)
     }
   }
 
-  fRowGroupOut->setDBRoot(pRows->getDBRoot());
+  // The disk-based storage detaches fRowGroupOut when it saves or frees the RGData it points at.
+  if (fRowGroupOut->getRGData())
+    fRowGroupOut->setDBRoot(pRows->getDBRoot());
 
   Row rowIn;
   pRows->initRow(&rowIn);
@@ -680,6 +683,7 @@ void RowAggregation::initialize(bool hasGroupConcat)
     fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
                                            disk_agg, allow_gen, compressor));
   }
+  fRowAggStorage->setDiskAggLog(fDiskAggLog);
 
   // Initialize the work row.
   fRowGroupOut->initRow(&fRow);
@@ -773,6 +777,7 @@ void RowAggregation::aggReset()
     fRowAggStorage.reset(new RowAggStorage(tmpDir, fRowGroupOut, fAggMapKeyCount, fRm, fSessionMemLimit,
                                            disk_agg, allow_gen, compressor));
   }
+  fRowAggStorage->setDiskAggLog(fDiskAggLog);
   fRowGroupOut->getRow(0, &fRow);
   copyNullRow(fRow);
   attachGroupConcatAg();
@@ -2336,6 +2341,7 @@ void RowAggregation::loadResult(messageqcpp::ByteStream& bs)
     ++sz;
     fRowGroupOut->setData(rgd.get());
     fRowGroupOut->serializeRGData(rgdbs);
+    fRowGroupOut->detachData();  // rgd is freed here
   }
 
   if (sz == 0)
@@ -2345,6 +2351,7 @@ void RowAggregation::loadResult(messageqcpp::ByteStream& bs)
     fRowGroupOut->setData(&rgd);
     fRowGroupOut->resetRowGroup(0);
     fRowGroupOut->serializeRGData(rgdbs);
+    fRowGroupOut->detachData();
   }
   bs << sz;
   bs.append(rgdbs.buf(), rgdbs.length());
@@ -4063,6 +4070,11 @@ bool RowAggregationUM::nextRowGroup()
     // load the top result set
     fRowGroupOut->setData(fCurRGData.get());
   }
+  else
+  {
+    // the previous fCurRGData, which fRowGroupOut pointed at, was just freed
+    fRowGroupOut->detachData();
+  }
 
   return more;
 }
@@ -4482,6 +4494,27 @@ RowAggregationDistinct::~RowAggregationDistinct()
 // Aggregation
 //
 //------------------------------------------------------------------------------
+void RowAggregation::setDiskAggLog(const DiskAggLogPtr& log)
+{
+  fDiskAggLog = log;
+  if (fRowAggStorage)
+    fRowAggStorage->setDiskAggLog(log);
+}
+
+void RowAggregationDistinct::setDiskAggLog(const DiskAggLogPtr& log)
+{
+  RowAggregationUMP2::setDiskAggLog(log);
+  if (fAggregator)
+    fAggregator->setDiskAggLog(log);
+}
+
+void RowAggregationMultiDistinct::setDiskAggLog(const DiskAggLogPtr& log)
+{
+  RowAggregationDistinct::setDiskAggLog(log);
+  for (auto& agg : fSubAggregators)
+    agg->setDiskAggLog(log);
+}
+
 void RowAggregationDistinct::setInputOutput(const RowGroup& pRowGroupIn, RowGroup* pRowGroupOut)
 {
   fRowGroupIn = fRowGroupDist;
