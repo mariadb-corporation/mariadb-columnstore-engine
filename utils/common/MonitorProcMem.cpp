@@ -53,7 +53,7 @@ void MonitorProcMem::operator()() const
   utils::setThreadName("MonitorProcMem");
   while (1)
   {
-    if (fMaxPct > 0)
+    if (fMaxPct > 0 && fDieFlag != nullptr)
     {
       size_t pct = rss() * 100 / fMemTotal;
 
@@ -67,7 +67,8 @@ void MonitorProcMem::operator()() const
         msg.format(args);
         logging::Logger logger(logid.fSubsysID);
         logger.logMessage(LOG_TYPE_CRITICAL, msg, logid);
-        exit(1);
+        fDieFlag->store(true, std::memory_order_relaxed);
+        return;
       }
     }
 

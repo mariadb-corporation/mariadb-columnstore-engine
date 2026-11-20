@@ -182,14 +182,13 @@ int ServiceDDLProc::Child()
     return 1;
   }
 
-  WriteEngine::WriteEngineWrapper::init(WriteEngine::SUBSYSTEM_ID_DDLPROC);
-
   ResourceManager* rm = ResourceManager::instance();
   Dec = DistributedEngineComm::instance(rm);
 
   setupChildSignalHandlers();
 
   ddlprocessor::DDLProcessor ddlprocessor(1, 20);
+  WriteEngine::WriteEngineWrapper::init(WriteEngine::SUBSYSTEM_ID_DDLPROC, ddlprocessor.getDieFlagPtr());
 
   // Initialize the charset library
   MY_INIT("DDLProc");

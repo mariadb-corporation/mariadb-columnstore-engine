@@ -343,7 +343,7 @@ int ServicePrimProc::Child()
       [this, rm]()
       {
         exemgr::Opt opt;
-        exemgr::globServiceExeMgr = new exemgr::ServiceExeMgr(opt, rm);
+        exemgr::globServiceExeMgr = new exemgr::ServiceExeMgr(opt, rm, &fDie);
         // primitive delay to avoid 'not connected to PM' log error messages
         // from EM. PrimitiveServer::start() releases SpinLock after sockets
         // are available.
@@ -549,9 +549,6 @@ int ServicePrimProc::Child()
   if (temp >= 0)
     aggPct = temp;
 
-  //...Start the thread to monitor our memory usage
-  new boost::thread(utils::MonitorProcMem(maxPct, aggPct, 28));
-
   // config file priority is 40..1 (highest..lowest)
   string sPriority = cf->getConfig(primitiveServers, "Priority");
 
@@ -662,7 +659,8 @@ int ServicePrimProc::Child()
 
   PrimitiveServer server(serverThreads, serverQueueSize, processorWeight, processorQueueSize,
                          rotatingDestination, BRPBlocks, BRPThreads, cacheCount, maxBlocksPerRead,
-                         blocksReadAhead, deleteBlocks, PTTrace, prefetchThreshold, PMSmallSide);
+                         blocksReadAhead, deleteBlocks, PTTrace, prefetchThreshold,
+                         PMSmallSide, maxPct, aggPct, &fDie);
 
 #ifdef QSIZE_DEBUG
   thread* qszMonThd;
@@ -697,6 +695,7 @@ int ServicePrimProc::Child()
   primServerThreadPool = server.getProcessorThreadPool();
 
   server.start(this, startupRaceLock);
+  exeMgrThread.join(); // wait for the ExeMgr thread
 
   cerr << "server.start() exited!" << endl;
 

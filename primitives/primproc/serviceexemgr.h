@@ -114,8 +114,8 @@ class ServiceExeMgr : public Service, public Opt
   }
 
  public:
-  ServiceExeMgr(const Opt& opt, joblist::ResourceManager* rm)
-   : Service("ExeMgr"), Opt(opt), msgLog_(logging::Logger(16)), rm_(rm)
+  ServiceExeMgr(const Opt& opt, joblist::ResourceManager* rm, std::atomic<bool>* dieFlag)
+   : Service("ExeMgr"), Opt(opt), msgLog_(logging::Logger(16)), rm_(rm), fDieFlag(dieFlag)
   {
   }
   void LogErrno() override
@@ -375,6 +375,7 @@ class ServiceExeMgr : public Service, public Opt
   // Its attributes are set in Child()
   querytele::QueryTeleServerParms teleServerParms_;
   std::vector<struct in_addr> localNetIfaceSins_;
+  std::atomic<bool>* fDieFlag;
 };
 extern ServiceExeMgr* globServiceExeMgr;
 }  // namespace exemgr

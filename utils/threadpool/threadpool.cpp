@@ -20,6 +20,8 @@
  *
  *
  ***********************************************************************/
+#include <boost/chrono/duration.hpp>
+#include <boost/chrono/system_clocks.hpp>
 #include <stdexcept>
 #include <iostream>
 using namespace std;
@@ -43,7 +45,7 @@ ThreadPool::ThreadPool() : fMaxThreads(0), fQueueSize(0)
 }
 
 ThreadPool::ThreadPool(size_t maxThreads, size_t queueSize)
- : fMaxThreads(maxThreads), fQueueSize(queueSize), fPruneThread(NULL)
+ : fMaxThreads(maxThreads), fQueueSize(queueSize), fPruneThread(nullptr)
 {
   init();
 }
@@ -72,7 +74,6 @@ void ThreadPool::init()
   fStop = false;
   fNextFunctor = fWaitingFunctors.end();
   fNextHandle = 1;
-  fPruneThread = new boost::thread(boost::bind(&ThreadPool::pruneThread, this));
 }
 
 void ThreadPool::setQueueSize(size_t queueSize)
@@ -131,9 +132,13 @@ void ThreadPool::stop()
   fStop = true;
   lock1.unlock();
 
-  fPruneThreadEnd.notify_all();
-  fPruneThread->join();
-  delete fPruneThread;
+  if (fPruneThread != nullptr)
+  {
+    fPruneThreadEnd.notify_all();
+    fPruneThread->join();
+    delete fPruneThread;
+    fPruneThread = nullptr;
+  }
   fNeedThread.notify_all();
   fThreads.join_all();
 }
@@ -147,6 +152,28 @@ void ThreadPool::wait()
     fThreadAvailable.wait(lock1);
     // cerr << "woke!" << endl;
   }
+}
+
+bool ThreadPool::waitFor(boost::chrono::microseconds timeout_us)
+{
+  auto start = boost::chrono::steady_clock::now();
+  boost::mutex::scoped_lock lock(fMutex);
+
+  while (waitingFunctorsSize > 0)
+  {
+    auto now = boost::chrono::steady_clock::now();
+    timeout_us -= boost::chrono::duration_cast<boost::chrono::microseconds>(now - start);
+    start = now;
+    if (timeout_us <= boost::chrono::microseconds{0})
+    {
+      return false;
+    }
+    if (fThreadAvailable.wait_for(lock, timeout_us) == boost::cv_status::timeout)
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 void ThreadPool::join(uint64_t thrHandle)
@@ -223,6 +250,12 @@ void ThreadPool::join(std::vector<uint64_t>& thrHandle)
 uint64_t ThreadPool::invoke(const Functor_T& threadfunc)
 {
   boost::mutex::scoped_lock lock1(fMutex);
+
+  if (!fStop && fPruneThread == nullptr)
+  {
+    fPruneThread = new boost::thread(boost::bind(&ThreadPool::pruneThread, this));
+  }
+
   uint64_t thrHandle = 0;
 
   for (;;)

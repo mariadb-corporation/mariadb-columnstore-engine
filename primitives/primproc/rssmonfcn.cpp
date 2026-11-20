@@ -40,7 +40,8 @@ namespace exemgr
           args.add((int)pct);
           args.add((int)fMaxPct);
           msgLog.logMessage(logging::LOG_TYPE_CRITICAL, ServiceExeMgr::logRssTooBig, args, logging::LoggingID(16));
-          exit(1);
+          fDieFlag->store(true, std::memory_order_relaxed);
+          return;
         }
 
         if (statementsRunningCount->cur() == 0)
@@ -50,7 +51,8 @@ namespace exemgr
           args.add((int)pct);
           args.add((int)fMaxPct);
           msgLog.logMessage(logging::LOG_TYPE_WARNING, ServiceExeMgr::logRssTooBig, args, logging::LoggingID(16));
-          exit(1);
+          fDieFlag->store(true, std::memory_order_relaxed);
+          return;
         }
 
         std::cerr << "Too much memory allocated, but stmts running" << std::endl;
@@ -62,8 +64,9 @@ namespace exemgr
       pause_();
     }
   }
-  void startRssMon(size_t maxPct, int pauseSeconds)
+
+  void startRssMon(size_t maxPct, std::atomic<bool>* dieFlag, int pauseSeconds)
   {
-    new std::thread(RssMonFcn(maxPct, pauseSeconds));
+    new std::thread(RssMonFcn(maxPct, dieFlag, pauseSeconds));
   }
 } // namespace
