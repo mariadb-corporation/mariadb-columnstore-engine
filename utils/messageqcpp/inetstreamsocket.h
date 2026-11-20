@@ -167,6 +167,14 @@ class InetStreamSocket : public Socket
       fConnectionTimeout = *timeout;
   }
 
+  /** set how long connect() may wait for the TCP handshake (ms); 0 = block until the OS gives up
+   *
+   */
+  virtual void tcpConnectTimeout(int ms)
+  {
+    fTcpConnectTimeoutMs = ms;
+  }
+
   /** set the connection protocol to be synchronous
    *
    */
@@ -242,6 +250,12 @@ class InetStreamSocket : public Socket
 
   // how long to wait for a connect() call to complete (in ms)
   struct ::timespec fConnectionTimeout;
+
+  // MCOL-6613 bound on the TCP handshake itself (ms); 0 = blocking connect(), as before
+  int fTcpConnectTimeoutMs = 0;
+
+  // ::connect(), bounded by fTcpConnectTimeoutMs when it is set; returns 0 or an errno value
+  int connectSocket(const sockaddr* serv_addr);
 
   // use sync proto
   bool fSyncProto;

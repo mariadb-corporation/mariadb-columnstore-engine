@@ -281,56 +281,27 @@ int JobList::putEngineComm(DistributedEngineComm* dec)
   }
 
   // Check to be sure all PrimProcs are attached.
-  fPmsConnected = dec->connectedPmServers();
-
-  while (fPmsConnected < fPmsConfigured)
-  {
-    sleep(1);
-    fPmsConnected = dec->connectedPmServers();
-
-    // Give up after 20 seconds. Primproc isn't coming back
-    if (retryCnt >= 20)
-    {
-      break;
-    }
-
-    ++retryCnt;
-    oam::OamCache* oamCache = oam::OamCache::makeOamCache();
-    oamCache->forceReload();
-    dec->Setup();
-  }
-
-  if (retryCnt > 0)
+  // MCOL-6613 this runs before the query sends anything: repair connections whose PrimProc went away, or the
+  // first request would be written into a dead socket and lost. Waits for a PrimProc that is still starting.
+  if (dec->reconnectIfDead() != 0)
   {
     logging::LoggingID lid(05);
     logging::MessageLog ml(lid);
     logging::Message::Args args;
     logging::Message m(0);
+    args.add("Failed to get all PrimProc connections");
+    m.format(args);
+    ml.logDebugMessage(m);
 
-    if (fPmsConnected < fPmsConfigured)
-    {
-      // We failed to get a connection
-      args.add("Failed to get all PrimProc connections. Retry count");
-      args.add(retryCnt);
-      m.format(args);
-      ml.logDebugMessage(m);
+    if (!errInfo)
+      errInfo.reset(new ErrorInfo);
 
-      if (!errInfo)
-        errInfo.reset(new ErrorInfo);
-
-      errInfo->errCode = logging::ERR_NO_PRIMPROC;
-      errInfo->errMsg = logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_NO_PRIMPROC);
-      return errInfo->errCode;
-    }
-    else
-    {
-      // Log that we had to reconnect
-      args.add("PrimProc reconnected. Retry count");
-      args.add(retryCnt);
-      m.format(args);
-      ml.logDebugMessage(m);
-    }
+    errInfo->errCode = logging::ERR_NO_PRIMPROC;
+    errInfo->errMsg = logging::IDBErrorInfo::instance()->errorMsg(logging::ERR_NO_PRIMPROC);
+    return errInfo->errCode;
   }
+
+  fPmsConnected = dec->connectedPmServers();
 
   JobStepVector::iterator iter = fQuery.begin();
   JobStepVector::iterator end = fQuery.end();

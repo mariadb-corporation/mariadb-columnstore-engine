@@ -39,14 +39,14 @@ class DropTableProcessor : public DDLPackageProcessor
   DropTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
   {
   }
+
+ protected:
+ private:
   /** @brief process a drop table statement
    *
    *  @param dropTableStmt the drop table statement
    */
-  EXPORT DDLResult processPackage(ddlpackage::DropTableStatement& dropTableStmt);
-
- protected:
- private:
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* dropTableStmt);
 };
 
 /** @brief specialization of a DDLPacakageProcessor
@@ -59,14 +59,14 @@ class TruncTableProcessor : public DDLPackageProcessor
   TruncTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
   {
   }
+
+ protected:
+ private:
   /** @brief process a truncate table statement
    *
    *  @param truncTableStmt the truncate table statement
    */
-  EXPORT DDLResult processPackage(ddlpackage::TruncTableStatement& truncTableStmt);
-
- protected:
- private:
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* truncTableStmt);
 };
 
 }  // namespace ddlpackageprocessor

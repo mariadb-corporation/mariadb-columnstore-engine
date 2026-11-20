@@ -217,11 +217,8 @@ void SQLFrontSessionThread::analyzeTableExecute(messageqcpp::ByteStream& bs, job
     return;
   }
 
-  if (UNLIKELY(fEc->getNumConnections() != fEc->connectedPmServers()))
-  {
-    std::cout << "fEc setup " << std::endl;
-    fEc->Setup();
-  }
+  // MCOL-6613 repair dead PrimProc connections; putEngineComm() checks the result.
+  fEc->reconnectIfDead();
 
   if (jl->status() == 0)
   {
@@ -471,10 +468,7 @@ void SQLFrontSessionThread::operator()()
 
       setRMParms(csep.rmParms());
       // Re-establish lost PP connections.
-      if (UNLIKELY(fEc->getNumConnections() != fEc->connectedPmServers()))
-      {
-        fEc->Setup();
-      }
+      fEc->reconnectIfDead();
       // @bug 1021. try to get schema cache for a come in query.
       // skip system catalog queries.
       if (!csep.isInternal())

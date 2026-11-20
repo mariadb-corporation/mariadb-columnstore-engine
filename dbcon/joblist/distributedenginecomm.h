@@ -37,6 +37,7 @@
 #include <boost/scoped_array.hpp>
 #include <condition_variable>
 #include <ifaddrs.h>
+#include <atomic>
 #include <iostream>
 #include <map>
 #include <mutex>
@@ -161,7 +162,20 @@ class DistributedEngineComm
    * Starts the current thread listening on the client socket for primitive response messages. Will not return
    * until busy() returns false or a zero-length response is received.
    */
-  EXPORT void Listen(boost::shared_ptr<messageqcpp::MessageQueueClient> client, uint32_t connIndex);
+  /* MCOL-6613 per-connection state shared between the connection's listener and the writers.
+   * dead: set by the listener, last, once it has stopped reading (EOF or error); cleared only by
+   *       reconnectIfDead() after it has reconnected the same client in place.
+   * published: the connection was swapped into fPmConnections by Setup(). A listener of an unpublished
+   *       client (left over from a failed Setup) must not touch any query. */
+  struct ConnState
+  {
+    std::atomic<bool> dead{false};
+    std::atomic<bool> published{false};
+  };
+  typedef std::shared_ptr<ConnState> SPConnState;
+
+  EXPORT void Listen(boost::shared_ptr<messageqcpp::MessageQueueClient> client, uint32_t connIndex,
+                     SPConnState state);
 
   /** @brief set/unset busy flag
    *
@@ -186,13 +200,20 @@ class DistributedEngineComm
 
   EXPORT int32_t Setup();
 
+  /** @brief MCOL-6613 reconnect every connection whose listener has seen it die, before a query sends
+   * anything.
+   *
+   * Lock-free no-op when every connection is live. Otherwise reconnects the dead connections in place and
+   * waits for a PrimProc that is still starting (10 x 3 s). Falls back to a full Setup() when the connection
+   * list is incomplete. Returns 0 when every connection is live.
+   */
+  EXPORT int32_t reconnectIfDead(bool background = false);
+
   EXPORT void addDECEventListener(DECEventListener*);
   EXPORT void removeDECEventListener(DECEventListener*);
 
-  uint64_t connectedPmServers() const
-  {
-    return fPmConnections.size();
-  }
+  // Number of connections whose listener is still running.
+  uint64_t connectedPmServers() const;
   uint32_t getPmCount() const
   {
     return pmCount;
@@ -244,6 +265,10 @@ class DistributedEngineComm
     // non-BPP primitives don't do ACKs
     bool sendACKs;
 
+    // MCOL-6613 set under fMlock once a message of this query is written to a PrimProc socket.
+    // A dying connection only errors out queries that have sent something.
+    bool sent = false;
+
     // This var will allow us to toggle flow control for BPP instances when
     // the UM is keeping up.  Send -1 as the ACK value to disable flow control
     // on the PM side, positive value to reenable it.  Not yet impl'd on the UM side.
@@ -264,7 +289,18 @@ class DistributedEngineComm
 
   explicit DistributedEngineComm(ResourceManager* rm, bool isExeMgr);
 
-  void StartClientListener(boost::shared_ptr<messageqcpp::MessageQueueClient> cl, uint32_t connIndex);
+  void StartClientListener(boost::shared_ptr<messageqcpp::MessageQueueClient> cl, uint32_t connIndex,
+                           SPConnState state);
+
+  // Setup() body; the caller holds fSetupMutex.
+  int32_t setupLocked();
+  bool needsReconnect() const;
+  // Reconnect every dead connection in place; the caller holds fSetupMutex.
+  void reconnectDeadLocked();
+  // Write msg to every PM (the local one last in ExeMgr). keepGoing: don't stop at the first failure.
+  int32_t writeToAllPms(const messageqcpp::SBS& msg, uint32_t senderID, bool keepGoing);
+  // Push a 0-length bs to one query's queue; the caller holds fMlock.
+  void poisonQueue(MQE& mqe);
 
   /** @brief Add a message to the queue
    *
@@ -287,9 +323,16 @@ class DistributedEngineComm
       fSessionMessages;  // place to put messages from the pm server to be returned by the Read method
   std::mutex fMlock;     // sessionMessages mutex
   std::vector<std::shared_ptr<std::mutex>> fWlock;  // PrimProc socket write mutexes
+  std::vector<SPConnState> fConnStates;             // parallel to fPmConnections
   bool fBusy;
   std::atomic<uint32_t> pmCount;
   boost::mutex fOnErrMutex;  // to lock function scope to reset pmconnections under error condition
+  // MCOL-6613 bound on a PrimProc TCP handshake, and whether the last full reconnect wait failed.
+  static constexpr int kTcpConnectTimeoutMs = 3000;
+  std::atomic<bool> fPmConfirmedDown{false};
+
+  // Lock order: fSetupMutex -> eventListenerLock -> fMlock -> fWlock[i]. Never take fSetupMutex holding
+  // fMlock.
   boost::mutex fSetupMutex;
 
   // event listener data
@@ -298,6 +341,7 @@ class DistributedEngineComm
 
   ClientList newClients;
   std::vector<std::shared_ptr<std::mutex>> newLocks;
+  std::vector<SPConnState> newConnStates;
 
   bool fIsExeMgr;
 

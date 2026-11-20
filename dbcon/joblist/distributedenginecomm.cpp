@@ -122,19 +122,20 @@ string getModuleNameByIPAddr(oam::ModuleTypeConfig moduletypeconfig, string ipAd
 struct EngineCommRunner
 {
   EngineCommRunner(joblist::DistributedEngineComm* jl, boost::shared_ptr<MessageQueueClient> cl,
-                   uint32_t connectionIndex)
-   : jbl(jl), client(cl), connIndex(connectionIndex)
+                   uint32_t connectionIndex, joblist::DistributedEngineComm::SPConnState connState)
+   : jbl(jl), client(cl), connIndex(connectionIndex), state(connState)
   {
   }
   joblist::DistributedEngineComm* jbl;
   boost::shared_ptr<MessageQueueClient> client;
   uint32_t connIndex;
+  joblist::DistributedEngineComm::SPConnState state;
   void operator()()
   {
     // cout << "Listening on client at 0x" << hex << (ptrdiff_t)client << dec << endl;
     try
     {
-      jbl->Listen(client, connIndex);
+      jbl->Listen(client, connIndex, state);
     }
     catch (std::exception& ex)
     {
@@ -225,7 +226,11 @@ int32_t DistributedEngineComm::Setup()
 {
   // This is here to ensure that this function does not get invoked multiple times simultaneously.
   boost::mutex::scoped_lock setupLock(fSetupMutex);
+  return setupLocked();
+}
 
+int32_t DistributedEngineComm::setupLocked()
+{
   makeBusy(true);
 
   // This needs to be here to ensure that whenever Setup function is called, the lists are
@@ -239,6 +244,7 @@ int32_t DistributedEngineComm::Setup()
 
   newClients.clear();
   newLocks.clear();
+  newConnStates.clear();
 
   uint32_t newPmCount = fRm->getPsCount();
   tbpsThreadCount = fRm->getJlNumScanReceiveThreads();
@@ -287,6 +293,11 @@ int32_t DistributedEngineComm::Setup()
       localConnectionId_ = connectionId;
     }
     std::shared_ptr<std::mutex> nl(new std::mutex());
+    SPConnState st(new ConnState());
+    // A DEC connection must never be reopened behind its listener's back; reconnectIfDead() does that.
+    cl->autoReconnect(false);
+    // A live host answers a SYN in milliseconds; don't wait minutes for one that is gone.
+    cl->tcpConnectTimeout(kTcpConnectTimeoutMs);
 
     try
     {
@@ -296,7 +307,8 @@ int32_t DistributedEngineComm::Setup()
         // assign the module name
         cl->moduleName(getModuleNameByIPAddr(moduletypeconfig, cl->addr2String()));
         newLocks.push_back(nl);
-        StartClientListener(cl, i);
+        newConnStates.push_back(st);
+        StartClientListener(cl, i, st);
       }
       else
       {
@@ -354,12 +366,17 @@ int32_t DistributedEngineComm::Setup()
 
   lock.unlock();
 
+  for (auto& st : newConnStates)
+    st->published.store(true);
+
   fWlock.swap(newLocks);
+  fConnStates.swap(newConnStates);
   fPmConnections.swap(newClients);
   // atomic store with release semantics ensures all previous writes are visible
   pmCount.store(newPmCount, std::memory_order_release);
 
   newLocks.clear();
+  newConnStates.clear();
   newClients.clear();
   return 0;
 }
@@ -375,7 +392,8 @@ int DistributedEngineComm::Close()
   return 0;
 }
 
-void DistributedEngineComm::Listen(boost::shared_ptr<MessageQueueClient> client, uint32_t connIndex)
+void DistributedEngineComm::Listen(boost::shared_ptr<MessageQueueClient> client, uint32_t connIndex,
+                                   SPConnState state)
 {
   SBS sbs;
 
@@ -409,27 +427,32 @@ void DistributedEngineComm::Listen(boost::shared_ptr<MessageQueueClient> client,
   }
 
 Error:
+  // A client from a failed Setup() was never used by any query; nothing to report or repair.
+  if (!state->published.load())
+  {
+    state->dead.store(true);
+    return;
+  }
+
   // @bug 488 - error condition! push 0 length bs to messagequeuemap and
   // eventually let jobstep error out.
+  // MCOL-6613 only queries that have sent something can be waiting on this connection. Mark it dead last,
+  // under fMlock: a writer either marked its query sent before this (and is errored out here) or sees dead.
   std::unique_lock lk(fMlock);
-  MessageQueueMap::iterator map_tok;
-  sbs.reset(new ByteStream(0U));
-
-  for (map_tok = fSessionMessages.begin(); map_tok != fSessionMessages.end(); ++map_tok)
+  for (auto& entry : fSessionMessages)
   {
-    map_tok->second->queue.clear();
-    map_tok->second->unackedWork[0].fetch_add(1, std::memory_order_relaxed);
-    map_tok->second->queue.push(sbs);
+    if (entry.second->sent)
+      poisonQueue(*entry.second);
   }
+  state->dead.store(true);
   lk.unlock();
 
+  // ExeMgr repairs the connection now; the other DEC users repair it at the next query (reconnectIfDead()).
   if (fIsExeMgr)
   {
-    uint32_t originalPMCount = pmCount.load(std::memory_order_relaxed);
     // Re-establish if a remote PM restarted.
     std::this_thread::sleep_for(std::chrono::seconds(3));
-    auto rc = Setup();
-    if (rc || originalPMCount != pmCount.load(std::memory_order_relaxed))
+    if (reconnectIfDead(true))
     {
       ostringstream os;
       os << "DEC: lost connection to " << client->addr2String();
@@ -437,6 +460,101 @@ Error:
     }
   }
   return;
+}
+
+void DistributedEngineComm::poisonQueue(MQE& mqe)
+{
+  SBS sbs(new ByteStream(0U));
+  mqe.queue.clear();
+  mqe.unackedWork[0].fetch_add(1, std::memory_order_relaxed);
+  mqe.queue.push(sbs);
+}
+
+uint64_t DistributedEngineComm::connectedPmServers() const
+{
+  uint64_t live = 0;
+  for (auto& st : fConnStates)
+  {
+    if (!st->dead.load())
+      ++live;
+  }
+  return live;
+}
+
+bool DistributedEngineComm::needsReconnect() const
+{
+  return fPmConnections.size() != getNumConnections() || connectedPmServers() != fPmConnections.size();
+}
+
+void DistributedEngineComm::reconnectDeadLocked()
+{
+  for (uint32_t i = 0; i < fPmConnections.size(); ++i)
+  {
+    if (!fConnStates[i]->dead.load())
+      continue;
+
+    // Reconnect the same client in place: its index, interleaving, local-host and module name stay valid.
+    // Its listener has already stopped reading (it set dead last), and writers are kept out by fWlock[i].
+    auto& client = fPmConnections[i];
+    std::lock_guard wlk(*fWlock[i]);
+    client->shutdown();
+
+    try
+    {
+      if (!client->connect())
+        continue;
+    }
+    catch (...)
+    {
+      continue;
+    }
+
+    fConnStates[i]->dead.store(false);
+    StartClientListener(client, i, fConnStates[i]);
+  }
+}
+
+int32_t DistributedEngineComm::reconnectIfDead(bool background)
+{
+  if (!needsReconnect())
+    return 0;
+
+  // Same wait as MCOL-5263: PrimProc may still be starting. Once a query's full wait has failed, later
+  // queries make one quick attempt instead of waiting again; the first success ends that. ExeMgr's listener
+  // retries in the background and never decides that a PM is down for the queries.
+  const int maxTries = (!background && fPmConfirmedDown.load()) ? 1 : 10;
+
+  for (int tries = 0; tries < maxTries; ++tries)
+  {
+    // Sleep unlocked so a query's own check isn't stuck behind another caller's wait.
+    if (tries > 0)
+      std::this_thread::sleep_for(std::chrono::seconds(3));
+
+    boost::mutex::scoped_lock setupLock(fSetupMutex);
+
+    // Another caller may have repaired it already.
+    if (!needsReconnect())
+    {
+      fPmConfirmedDown.store(false);
+      return 0;
+    }
+
+    if (fPmConnections.size() != getNumConnections())
+      setupLocked();
+    else
+      reconnectDeadLocked();
+  }
+
+  if (!needsReconnect())
+  {
+    fPmConfirmedDown.store(false);
+    return 0;
+  }
+
+  if (!background && !fPmConfirmedDown.exchange(true))
+    writeToLog(__FILE__, __LINE__, "DEC: could not reconnect to all PrimProcs", LOG_TYPE_ERROR);
+
+  return 1;
 }
 
 void DistributedEngineComm::addQueue(uint32_t key, bool sendACKs)
@@ -695,7 +813,7 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
 
   if (l_msgCount > 0)
   {
-    vector<bool> pmAcked(pmCount, false);
+    vector<bool> pmAcked(mqe->pmCount, false);
 
     {
       SBS ackCommand(new ByteStream(sizeof(ISMPacketHeader)));
@@ -740,7 +858,7 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
     {
       uint64_t totalUnackedWork = 0;
 
-      for (uint32_t i = 0; i < pmCount; ++i)
+      for (uint32_t i = 0; i < mqe->pmCount; ++i)
         totalUnackedWork += mqe->unackedWork[i].load(std::memory_order_relaxed);
 
       if (totalUnackedWork == 0)
@@ -748,7 +866,7 @@ void DistributedEngineComm::sendAcks(uint32_t uniqueID, const vector<SBS>& msgs,
         // MCOL-5637 Initialize a new bytestream before send a `ACK` command to Primitive Server.
         // It is safe to re-use it because the `ACK` command is sent to all Primitive Servers.
         SBS ackCommand = createBatchPrimitiveCommand(BATCH_PRIMITIVE_ACK, uniqueID, 1);
-        for (uint32_t i = 0; i < pmCount; ++i)
+        for (uint32_t i = 0; i < mqe->pmCount; ++i)
         {
           if (!pmAcked[i])
           {
@@ -784,14 +902,14 @@ void DistributedEngineComm::nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t max
     // FIXME: we're going to truncate here from 32 to 16 bits. Hopefully this will always fit...
     *numToAck = maxAck;
 
-    if (pmCount > 0)
-      nextIndex = (nextIndex + 1) % pmCount;
+    if (mqe->pmCount > 0)
+      nextIndex = (nextIndex + 1) % mqe->pmCount;
 
     return;
   }
   else
   {
-    for (int i = pmCount - 1; i >= 0; --i)
+    for (int i = mqe->pmCount - 1; i >= 0; --i)
     {
       uint32_t curVal = mqe->unackedWork[nextIndex].load(std::memory_order_relaxed);
       uint32_t unackedWork = (curVal > maxAck ? maxAck : curVal);
@@ -802,29 +920,29 @@ void DistributedEngineComm::nextPMToACK(boost::shared_ptr<MQE> mqe, uint32_t max
         *sockIndex = nextIndex;
         *numToAck = unackedWork;
 
-        if (pmCount > 0)
-          nextIndex = (nextIndex + 1) % pmCount;
+        if (mqe->pmCount > 0)
+          nextIndex = (nextIndex + 1) % mqe->pmCount;
 
         return;
       }
 
-      if (pmCount > 0)
-        nextIndex = (nextIndex + 1) % pmCount;
+      if (mqe->pmCount > 0)
+        nextIndex = (nextIndex + 1) % mqe->pmCount;
     }
 
     cerr << "DEC::nextPMToACK(): Couldn't find a PM to ACK! ";
 
-    for (int i = pmCount - 1; i >= 0; --i)
+    for (int i = mqe->pmCount - 1; i >= 0; --i)
       cerr << mqe->unackedWork[i].load(std::memory_order_relaxed) << " ";
 
     cerr << " max: " << maxAck;
     cerr << endl;
     // make sure the returned vars are legitimate
     *sockIndex = nextIndex;
-    *numToAck = maxAck / pmCount;
+    *numToAck = maxAck / mqe->pmCount;
 
-    if (pmCount > 0)
-      nextIndex = (nextIndex + 1) % pmCount;
+    if (mqe->pmCount > 0)
+      nextIndex = (nextIndex + 1) % mqe->pmCount;
 
     return;
   }
@@ -878,24 +996,12 @@ int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
         /* XXXPAT: This relies on the assumption that the first pmCount "PMS*"
         entries in the config file point to unique PMs */
         {
-          int32_t rc = 0;
-          for (uint32_t i = 0; i < pmCount; ++i)
-          {
-            if (i == localConnectionId_ && fIsExeMgr)
-            {
-              continue;
-            }
-
-            if ((rc = writeToClient(i, msg, senderID)))
-            {
-              return rc;
-            }
-          }
-          if (fIsExeMgr)
-          {
-            return writeToClient(localConnectionId_, msg);
-          }
-          return rc;
+          // MCOL-6613 teardown messages must reach every live PM even if one is dead, or those PMs keep the
+          // query's state; setup messages stop at the first failure.
+          const bool teardown = ism->Command == BATCH_PRIMITIVE_DESTROY ||
+                                ism->Command == BATCH_PRIMITIVE_ABORT ||
+                                ism->Command == DICT_DESTROY_EQUALITY_FILTER;
+          return writeToAllPms(msg, senderID, teardown);
         }
 
       case BATCH_PRIMITIVE_RUN:
@@ -917,6 +1023,32 @@ int32_t DistributedEngineComm::write(uint32_t senderID, const SBS& msg)
     throw IDBExcept(ERR_NO_PRIMPROC);
   }
   return 0;
+}
+
+int32_t DistributedEngineComm::writeToAllPms(const SBS& msg, uint32_t senderID, bool keepGoing)
+{
+  int32_t rc = 0;
+  for (uint32_t i = 0; i < pmCount; ++i)
+  {
+    if (i == localConnectionId_ && fIsExeMgr)
+    {
+      continue;
+    }
+
+    int32_t thisRc = writeToClient(i, msg, senderID);
+    if (thisRc && !rc)
+      rc = thisRc;
+    if (rc && !keepGoing)
+    {
+      return rc;
+    }
+  }
+  if (fIsExeMgr)
+  {
+    int32_t thisRc = writeToClient(localConnectionId_, msg);
+    return rc ? rc : thisRc;
+  }
+  return rc;
 }
 
 void DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connection)
@@ -944,9 +1076,10 @@ void DistributedEngineComm::write(messageqcpp::ByteStream& msg, uint32_t connect
   newClients[connection]->write(msg, NULL, senderStats);
 }
 
-void DistributedEngineComm::StartClientListener(boost::shared_ptr<MessageQueueClient> cl, uint32_t connIndex)
+void DistributedEngineComm::StartClientListener(boost::shared_ptr<MessageQueueClient> cl, uint32_t connIndex,
+                                                SPConnState state)
 {
-  boost::thread* thrd = new boost::thread(EngineCommRunner(this, cl, connIndex));
+  boost::thread* thrd = new boost::thread(EngineCommRunner(this, cl, connIndex, state));
   fPmReader.push_back(thrd);
 }
 
@@ -977,7 +1110,7 @@ void DistributedEngineComm::addDataToOutput(SBS sbs, uint32_t connIndex, Stats* 
 
   if (pmCount > 0)
   {
-    mqe->unackedWork[connIndex % pmCount].fetch_add(1, std::memory_order_relaxed);
+    mqe->unackedWork[connIndex % mqe->pmCount].fetch_add(1, std::memory_order_relaxed);
   }
 
   TSQSize_t queueSize = mqe->queue.push(sbs);
@@ -1063,18 +1196,34 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
     return 0;
   }
 
-  if (senderUniqueID != numeric_limits<uint32_t>::max())
   {
     std::lock_guard lk(fMlock);
-    it = fSessionMessages.find(senderUniqueID);
 
-    if (it != fSessionMessages.end())
+    if (senderUniqueID != numeric_limits<uint32_t>::max())
     {
-      mqe = it->second;
-      senderStats = &(mqe->stats);
-      size_t pmIndex = aPMIndex % mqe->pmCount;
-      connectionId = it->second->getNextConnectionId(pmIndex, fPmConnections.size(), fDECConnectionsPerQuery);
+      it = fSessionMessages.find(senderUniqueID);
+
+      if (it != fSessionMessages.end())
+      {
+        mqe = it->second;
+        senderStats = &(mqe->stats);
+        size_t pmIndex = aPMIndex % mqe->pmCount;
+        connectionId =
+            it->second->getNextConnectionId(pmIndex, fPmConnections.size(), fDECConnectionsPerQuery);
+      }
     }
+
+    // MCOL-6613 never write into a connection whose listener is gone: the request would be lost silently.
+    // The query fails instead; the connection is repaired by reconnectIfDead() before the next query.
+    if (fConnStates[connectionId]->dead.load())
+    {
+      if (mqe)
+        poisonQueue(*mqe);
+      return 1;
+    }
+
+    if (mqe)
+      mqe->sent = true;
   }
 
   ClientList::value_type client = fPmConnections[connectionId];
@@ -1089,43 +1238,18 @@ int DistributedEngineComm::writeToClient(size_t aPMIndex, const SBS& bs, uint32_
   catch (...)
   {
     // @bug 488. error out under such condition instead of re-trying other connection,
-    // by pushing 0 size bytestream to messagequeue and throw exception
-    SBS sbs;
-    std::unique_lock lk(fMlock);
-    // std::cout << "WARNING: DEC WRITE BROKEN PIPE. PMS index = " << index << std::endl;
-    MessageQueueMap::iterator map_tok;
-    sbs.reset(new ByteStream(0U));
-
-    for (map_tok = fSessionMessages.begin(); map_tok != fSessionMessages.end(); ++map_tok)
+    // by pushing 0 size bytestream to messagequeue.
+    // MCOL-6613 the listener errors out every other query on this connection and marks it dead; repairing it
+    // here, under fMlock, would stall every listener and reader for up to 30 s.
+    if (mqe)
     {
-      map_tok->second->queue.clear();
-      map_tok->second->unackedWork[0].fetch_add(1, std::memory_order_relaxed);
-      map_tok->second->queue.push(sbs);
+      std::lock_guard lk(fMlock);
+      poisonQueue(*mqe);
     }
 
-    int tries = 0;
-    // Try to setup connection with PS, it could be a situation that PS is starting.
-    // MCOL-5263.
-    while (tries < 10 && Setup())
-    {
-      ++tries;
-      std::this_thread::sleep_for(std::chrono::seconds(3));
-    }
-
-    lk.unlock();
-
-    if (tries == 10)
-    {
-      ostringstream os;
-      os << "DEC: lost connection to " << client->addr2String();
-      writeToLog(__FILE__, __LINE__, os.str(), LOG_TYPE_ERROR);
-      if (!fIsExeMgr)
-        abort();
-      else
-        throw runtime_error("DistributedEngineComm::write: Broken Pipe error");
-    }
-
-    // Connection was established.
+    ostringstream os;
+    os << "DEC: write to " << client->addr2String() << " failed";
+    writeToLog(__FILE__, __LINE__, os.str(), LOG_TYPE_WARNING);
     return 1;
     /*
                     // reconfig the connection array
