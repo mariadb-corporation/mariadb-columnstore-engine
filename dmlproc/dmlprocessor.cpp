@@ -1215,6 +1215,7 @@ void PackageHandler::run()
   results << result.queryStats;
   results << result.extendedStats;
   results << result.miniStats;
+  results << result.bloatAnalysis;
   result.stats.serialize(results);
   fIos.write(results);
   // Bug 5226. dmlprocessor thread will close the socket to mysqld.
