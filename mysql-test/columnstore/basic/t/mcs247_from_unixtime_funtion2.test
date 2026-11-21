@@ -11,28 +11,32 @@ SET time_zone = '+00:00';
 # Get reference values from MariaDB
 #
 
-# FROM_UNIXTIME(0) returns a non-NULL datetime on 11.4 and NULL on 11.8.
-# Wrap with IFNULL so the captured variable is never the empty string,
-# which would make --replace_result fail below.
-let $dt_ts0=`SELECT IFNULL(FROM_UNIXTIME(0), 'NULL')`;
-let $dt_ts1=`SELECT FROM_UNIXTIME(1)`;
-let $dt_ts103=`SELECT FROM_UNIXTIME(103)`;
-let $dt_ts111=`SELECT FROM_UNIXTIME(111)`;
-let $dt_ts1234=`SELECT FROM_UNIXTIME(1234)`;
-let $dt_ts9913=`SELECT FROM_UNIXTIME(9913)`;
-let $dt_ts98765=`SELECT FROM_UNIXTIME(98765)`;
-
-let $dt_ts1547432997=`SELECT FROM_UNIXTIME(1547432997)`;
-let $dt_ts1547432997_num=`SELECT FROM_UNIXTIME(1547432997)+0`;
-let $dt_ts1547432997_fmt0=`SELECT FROM_UNIXTIME(1547432997, '%Y %D %M %h:%i:%s %x')`;
-let $dt_ts1547432997_minus_8101=`SELECT FROM_UNIXTIME(2047430881)-8101`;
-
 --disable_warnings
 DROP DATABASE IF EXISTS mcs247_db2;
 --enable_warnings
 
 CREATE DATABASE mcs247_db2;
 USE mcs247_db2;
+
+# FROM_UNIXTIME(0) returns a non-NULL datetime on 11.4 and NULL on 11.8.
+# Wrap with IFNULL so the captured variable is never the empty string,
+# which would make --replace_result fail below.
+--disable_query_log
+CREATE TABLE idb (x int) ENGINE=InnoDB; # table to trigger the use of InnoDB environment and functions.
+INSERT INTO idb(x) VALUES (42);
+--enable_query_log
+let $dt_ts0=`SELECT IFNULL(FROM_UNIXTIME(0), 'NULL') FROM idb`;
+let $dt_ts1=`SELECT FROM_UNIXTIME(1) FROM idb`;
+let $dt_ts103=`SELECT FROM_UNIXTIME(103) FROM idb`;
+let $dt_ts111=`SELECT FROM_UNIXTIME(111) FROM idb`;
+let $dt_ts1234=`SELECT FROM_UNIXTIME(1234) FROM idb`;
+let $dt_ts9913=`SELECT FROM_UNIXTIME(9913) FROM idb`;
+let $dt_ts98765=`SELECT FROM_UNIXTIME(98765) FROM idb`;
+
+let $dt_ts1547432997=`SELECT FROM_UNIXTIME(1547432997) FROM idb`;
+let $dt_ts1547432997_num=`SELECT FROM_UNIXTIME(1547432997)+0 FROM idb`;
+let $dt_ts1547432997_fmt0=`SELECT FROM_UNIXTIME(1547432997, '%Y %D %M %h:%i:%s %x') FROM idb`;
+let $dt_ts1547432997_minus_8101=`SELECT FROM_UNIXTIME(2047430881)-8101 FROM idb`;
 
 CREATE TABLE t1
 (
