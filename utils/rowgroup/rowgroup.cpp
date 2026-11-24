@@ -92,6 +92,10 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
 
   if (fUseStoreStringMutex)
     lk.lock();
+#if 01
+  uint64_t ofs = storeStringAlloc(data, len);
+  return ofs;
+#else
 
   uint64_t to_hash = len;
   to_hash <<= 32;
@@ -160,6 +164,7 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
     std::swap(fLRUs[ht_index].lru[i], fLRUs[ht_index].lru[i+1]);
   }
   return ofs;
+#endif
 }
 
 uint64_t StringStore::storeStringAlloc(const uint8_t* data, uint32_t len)
