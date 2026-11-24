@@ -1,7 +1,6 @@
 import logging
 from typing import Any, Dict, List, Optional, Union
 
-import pyotp
 import requests
 
 
@@ -221,11 +220,7 @@ class ClusterControllerClient(BaseClient):
         :param api_key: The API key to set.
         :return: The response from the API.
         """
-        totp = pyotp.TOTP(SECRET_KEY)
-        payload = {
-            'api_key': api_key,
-            'verification_key': totp.now()
-        }
+        payload = {'api_key': api_key}
         return self._request('PUT', 'apikey-set', payload)
 
     def set_log_level(self, log_level: str) -> Union[Dict[str, Any], Dict[str, str]]:

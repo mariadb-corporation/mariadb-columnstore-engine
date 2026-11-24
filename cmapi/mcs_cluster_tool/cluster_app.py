@@ -19,7 +19,11 @@ from cmapi_server.constants import (
 from cmapi_server.controllers.api_clients import ClusterControllerClient
 from cmapi_server.exceptions import CMAPIBasicError
 from cmapi_server.helpers import (
-    get_config_parser, get_current_key, get_version, build_url
+    build_url,
+    get_config_parser,
+    get_current_key, 
+    get_version,
+    save_cmapi_conf_file,
 )
 from cmapi_server.managers.transaction import TransactionManager
 from mcs_cluster_tool.decorators import handle_output
@@ -374,8 +378,19 @@ def api_key(key: str = typer.Option(..., help='API key to set.')):
 
     WARNING: this command will affect API key value on all cluster nodes.
     """
+    cfg_parser = get_config_parser(CMAPI_CONF_PATH)
+    api_key = get_current_key(cfg_parser)
     if not key:
         raise typer.BadParameter('Empty API key not allowed.')
+    # case when we have fresh install and no api-key in config file
+    # so we can write new key only from mcs cli command on the same node
+    # just direct file write
+    if not api_key:
+        if not cfg_parser.has_section('Authentication'):
+            cfg_parser.add_section('Authentication')
+        cfg_parser['Authentication']['x-api-key'] = f"'{key}'"
+        save_cmapi_conf_file(cfg_parser, CMAPI_CONF_PATH)
+        return '{"status": "OK"}'
     client.request_timeout = REQUEST_TIMEOUT
     return client.set_api_key(key)
 

@@ -104,7 +104,7 @@ ALL_MCS_PROGS: dict[MCSProgs, ProgInfo] = {
     MCSProgs.CONTROLLER_NODE: ProgInfo(11, 'mcs-controllernode', 'fg', True),
     MCSProgs.PRIM_PROC: ProgInfo(5, 'mcs-primproc', '', False, 1),
     MCSProgs.WRITE_ENGINE_SERVER: ProgInfo(7, 'mcs-writeengineserver', '', False, 3),
-    MCSProgs.DML_PROC: ProgInfo(3, 'mcs-dmlproc', '', False),
+    MCSProgs.DML_PROC: ProgInfo(3, 'mcs-dmlproc', '', False, 1),
     MCSProgs.DDL_PROC: ProgInfo(1, 'mcs-ddlproc', '', False),
 }
 

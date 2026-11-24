@@ -24,6 +24,7 @@ TRUNCATE TABLE t1;
 
 --replace_result $MTR_SUITE_DIR MTR_SUITE_DIR
 --eval LOAD DATA LOCAL infile '$datafile' IGNORE INTO TABLE t1 FIELDS TERMINATED BY ',' LINES STARTING BY ',' (b,c,d);
+--sorted_result
 SELECT * FROM t1;
 DROP TABLE t1;
 

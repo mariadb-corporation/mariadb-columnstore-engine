@@ -179,8 +179,6 @@ pyopenssl==24.2.1
     # via
     #   gcs-oauth2-boto-plugin
     #   gsutil
-pyotp==2.9.0
-    # via -r requirements.in
 pyparsing==3.2.3
     # via httplib2
 python-dateutil==2.9.0.post0
