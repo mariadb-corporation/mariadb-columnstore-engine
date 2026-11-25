@@ -513,16 +513,10 @@ if __name__ == '__main__':
         # no saves yet and must start empty; a node whose saves exist but
         # whose _current pointer is missing or empty must not.
         if s3_enabled:
-<<<<<<< HEAD
-            logging.info(
-                'brm_saves_currenty returned empty string from '
-                'read_from_sm_with_retry'
-=======
             # A new install and an unreadable save look the same through smcat.
             logging.warning(
                 'brm_saves_current returned empty string from '
                 'read_from_sm_with_retry; starting with an empty BRM.'
->>>>>>> 98d60a8b6 (fix(oam): MCOL-6606 don't start the DBRM worker after a failed BRM load)
             )
             sys.exit(0)
         saves = glob.glob('{}*_em'.format(dbrmroot))
