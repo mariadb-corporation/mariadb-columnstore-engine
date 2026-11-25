@@ -92,7 +92,7 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
 
   if (fUseStoreStringMutex)
     lk.lock();
-#if 01
+#if 0
   uint64_t ofs = storeStringAlloc(data, len);
   return ofs;
 #else

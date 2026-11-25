@@ -233,7 +233,7 @@ class StringStore
     static const int size = 8;
     Stored lru[size];
   };
-  static const uint32_t LRUCount = 1024;
+  static const uint32_t LRUCount = 256; // reduced to lessen GROUP_CONCAT memory consumption. GCONC retains too much RGData.
   TinyLRU fLRUs[LRUCount];
 };
 
