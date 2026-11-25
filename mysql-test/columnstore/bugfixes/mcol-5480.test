@@ -4,6 +4,7 @@
 #
 
 --source ../include/have_columnstore.inc
+SET time_zone = '+00:00';
 
 let $DATADIR=`SELECT @@datadir`;
 
