@@ -514,6 +514,14 @@ void CopyLocks::rollback(VER_t txnID)
     }
 }
 
+void CopyLocks::releaseAll()
+{
+  for (int i = 0; i < header->capacity; i++)
+    entries[i].size = 0;
+
+  header->currentSize = 0;
+}
+
 /* Same as isLocked(): reads whichever image lock(op) selected. */
 void CopyLocks::getCurrentTxnIDs(std::set<VER_t>& list) const
 {
