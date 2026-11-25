@@ -73,6 +73,8 @@ if [[ "${CONTAINER_NAME}" == *smoke* ]] || [[ "${CONTAINER_NAME}" == *mtr* ]] ||
     if [[ "${CONTAINER_NAME}" == *mtr* ]]; then
         echo
         docker cp "${CONTAINER_NAME}:${MTR_PATH}/var/log" "/drone/src/${RESULT}/mtr-logs" || echo "missing ${MTR_PATH}/var/log"
+        docker cp "${CONTAINER_NAME}:/var/log/syslog" "/drone/src/${RESULT}/mtr-logs" || echo "missing syslog"
+        docker cp "${CONTAINER_NAME}:/var/log/messages" "/drone/src/${RESULT}/mtr-logs" || echo "missing messages"
     fi
 
     if [[ "${CONTAINER_NAME}" == *cmapi* ]]; then
