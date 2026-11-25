@@ -97,11 +97,28 @@ if(WITH_UNITTESTS)
     columnstore_link(brm_versioned_shm_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
     gtest_add_tests(TARGET brm_versioned_shm_tests TEST_PREFIX columnstore:)
 
-    # standalone EM routines test
-    add_executable(brm_em_standalone brm-em-standalone.cpp)
-    target_link_libraries(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
-    add_test(NAME columnstore:brm_em_standalone COMMAND brm_em_standalone)
-    set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
+    # MCOL-6605: runs on shm segments of its own, see mcol6605-tests.cpp
+    add_executable(mcol6605_tests mcol6605-tests.cpp)
+    add_dependencies(mcol6605_tests googletest)
+    columnstore_link(mcol6605_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${GTEST_LIBRARIES})
+    gtest_add_tests(TARGET mcol6605_tests TEST_PREFIX columnstore: TEST_LIST mcol6605_test_list)
+    set_tests_properties(${mcol6605_test_list} PROPERTIES SKIP_REGULAR_EXPRESSION "\\[  SKIPPED \\]")
+
+    if(NOT DEFINED WITH_MSAN) # CPPUnit is not build from sources
+        add_executable(comparators_tests comparators-tests.cpp)
+        columnstore_link(comparators_tests ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+        add_test(NAME columnstore:comparators_tests COMMAND comparators_tests)
+
+        add_executable(bytestream bytestream.cpp)
+        columnstore_link(bytestream ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+        add_test(NAME columnstore:bytestream COMMAND bytestream)
+
+        # standalone EM routines test
+        add_executable(brm_em_standalone brm-em-standalone.cpp)
+        columnstore_link(brm_em_standalone ${ENGINE_LDFLAGS} ${ENGINE_WRITE_LIBS} ${CPPUNIT_LIBRARIES} cppunit)
+        add_test(NAME columnstore:brm_em_standalone COMMAND brm_em_standalone)
+        set_tests_properties(columnstore:brm_em_standalone PROPERTIES DISABLED True)
+    endif()
 endif()
 # -Werror=sign-compare
 if(WITH_MICROBENCHMARKS AND (NOT CMAKE_BUILD_TYPE STREQUAL "Debug"))

@@ -33,6 +33,7 @@
 #include <unordered_map>
 #include <tr1/unordered_map>
 #include <mutex>
+#include <optional>
 
 // #define NDEBUG
 #include <cassert>
@@ -726,7 +727,27 @@ class ExtentMap
 {
  public:
   EXPORT ExtentMap();
+
+  /** @brief Same as ExtentMap(), but on the shared memory segments named by shmKeys.
+   *
+   * The segments behind the extent map are mapped once per process, by the
+   * first ExtentMap that needs them, so shmKeys only matters for that one.
+   */
+  EXPORT explicit ExtentMap(const ShmKeys& shmKeys);
+
+  /** @brief Takes the DBRoot list and count from dbRoots instead of OamCache.
+   *
+   * For tests that have no installed ColumnStore to ask: OamCache needs the
+   * local module file. Only covers what extent creation asks for (the DBRoot
+   * count and list); the PM to DBRoot mapping is still OamCache's.
+   */
+  EXPORT void setDbRoots(const DBRootVec& dbRoots);
   EXPORT ~ExtentMap();
+
+  /** @brief Turns on logging of the free list summary (extent count, ranges
+   * and a checksum) at the end of load(filename). Off by default; process-wide.
+   */
+  EXPORT static void setLogFreeList(bool enable);
 
   /** @brief Loads the ExtentMap entries from a file
    *
@@ -1492,6 +1513,7 @@ class ExtentMap
   unsigned getDbRootCount();
   void getPmDbRoots(int pm, std::vector<int>& dbRootList);
   DBRootVec getAllDbRoots();
+  std::optional<DBRootVec> fDbRootsOverride;
   void checkReloadConfig();
   ShmKeys fShmKeys;
 
