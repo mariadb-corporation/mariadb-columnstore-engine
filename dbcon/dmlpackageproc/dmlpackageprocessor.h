@@ -97,7 +97,9 @@ class DMLPackageProcessor
     ACTIVE_TRANSACTION_ERROR,
     TABLE_LOCK_ERROR,
     JOB_ERROR,
-    JOB_CANCELED
+    JOB_CANCELED,
+    DBRM_READ_ONLY,
+    PP_LOST_CONNECTION
   };
 
   enum DebugLevel /** @brief Debug level type enumeration */
@@ -235,7 +237,11 @@ class DMLPackageProcessor
    *
    * @param cpackage the CalpontDMLPackage to process
    */
-  virtual DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage) = 0;
+  DMLResult processPackage(dmlpackage::CalpontDMLPackage& cpackage);
+
+  /** @brief Check that give exception is related to PP lost connection.
+   */
+  bool checkPPLostConnection(std::exception& ex);
 
   inline void setRM(joblist::ResourceManager* frm)
   {
@@ -523,8 +529,12 @@ class DMLPackageProcessor
   bool fRollbackPending;  // When set, any derived object should stop what it's doing and cleanup in
                           // preparation for a Rollback
   execplan::ClientRotator* fExeMgr;
+  // MCOL-6613 set once an attempt has sent anything to WES; such an attempt must not be retried.
+  bool fSentToWES = false;
 
  private:
+  virtual DMLResult processPackageInternal(dmlpackage::CalpontDMLPackage& cpackage) = 0;
+
   /** @brief clean beginning and ending glitches and spaces from string
    *
    * @param s string to be cleaned
@@ -532,6 +542,8 @@ class DMLPackageProcessor
   void cleanString(std::string& s);
 
   DebugLevel fDebugLevel;  // internal use debug level
+
+  const std::string PPLostConnectionErrorCode = "MCS-2045";
 };
 
 /** @brief helper template function to do safe from string to type conversions

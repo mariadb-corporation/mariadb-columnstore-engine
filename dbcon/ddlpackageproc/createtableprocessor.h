@@ -39,17 +39,17 @@ class CreateTableProcessor : public DDLPackageProcessor
   CreateTableProcessor(BRM::DBRM* aDbrm) : DDLPackageProcessor(aDbrm)
   {
   }
-  /** @brief process a create table statement
-   *
-   * @param createTableStmt the CreateTableStatement
-   */
-  EXPORT DDLResult processPackage(ddlpackage::CreateTableStatement& createTableStmt);
 
  protected:
   void rollBackCreateTable(const std::string& error, BRM::TxnID txnID, int sessionId,
                            ddlpackage::TableDef& tableDef, DDLResult& result);
 
  private:
+  /** @brief process a create table statement
+   *
+   * @param createTableStmt the CreateTableStatement
+   */
+  DDLResult processPackageInternal(ddlpackage::SqlStatement* sqlTableStmt);
 };
 
 }  // namespace ddlpackageprocessor

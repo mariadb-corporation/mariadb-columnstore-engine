@@ -30,8 +30,7 @@ using namespace logging;
 
 namespace ddlpackageprocessor
 {
-DropIndexProcessor::DDLResult DropIndexProcessor::processPackage(
-    ddlpackage::DropIndexStatement& dropIndexStmt)
+DropIndexProcessor::DDLResult DropIndexProcessor::processPackageInternal(ddlpackage::SqlStatement* sqlStmt)
 {
   SUMMARY_INFO("DropIndexProcessor::processPackage");
 
@@ -49,20 +48,32 @@ DropIndexProcessor::DDLResult DropIndexProcessor::processPackage(
 
   int err = 0;
 
+  auto* dropIndexStmt = dynamic_cast<DropIndexStatement*>(sqlStmt);
+  if (!dropIndexStmt)
+  {
+    Message::Args args;
+    Message message(9);
+    args.add("DropIndexStatement wrong cast");
+    message.format(args);
+    result.result = DROP_ERROR;
+    result.message = message;
+    return result;
+  }
+
   VERBOSE_INFO(dropIndexStmt);
 
-  SQLLogger logger(dropIndexStmt.fSql, fDDLLoggingId, dropIndexStmt.fSessionID, txnID.id);
+  SQLLogger logger(dropIndexStmt->fSql, fDDLLoggingId, dropIndexStmt->fSessionID, txnID.id);
 
-  indexName.schema = dropIndexStmt.fIndexName->fSchema;
-  indexName.index = dropIndexStmt.fIndexName->fName;
+  indexName.schema = dropIndexStmt->fIndexName->fSchema;
+  indexName.index = dropIndexStmt->fIndexName->fName;
   // Look up table name from indexname. Oracle will error out if same constraintname or indexname exists.
-  CalpontSystemCatalog::TableName tableName =
-      sysCatalogPtr->lookupTableForIndex(dropIndexStmt.fIndexName->fName, dropIndexStmt.fIndexName->fSchema);
+  CalpontSystemCatalog::TableName tableName = sysCatalogPtr->lookupTableForIndex(
+      dropIndexStmt->fIndexName->fName, dropIndexStmt->fIndexName->fSchema);
   indexName.table = tableName.table;
   indexOID = sysCatalogPtr->lookupIndexNbr(indexName);
 
   VERBOSE_INFO("Removing the SYSINDEX meta data");
-  removeSysIndexMetaData(dropIndexStmt.fSessionID, txnID.id, result, *dropIndexStmt.fIndexName);
+  removeSysIndexMetaData(dropIndexStmt->fSessionID, txnID.id, result, *(dropIndexStmt->fIndexName));
 
   if (result.result != NO_ERROR)
   {
@@ -71,7 +82,7 @@ DropIndexProcessor::DDLResult DropIndexProcessor::processPackage(
   }
 
   VERBOSE_INFO("Removing the SYSINDEXCOL meta data");
-  removeSysIndexColMetaData(dropIndexStmt.fSessionID, txnID.id, result, *dropIndexStmt.fIndexName);
+  removeSysIndexColMetaData(dropIndexStmt->fSessionID, txnID.id, result, *(dropIndexStmt->fIndexName));
 
   if (result.result != NO_ERROR)
   {
@@ -89,7 +100,7 @@ DropIndexProcessor::DDLResult DropIndexProcessor::processPackage(
   }
 
   // Log the DDL statement
-  logging::logDDL(dropIndexStmt.fSessionID, txnID.id, dropIndexStmt.fSql, dropIndexStmt.fOwner);
+  logging::logDDL(dropIndexStmt->fSessionID, txnID.id, dropIndexStmt->fSql, dropIndexStmt->fOwner);
 
   // register the changes
   err = fWriteEngine.commit(txnID.id);
@@ -106,7 +117,7 @@ DropIndexProcessor::DDLResult DropIndexProcessor::processPackage(
   return result;
 
 rollback:
-  fWriteEngine.rollbackTran(txnID.id, dropIndexStmt.fSessionID);
+  fWriteEngine.rollbackTran(txnID.id, dropIndexStmt->fSessionID);
   fSessionManager.rolledback(txnID);
   return result;
 }

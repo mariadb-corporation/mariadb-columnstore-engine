@@ -3960,6 +3960,14 @@ uint8_t WE_DMLCommandProc::processFlushFiles(messageqcpp::ByteStream& bs, std::s
   bs >> flushCode;
   bs >> txnId;
   bs >> tableOid;
+
+  // MCOL-6613 erase the rowgroup before anything can fail, so a retry of this txn starts at its meta data.
+  if (rowGroups[txnId])
+  {
+    delete rowGroups[txnId];
+    rowGroups[txnId] = 0;
+  }
+
   std::map<uint32_t, uint32_t> oids;
   CalpontSystemCatalog::TableName aTableName;
   CalpontSystemCatalog::RIDList ridList;
@@ -4027,13 +4035,6 @@ uint8_t WE_DMLCommandProc::processFlushFiles(messageqcpp::ByteStream& bs, std::s
     rc = error;
     WErrorCodes ec;
     err = ec.errorString(error);
-  }
-
-  // erase rowgroup from the rowGroup map
-  if (rowGroups[txnId])
-  {
-    delete rowGroups[txnId];
-    rowGroups[txnId] = 0;
   }
 
   TableMetaData* aTbaleMetaData = TableMetaData::makeTableMetaData(tableOid);
