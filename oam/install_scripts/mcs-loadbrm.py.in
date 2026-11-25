@@ -437,6 +437,12 @@ if __name__ == '__main__':
                     shutil.chown(shm_file, USER, GROUP)
         except subprocess.CalledProcessError as exc:
             logging.error('{} exits with {}.'.format(cmd, exc.returncode))
+            # Don't leave a half-loaded image in shared memory: the next load
+            # would run against it and fail again (MCOL-6608).
+            subprocess.run(
+                [os.path.join(MCS_BIN_DIR, 'clearShm')],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
             sys.exit(1)
         except OSError:
             sys.exit(1)

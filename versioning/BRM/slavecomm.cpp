@@ -436,8 +436,7 @@ void SlaveComm::do_createStripeColumnExtents(ByteStream& msg)
   cerr << "WorkerComm: do_createStripeColumnExtents() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   // see bug 3596.  Need to make sure a snapshot file exists.
   if ((cols.size() > 0) && (cols[0].oid < 3000))
@@ -505,8 +504,7 @@ void SlaveComm::do_createColumnExtent_DBroot(ByteStream& msg)
   cerr << "WorkerComm: do_createColumnExtent_DBroot() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   if (oid < 3000)  // see bug 3596.  Need to make sure a snapshot file exists.
     takeSnapshot = true;
@@ -574,8 +572,7 @@ void SlaveComm::do_createColumnExtentExactFile(ByteStream& msg)
   cerr << "WorkerComm: do_createColumnExtentExactFile() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   if (oid < 3000)  // see bug 3596.  Need to make sure a snapshot file exists.
     takeSnapshot = true;
@@ -630,8 +627,7 @@ void SlaveComm::do_createDictStoreExtent(ByteStream& msg)
   cerr << "WorkerComm: do_createDictStoreExtent() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -686,8 +682,7 @@ void SlaveComm::do_rollbackColumnExtents_DBroot(ByteStream& msg)
   cerr << "WorkerComm: do_rollbackColumnExtents_DBroot() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -739,8 +734,7 @@ void SlaveComm::do_rollbackDictStoreExtents_DBroot(ByteStream& msg)
   cerr << "WorkerComm: do_rollbackDictStoreExtents() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -795,8 +789,7 @@ void SlaveComm::do_deleteEmptyColExtents(messageqcpp::ByteStream& msg)
   cerr << "WorkerComm: do_deleteEmptyColExtents() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -854,8 +847,7 @@ void SlaveComm::do_deleteEmptyDictStoreExtents(messageqcpp::ByteStream& msg)
   cerr << "WorkerComm: do_deleteEmptyDictStoreExtents() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -886,8 +878,7 @@ void SlaveComm::do_deleteOID(ByteStream& msg)
   cerr << "WorkerComm: do_deleteOID() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -929,8 +920,7 @@ void SlaveComm::do_deleteOIDs(ByteStream& msg)
   cerr << "WorkerComm: do_deleteOIDs() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -976,8 +966,7 @@ void SlaveComm::do_setLocalHWM(ByteStream& msg)
   cerr << "WorkerComm: do_setLocalHWM() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1015,8 +1004,7 @@ void SlaveComm::do_bulkSetHWM(ByteStream& msg)
   cerr << "WorkerComm: do_setLocalHWM() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1062,8 +1050,7 @@ void SlaveComm::do_bulkSetHWMAndCP(ByteStream& msg)
   cerr << "WorkerComm: do_setLocalHWM() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1078,8 +1065,7 @@ void SlaveComm::do_bulkUpdateDBRoot(ByteStream& msg)
   err = slave->bulkUpdateDBRoot(args);
   reply << (uint8_t)err;
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1110,8 +1096,7 @@ void SlaveComm::do_markInvalid(ByteStream& msg)
   cerr << "WorkerComm: do_markInvalid() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1155,8 +1140,7 @@ void SlaveComm::do_markManyExtentsInvalid(ByteStream& msg)
   cerr << "WorkerComm: do_markManyExtentsInvalid() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1201,8 +1185,7 @@ void SlaveComm::do_setExtentMaxMin(ByteStream& msg)
   cerr << "WorkerComm: do_setExtentMaxMin() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1279,8 +1262,7 @@ void SlaveComm::do_setExtentsMaxMin(ByteStream& msg)
   cerr << "WorkerComm: do_setExtentsMaxMin() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1347,8 +1329,7 @@ void SlaveComm::do_mergeExtentsMaxMin(ByteStream& msg)
   cerr << "WorkerComm: do_mergeExtentsMaxMin() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1409,8 +1390,7 @@ void SlaveComm::do_deletePartition(ByteStream& msg)
   cerr << "WorkerComm: do_deletePartition() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1471,8 +1451,7 @@ void SlaveComm::do_markPartitionForDeletion(ByteStream& msg)
   cerr << "WorkerComm: do_markPartitionforDeletion() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1517,8 +1496,7 @@ void SlaveComm::do_markAllPartitionForDeletion(ByteStream& msg)
   cerr << "WorkerComm: do_markAllPartitionforDeletion() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1579,8 +1557,7 @@ void SlaveComm::do_restorePartition(ByteStream& msg)
   cerr << "WorkerComm: do_restorePartition() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1615,8 +1592,7 @@ void SlaveComm::do_deleteDBRoot(ByteStream& msg)
   cerr << "WorkerComm: do_deleteDBRoot() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1656,8 +1632,7 @@ void SlaveComm::do_writeVBEntry(ByteStream& msg)
   cerr << "WorkerComm: do_writeVBEntry() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1699,8 +1674,7 @@ void SlaveComm::do_bulkWriteVBEntry(ByteStream& msg)
   cerr << "WorkerComm: do_bulkWriteVBEntry() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1745,8 +1719,7 @@ void SlaveComm::do_beginVBCopy(ByteStream& msg)
   cerr << "WorkerComm: do_beginVBCopy() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1783,8 +1756,7 @@ void SlaveComm::do_endVBCopy(ByteStream& msg)
   cerr << "WorkerComm: do_endVBCopy() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1821,8 +1793,7 @@ void SlaveComm::do_vbRollback1(ByteStream& msg)
   cerr << "WorkerComm: do_vbRollback1() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1859,8 +1830,7 @@ void SlaveComm::do_vbRollback2(ByteStream& msg)
   cerr << "WorkerComm: do_vbRollback2() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -1891,8 +1861,7 @@ void SlaveComm::do_vbCommit(ByteStream& msg)
   cerr << "WorkerComm: do_vbCommit() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -2127,7 +2096,6 @@ void SlaveComm::do_clear()
 int SlaveComm::replayJournal(string prefix)
 {
   ByteStream cmd;
-  uint32_t len;
   int ret = 0;
 
   // @Bug 2667+
@@ -2154,8 +2122,8 @@ int SlaveComm::replayJournal(string prefix)
 
   const char* filename = fName.c_str();
 
-  IDBDataFile* journalf =
-      IDBDataFile::open(IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "rb", 0);
+  std::unique_ptr<IDBDataFile> journalf(
+      IDBDataFile::open(IDBPolicy::getType(filename, IDBPolicy::WRITEENG), filename, "rb", 0));
 
   if (!journalf)
   {
@@ -2166,36 +2134,101 @@ int SlaveComm::replayJournal(string prefix)
   if (journalf->size() == 0)  // empty file, nothing to replay
     return 0;
 
-  ssize_t readIn = 0;
+  int rc;
 
-  do
+  while ((rc = readJournalRecord(journalf.get(), cmd, ret + 1)) > 0)
   {
-    readIn = journalf->read((char*)&len, sizeof(len));
+    if (!applyJournalRecord(cmd, ret + 1))
+      return -1;
 
-    if (readIn > 0)
-    {
-      cmd.needAtLeast(len);
-      readIn = journalf->read((char*)cmd.getInputPtr(), len);
-      cmd.advanceInputPtr(len);
+    slave->confirmChanges();
+    cmd.restart();
+    ret++;
+  }
 
-      try
-      {
-        processCommand(cmd);
-      }
-      catch (exception& e)
-      {
-        cout << e.what() << "  Journal replay was incomplete." << endl;
-        slave->undoChanges();
-        return -1;
-      }
+  return rc < 0 ? -1 : ret;
+}
 
-      slave->confirmChanges();
-      cmd.restart();
-      ret++;
-    }
-  } while (readIn > 0);
+namespace
+{
+/* One read can return part of the request without being at the end (a
+   StorageManager read does), so keep reading until len bytes, the end, or an
+   error. A short result then really means a short journal. */
+ssize_t readFully(IDBDataFile* f, char* buf, size_t len)
+{
+  size_t done = 0;
 
-  return ret;
+  while (done < len)
+  {
+    ssize_t n = f->read(buf + done, len - done);
+
+    if (n <= 0)
+      return done > 0 ? (ssize_t)done : n;
+
+    done += n;
+  }
+
+  return done;
+}
+}  // namespace
+
+/* Reads the next journal record into cmd. Returns 1 for a record, 0 at the
+   end of the journal, and -1 if it can't be read whole: a cut journal (a
+   partial copy or a torn write) must not replay as a shorter one (MCOL-6608). */
+int SlaveComm::readJournalRecord(IDBDataFile* journalf, ByteStream& cmd, int recordNo)
+{
+  uint32_t len;
+  ssize_t readIn = readFully(journalf, (char*)&len, sizeof(len));
+
+  if (readIn == 0)
+    return 0;
+
+  if (readIn != sizeof(len))
+  {
+    cout << "Journal record " << recordNo << ": short read of its length (" << readIn
+         << ").  Journal replay was incomplete." << endl;
+    return -1;
+  }
+
+  cmd.needAtLeast(len);
+  readIn = readFully(journalf, (char*)cmd.getInputPtr(), len);
+
+  if (readIn != (ssize_t)len)
+  {
+    cout << "Journal record " << recordNo << ": read " << readIn << " of " << len
+         << " bytes.  Journal replay was incomplete." << endl;
+    return -1;
+  }
+
+  cmd.advanceInputPtr(len);
+  return 1;
+}
+
+/* Applies one journal record. On failure (an exception, or a command that
+   answered with an error) undoes it and returns false. */
+bool SlaveComm::applyJournalRecord(ByteStream& cmd, int recordNo)
+{
+  uint32_t errorsBefore = replayErrors;
+
+  try
+  {
+    processCommand(cmd);
+  }
+  catch (exception& e)
+  {
+    cout << e.what() << "  Journal replay was incomplete." << endl;
+    slave->undoChanges();
+    return false;
+  }
+
+  if (replayErrors != errorsBefore)
+  {
+    cout << "Journal record " << recordNo << " failed to apply.  Journal replay was incomplete." << endl;
+    slave->undoChanges();
+    return false;
+  }
+
+  return true;
 }
 
 void SlaveComm::do_takeSnapshot()
@@ -2233,6 +2266,30 @@ void SlaveComm::saveDelta()
     cerr << "Journal write error: " << e.what() << endl;
     throw;
   }
+}
+
+/* Journaled commands answer with the error code first. load_brm runs them
+   standalone, with no master to answer, so count the failures instead: a
+   replay where a command fails must not report success (MCOL-6608).
+   The partition codes below are not failures: the master confirms (and so
+   journals) partition commands that return them (MasterDBRMNode::msgProcessor). */
+void SlaveComm::writeReply(const ByteStream& reply)
+{
+  if (!standalone)
+  {
+    master.write(reply);
+    return;
+  }
+
+  if (reply.length() == 0)
+    return;
+
+  int8_t err = (int8_t)reply.buf()[0];
+
+  if (err != ERR_OK && err != ERR_PARTITION_DISABLED && err != ERR_PARTITION_ENABLED &&
+      err != ERR_INVALID_OP_LAST_PARTITION && err != ERR_NOT_EXIST_PARTITION &&
+      err != ERR_NO_PARTITION_PERFORMED)
+    replayErrors++;
 }
 
 int SlaveComm::printJournal(string prefix)
@@ -2326,8 +2383,7 @@ void SlaveComm::do_dmlLockLBIDRanges(ByteStream& msg)
   cerr << "WorkerComm: do_dmlLockLBIDRanges() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }
@@ -2357,8 +2413,7 @@ void SlaveComm::do_dmlReleaseLBIDRanges(ByteStream& msg)
   cerr << "WorkerComm: do_dmlReleaseLBIDRanges() err code is " << err << endl;
 #endif
 
-  if (!standalone)
-    master.write(reply);
+  writeReply(reply);
 
   doSaveDelta = true;
 }

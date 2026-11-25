@@ -124,6 +124,9 @@ class SlaveComm
   void do_ownerCheck(messageqcpp::ByteStream& msg);
   void do_takeSnapshot();
   void saveDelta();
+  void writeReply(const messageqcpp::ByteStream& reply);
+  int readJournalRecord(idbdatafile::IDBDataFile* journalf, messageqcpp::ByteStream& cmd, int recordNo);
+  bool applyJournalRecord(messageqcpp::ByteStream& cmd, int recordNo);
   bool processExists(const uint32_t pid, const std::string& pname);
 
   std::unique_ptr<messageqcpp::MessageQueueServer> server;
@@ -136,6 +139,7 @@ class SlaveComm
   std::string journalName;
   std::unique_ptr<idbdatafile::IDBDataFile> journalh;
   int64_t snapshotInterval, journalCount;
+  uint32_t replayErrors = 0;  // failed commands during a standalone journal replay
   struct timespec MSG_TIMEOUT;
 };
 
