@@ -60,7 +60,114 @@ StringStore::~StringStore()
 {
 }
 
+// SipHash pieces.
+#define ROTL(x, b) (uint64_t)(((x) << (b)) | ((x) >> (64 - (b))))
+#define SIPROUND(v0,v1,v2,v3)                                                          \
+        do {                                                                           \
+                v0 += v1;                                                              \
+                v1 = ROTL(v1, 13);                                                     \
+                v1 ^= v0;                                                              \
+                v0 = ROTL(v0, 32);                                                     \
+                v2 += v3;                                                              \
+                v3 = ROTL(v3, 16);                                                     \
+                v3 ^= v2;                                                              \
+                v0 += v3;                                                              \
+                v3 = ROTL(v3, 21);                                                     \
+                v3 ^= v0;                                                              \
+                v2 += v1;                                                              \
+                v1 = ROTL(v1, 17);                                                     \
+                v1 ^= v2;                                                              \
+                v2 = ROTL(v2, 32);                                                     \
+        } while (0)
+
+
 uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
+{
+  // trivial case.
+  if (!data)
+    return numeric_limits<uint64_t>::max();
+
+  //@bug6065, make StringStore::storeString() thread safe
+  boost::mutex::scoped_lock lk(fMutex, boost::defer_lock);
+
+  if (fUseStoreStringMutex)
+    lk.lock();
+#if 0
+  uint64_t ofs = storeStringAlloc(data, len);
+  return ofs;
+#else
+
+  uint64_t to_hash = len;
+  to_hash <<= 32;
+  uint8_t bytes[4] = {0};
+  if (len == 1)
+  {
+    bytes[3] = bytes[0] = data[0];
+  }
+  else if (len > 1)
+  {
+    bytes[0] = data[0];
+    bytes[1] = data[1];
+    bytes[2] = data[len-2];
+    bytes[3] = data[len-1];
+  }
+  uint32_t bytes_word = *reinterpret_cast<uint32_t*>(bytes);
+  to_hash |= bytes_word;
+  uint64_t v0 = 0x736f6d6570736575UL, v1 = 0x646f72616e646f6dUL,
+           v2 = 0x6c7967656e657261UL, v3 = 0x7465646279746573UL;
+  // key is zeroes.
+
+  v3 ^= to_hash;
+  SIPROUND(v0,v1,v2,v3); // two compression rounds.
+  SIPROUND(v0,v1,v2,v3);
+  v0 ^= to_hash;
+
+  v2 ^= 0xff; // 64-bit value.
+  SIPROUND(v0,v1,v2,v3); // two finalization rounds.
+  SIPROUND(v0,v1,v2,v3);
+  uint64_t full_hash = v0^v1^v2^v3;
+
+  uint32_t ht_index = full_hash % LRUCount;
+
+  int lruPos;
+  for(lruPos = 0;lruPos < TinyLRU::size;lruPos ++)
+  {
+    if (fLRUs[ht_index].lru[lruPos].isEmpty())
+    {
+      break;
+    }
+    if (fLRUs[ht_index].lru[lruPos].hash != full_hash)
+    {
+      continue;
+    }
+    uint64_t ofs = fLRUs[ht_index].lru[lruPos].offset;
+    if (getStringLength(ofs) == len && 0 == memcmp(data, getPointer(ofs), len))
+    {
+      // bubble what was found is all the way down and what was before up one step.
+      for(int i=lruPos-1;i >= 0;i--)
+      {
+        std::swap(fLRUs[ht_index].lru[i], fLRUs[ht_index].lru[i+1]);
+      }
+      return ofs;
+    }
+  }
+  // here we are having not found same string.
+  uint64_t ofs = storeStringAlloc(data, len);
+  if (lruPos >= TinyLRU::size)
+  {
+    lruPos --;
+  }
+  fLRUs[ht_index].lru[lruPos] = Stored(ofs, full_hash);
+  // bubble what was recorded is all the way down and what was before up one step.
+  for(int i=lruPos-1;i >= 0;i--)
+  {
+    std::swap(fLRUs[ht_index].lru[i], fLRUs[ht_index].lru[i+1]);
+  }
+  return ofs;
+#endif
+}
+
+uint64_t StringStore::storeStringAlloc(const uint8_t* data, uint32_t len)
 {
   MemChunk* lastMC = nullptr;
   uint64_t ret = 0;
@@ -72,12 +179,6 @@ uint64_t StringStore::storeString(const uint8_t* data, uint32_t len)
 
   if (!data)
     return numeric_limits<uint64_t>::max();
-
-  //@bug6065, make StringStore::storeString() thread safe
-  boost::mutex::scoped_lock lk(fMutex, boost::defer_lock);
-
-  if (fUseStoreStringMutex)
-    lk.lock();
 
   if (mem.size() > 0)
     lastMC = (MemChunk*)mem.back().get();
@@ -169,6 +270,7 @@ void StringStore::serialize(ByteStream& bs) const
 
 void StringStore::deserialize(ByteStream& bs)
 {
+  clear();
   uint64_t i;
   uint64_t count;
   uint64_t size;
@@ -220,6 +322,12 @@ void StringStore::clear()
   vector<StringStoreBufSPType> emptyv2;
   mem.swap(emptyv);
   longStrings.swap(emptyv2);
+
+  for(uint32_t i=0;i<LRUCount;i++)
+  {
+    fLRUs[i] = TinyLRU();
+  }
+
   empty = true;
 }
 
