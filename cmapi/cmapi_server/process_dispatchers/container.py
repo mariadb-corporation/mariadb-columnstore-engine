@@ -177,9 +177,16 @@ class ContainerDispatcher(BaseDispatcher):
                     f'{loadbrm_path} no', stdout=loadbrm_logfh, env=env_vars
                 )
             if not success:
-                logger.error('Error while loading BRM.')
-            else:
-                logger.debug('Successfully loaded BRM.')
+                # Same as Requires=mcs-loadbrm.service in systemd unit:
+                # don't start workernode on an empty BRM image when the load
+                # failed (MCOL-6606). A new install (no BRM saves yet) makes
+                # mcs-loadbrm.py exit 0, so it isn't blocked here.
+                logger.error(
+                    'Error while loading BRM. Not starting workernode on an '
+                    'empty BRM image.'
+                )
+                return False
+            logger.debug('Successfully loaded BRM.')
 
         service_log_path = cls._create_mcs_process_logfile(
             f'{service.lower()}.log'
