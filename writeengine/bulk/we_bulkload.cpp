@@ -1293,6 +1293,15 @@ int BulkLoad::manageImportDataFileList(Job& job, int tableNo, TableInfo* tableIn
                                      fS3Bucket, fS3Region);
         tableInfo->markTableComplete();
         fLog.logMsg(oss.str(), MSGLVL_INFO1);
+
+        // Still write a zero-row report: WES sends it, and the coordinator waits for a report
+        // from every PM (MCOL-6604).
+        int rptRc = tableInfo->fBRMReporter.sendBRMInfo(tableInfo->fBRMRptFileName, {}, {});
+
+        if (rptRc != NO_ERROR)
+          return rptRc;
+
+        tableInfo->fBRMReporter.reportTotals(0, 0, {});
         return NO_ERROR;
       }
       else

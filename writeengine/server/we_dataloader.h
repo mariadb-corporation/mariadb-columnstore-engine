@@ -79,6 +79,7 @@ class WEDataLoader : public Observer
   void onReceiveCmdLineArgs(ByteStream& Ibs);
   void onReceiveStartCpimport();
   void onReceiveBrmRptFileName(ByteStream& Ibs);
+  std::string perPmBrmRptFileName(const std::string& name) const;
   void onReceiveCleanup(ByteStream& Ibs);
   void onReceiveRollback(ByteStream& Ibs);
 

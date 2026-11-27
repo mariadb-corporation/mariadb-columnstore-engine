@@ -1177,6 +1177,10 @@ void WESDHandler::onCpimportPass(int PmId)
 
   fLog.logMsg(aStrStr.str(), MSGLVL_INFO2);
 
+  // onBrmReport may already have failed this PM over its report (and started the rollback).
+  if (fWeSplClients[PmId]->isCpiFailed())
+    return;
+
   fWeSplClients[PmId]->setCpiPassed(true);
 
   // Every CPI passed, BRM report will be send to us b4 this Msg.
@@ -1267,6 +1271,8 @@ void WESDHandler::onBrmReport(int PmId, messageqcpp::SBS& Sbs)
   std::string aBadFileName;
   std::string aErrFileName;
   std::string aColName;
+  bool aGotRows = false;
+  bool aGotHwm = false;
 
   if (getDebugLvl() > 2)
     cout << "BRM Report length : " << (*Sbs).length() << endl;
@@ -1282,6 +1288,7 @@ void WESDHandler::onBrmReport(int PmId, messageqcpp::SBS& Sbs)
 
     if (aRet)
     {
+      aGotRows = true;
       setRowsUploadInfo(PmId, aTotRows, aInsRows);
       fImportRslt.updateRowsProcessed(aTotRows);
       fImportRslt.updateRowsInserted(aInsRows);
@@ -1365,12 +1372,38 @@ void WESDHandler::onBrmReport(int PmId, messageqcpp::SBS& Sbs)
       fLog.logMsg(aOss.str(), MSGLVL_ERROR);
     }
     else  // do not add Crit Msgs to BRMRpt vector
+    {
+      if (!aStr.empty() && aStr.at(0) == 'H')
+        aGotHwm = true;
+
       fBrmRptVec.push_back(aStr);
+    }
   }
 
   // Even when CPI fail, we get BRMRpt to get the Err/Bad file.
   if (checkForCpiFailStatus())
     return;  // if a PM failed, don't update BRM.
+
+  // MCOL-6604: a report that is empty or lacks HWMs (e.g. overwritten by another PM) must not
+  // be taken for success; fail this PM so the usual cpimport-failure path rolls the load back.
+  std::string aRptProblem;
+
+  if (!aGotRows)
+    aRptProblem = "no ROWS entry (cpimport did not finish the table)";
+  else if ((aInsRows > 0) && (!aGotHwm))
+    aRptProblem = "rows were inserted but there is no HWM entry";
+
+  if (!aRptProblem.empty())
+  {
+    std::stringstream aOss;
+    aOss << "Invalid BRM report from PM" << PmId << " : " << aRptProblem << "; failing the load";
+    logging::Message::Args aErrArgs;
+    aErrArgs.add(aOss.str());
+    fRef.fpSysLog->logMsg(aErrArgs, logging::LOG_TYPE_ERROR, logging::M0000);
+    fLog.logMsg(aOss.str(), MSGLVL_ERROR);
+    onCpimportFail(PmId);
+    return;
+  }
 
   // cout << "Checking clients for BRM Reports" << endl;
   // TODO we should update BRM with the report we got.
