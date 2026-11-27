@@ -5,7 +5,7 @@ TODO: move main constant paths here and replace in files in next releases.
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import NamedTuple
+from typing import NamedTuple, Tuple
 
 # default MARIADB ColumnStore config path
 MCS_ETC_PATH = '/etc/columnstore'
@@ -168,6 +168,64 @@ CMAPI_PACKAGE_NAME = MultiDistroNamer(
     rhel='MariaDB-columnstore-cmapi',
     deb='mariadb-columnstore-cmapi'
 )
+
+
+@dataclass(frozen=True)
+class MultiDistroPackages:
+    """Group of package names that differ between RPM and DEB distros.
+
+    One RPM package may map to several DEB packages (and vice versa),
+    so both sides are tuples.
+    """
+    rhel: Tuple[str, ...]
+    deb: Tuple[str, ...]
+
+    def for_pkg_type(self, pkg_type: PkgType) -> Tuple[str, ...]:
+        return self.deb if pkg_type == PkgType.DEB else self.rhel
+
+
+# Optional MariaDB ES packages from the main ES repo. If any of them is
+# installed on a node, install_es upgrades it together with MariaDB server.
+# Most of them depend on the server package, so they are removed together
+# with it and must be reinstalled at the target version.
+MDB_EXTRA_PACKAGES = MultiDistroPackages(
+    rhel=(
+        'MariaDB-backup',
+        'MariaDB-cracklib-password',
+        'MariaDB-devel',
+        'MariaDB-gssapi-server',
+        'MariaDB-hashicorp-key-management',
+        'MariaDB-provider-bzip2',
+        'MariaDB-provider-lz4',
+        'MariaDB-provider-lzma',
+        'MariaDB-provider-lzo',
+        'MariaDB-provider-snappy',
+        'MariaDB-s3-engine',
+    ),
+    deb=(
+        'mariadb-backup',
+        'mariadb-plugin-cracklib-password',
+        'libmariadb-dev',
+        'libmariadb-dev-compat',
+        'libmariadbd-dev',
+        'mariadb-plugin-gssapi-server',
+        'mariadb-plugin-hashicorp-key-management',
+        'mariadb-plugin-provider-bzip2',
+        'mariadb-plugin-provider-lz4',
+        'mariadb-plugin-provider-lzma',
+        'mariadb-plugin-provider-lzo',
+        'mariadb-plugin-provider-snappy',
+        'mariadb-plugin-s3',
+    ),
+)
+# Optional MariaDB ES packages shipped in the separate "unsupported" repo.
+# The unsupported repo is configured only on nodes where one of these is
+# installed.
+MDB_UNSUPPORTED_REPO_PACKAGES = MultiDistroPackages(
+    rhel=('MariaDB-test',),
+    deb=('mariadb-test', 'mariadb-test-data'),
+)
+
 ES_REPO = MultiDistroNamer(
     rhel=(
 '''[mariadb-es-main]
@@ -180,6 +238,27 @@ module_hotfixes = 1
 '''
     ),
     deb='deb [arch=amd64,arm64] https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-server/{mdb_version}/deb {os_version} main'
+)
+ES_UNSUPPORTED_REPO = MultiDistroNamer(
+    rhel=(
+'''
+[mariadb-es-unsupported]
+name = MariaDB Enterprise Server Unsupported
+baseurl = https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-unsupported/{mdb_version}/rpm/rhel/{os_major_version}/{arch}
+gpgkey = {gpg_key_url}
+gpgcheck = 1
+enabled = 1
+module_hotfixes = 1
+'''
+    ),
+    deb=(
+        '\n# Unsupported supplemental packages\n'
+        'deb [arch=amd64,arm64] https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-unsupported/{mdb_version}/deb {os_version} main\n'
+    ),
+)
+ES_UNSUPPORTED_VERIFY_URL = MultiDistroNamer(
+    rhel='https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-unsupported/{mdb_version}/rpm/rhel/{os_major_version}/{arch}/repodata/repomd.xml',
+    deb='https://dlm.mariadb.com/repo/{token}/mariadb-enterprise-unsupported/{mdb_version}/deb/dists/{os_version}/Release'
 )
 ES_REPO_PRIORITY_PREFS = '''
 Package: *

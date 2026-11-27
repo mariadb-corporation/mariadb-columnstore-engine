@@ -11,6 +11,7 @@ import requests
 import typer
 from typing_extensions import Annotated
 from rich.console import Console
+from rich.markup import escape
 from rich.progress import (
     BarColumn, Progress, SpinnerColumn, TimeElapsedColumn,
 )
@@ -31,6 +32,7 @@ from cmapi_server.exceptions import CEJError
 from cmapi_server.handlers.cej import CEJPasswordHandler
 from cmapi_server.helpers import get_active_nodes, get_cej_info, get_config_parser, get_current_key
 from cmapi_server.managers.transaction import TransactionManager
+from cmapi_server.managers.upgrade.preinstall import PreInstallManager
 from cmapi_server.managers.upgrade.utils import ComparableVersion
 from cmapi_server.process_dispatchers.base import BaseDispatcher
 from mcs_cluster_tool.constants import MCS_COLUMNSTORE_REVIEW_SH
@@ -39,10 +41,12 @@ from mcs_cluster_tool.helpers import cook_sh_arg
 from mcs_cluster_tool.install_es_helpers import (
     INSTALL_ES_CMAPI_UPGRADE_SLEEP,
     INSTALL_ES_LONG_TRANSACTION_TIMEOUT,
+    Precheck,
     build_node_status_table,
     call_upgrade_agents_on_all_nodes,
     get_current_versions,
     run_node_step_on_cluster,
+    run_prechecks,
     setup_install_es_logging,
     stop_upgrade_agents_on_cluster,
     validate_cej_preupgrade,
@@ -691,6 +695,20 @@ def install_es(
             show_default=False
         )
     ] = False,
+    ignore_unavailable_extras: Annotated[
+        bool,
+        typer.Option(
+            '--ignore-unavailable-extras',
+            help=(
+                'Proceed even if some installed optional MariaDB packages '
+                '(e.g. MariaDB-backup, MariaDB-s3-engine, MariaDB-test) are not '
+                'available in the repository at the target version. Such '
+                'packages are removed during the upgrade and NOT reinstalled; '
+                'only a warning is shown.'
+            ),
+            show_default=False
+        )
+    ] = False,
 ):
     """
     [Beta]
@@ -727,19 +745,56 @@ def install_es(
         else:
             post_output.append(msg)
 
-    # Pre-upgrade check: make sure CEJ (Cross-Engine Join) credentials are
-    # valid before touching anything. Newer versions refuse to start the
-    # cluster with broken/empty CEJ credentials, so a currently-working
-    # installation with invalid credentials must be fixed before upgrading.
-    validate_cej_preupgrade(console)
+    # Prechecks: fail fast, before anything in the cluster is touched.
+    # Non-interactive only: the live progress bar must be stopped before any
+    # typer.confirm() prompt (see replication handling below).
+    prechecks = [
+        # Newer versions refuse to start the cluster with broken/empty CEJ
+        # credentials, so a currently-working installation with invalid
+        # credentials must be fixed before upgrading.
+        Precheck(
+            'Validating Cross-Engine Join credentials...',
+            'Cross-Engine Join credentials are valid',
+            lambda: validate_cej_preupgrade(console),
+        ),
+        Precheck(
+            'Validating ES token and target version...',
+            'ES token and target version are valid',
+            lambda: validate_es_token_and_version(
+                node_api_client, token, target_version, console
+            ),
+            name='target_version',
+        ),
+        Precheck(
+            'Checking gtid_strict_mode...',
+            'gtid_strict_mode is disabled',
+            PreInstallManager.check_gtid_strict_mode,
+        ),
+        Precheck(
+            'Checking installed MariaDB plugins...',
+            'No plugins blocking auto-upgrade found',
+            PreInstallManager.check_installed_plugins,
+        ),
+        Precheck(
+            'Retrieving currently installed versions...',
+            'Currently installed versions retrieved',
+            lambda: get_current_versions(
+                cluster_api_client, console, ignore_mismatch
+            ),
+            name='versions',
+        ),
+        Precheck(
+            'Checking replication status...',
+            'Replication status checked',
+            lambda: precheck_replication(active_nodes, console),
+            name='replication_ok',
+        ),
+    ]
+    precheck_results = run_prechecks(console, prechecks)
+    target_version = precheck_results['target_version']
+    versions = precheck_results['versions']
+    replication_ok = precheck_results['replication_ok']
 
-    # Validate token and resolve target version
-    target_version = validate_es_token_and_version(
-        node_api_client, token, target_version, console
-    )
-
-    # Retrieve current versions (handles mismatch display)
-    versions = get_current_versions(cluster_api_client, console, ignore_mismatch)
     mdb_curr_ver = versions['server_version']
     mcs_curr_ver = versions['columnstore_version']
     cmapi_curr_ver = versions['cmapi_version']
@@ -751,7 +806,6 @@ def install_es(
     table.add_row(mdb_curr_ver, mcs_curr_ver, cmapi_curr_ver)
     console.print(table)
 
-    replication_ok = precheck_replication(active_nodes, console)
     if not replication_ok:
         proceed = typer.confirm(
             'Replication issues detected on one or more nodes. '
@@ -816,11 +870,12 @@ def install_es(
     logger.info(
         'Starting install_es: %s -> %s (%s) on %d node(s): %s | '
         'cmapi_upgrade=%s, ignore_mismatch=%s, skip_cmapi=%s, '
-        'allow_cmapi_downgrade=%s',
+        'allow_cmapi_downgrade=%s, ignore_unavailable_extras=%s',
         mdb_curr_ver, target_version,
         'downgrade' if is_downgrade else 'upgrade',
         len(active_nodes), ', '.join(active_nodes),
         should_upgrade_cmapi, ignore_mismatch, skip_cmapi, allow_cmapi_downgrade,
+        ignore_unavailable_extras,
     )
 
     with Progress(
@@ -989,6 +1044,120 @@ def install_es(
             )
             progress.stop_task(step3_5_get_available_versions)
 
+        # Optional MariaDB packages (backup, plugins, devel, test...) are
+        # reinstalled at the target version during the upgrade. Check they
+        # exist in the repo now, while nothing is upgraded yet.
+        step3_6_extra_packages = progress.add_task(
+            'Checking optional MariaDB packages on each node...', total=None
+        )
+        extras_results, extras_errors = run_node_step_on_cluster(
+            active_nodes,
+            method_name='check_extra_packages',
+            action_label='Checking optional MariaDB packages',
+            progress=progress,
+            task_id=step3_6_extra_packages,
+            mariadb_version=mdb_target_ver,
+        )
+        if extras_errors:
+            failed_node = next(iter(extras_errors))
+            progress.update(
+                step3_6_extra_packages,
+                description=(
+                    f'[red]Optional packages check failed on {failed_node} ✗'
+                ),
+                total=100, completed=True
+            )
+            progress.stop_task(step3_6_extra_packages)
+            progress.stop()
+            console.print(
+                f'[red]ERROR:[/red] Optional MariaDB packages check failed '
+                f'on {failed_node}.'
+            )
+            console.print(f'[red]{extras_errors[failed_node]}[/red]')
+            console.print(
+                '[yellow]Nothing was upgraded yet. Fix the issue and retry.[/yellow]'
+            )
+            raise typer.Exit(code=1)
+        extras_installed = {
+            node: res.get('installed', [])
+            for node, res in extras_results.items() if res.get('installed')
+        }
+        extras_unavailable = {
+            node: res.get('unavailable', [])
+            for node, res in extras_results.items() if res.get('unavailable')
+        }
+        for node, pkgs in extras_installed.items():
+            logger.info(
+                'Optional MariaDB packages on %s: %s', node, ', '.join(pkgs)
+            )
+        if extras_unavailable:
+            unavailable_lines = [
+                f'  - {node}: {", ".join(pkgs)}'
+                for node, pkgs in extras_unavailable.items()
+            ]
+            if not ignore_unavailable_extras:
+                progress.update(
+                    step3_6_extra_packages,
+                    description=(
+                        '[red]Optional packages not available in repository ✗'
+                    ),
+                    total=100, completed=True
+                )
+                progress.stop_task(step3_6_extra_packages)
+                progress.stop()
+                console.print(
+                    '[red]ERROR:[/red] Installed optional MariaDB packages are '
+                    'not available in the repository at the target version:'
+                )
+                for line in unavailable_lines:
+                    console.print(f'[red]{escape(line)}[/red]')
+                console.print(
+                    '[yellow]Nothing was upgraded yet. Remove these packages, '
+                    'choose a different ES version, or re-run with '
+                    '--ignore-unavailable-extras to upgrade without them '
+                    '(they will be removed and not reinstalled).[/yellow]'
+                )
+                raise typer.Exit(code=1)
+            logger.warning(
+                'Optional MariaDB packages not available, will be skipped '
+                '(--ignore-unavailable-extras):\n%s',
+                '\n'.join(unavailable_lines),
+            )
+            post_print(
+                'WARNING: these optional MariaDB packages were not available '
+                'at the target version and were NOT reinstalled '
+                '(--ignore-unavailable-extras):', 'yellow'
+            )
+            for line in unavailable_lines:
+                post_print(escape(line), 'yellow')
+            progress.update(
+                step3_6_extra_packages,
+                description=(
+                    '[yellow]Some optional packages will be skipped '
+                    '(--ignore-unavailable-extras) ⚠'
+                ),
+                total=100, completed=True
+            )
+        elif extras_installed:
+            all_extras = sorted({
+                pkg for pkgs in extras_installed.values() for pkg in pkgs
+            })
+            progress.update(
+                step3_6_extra_packages,
+                description=(
+                    '[green]Optional packages to upgrade: '
+                    f'{escape(", ".join(all_extras))} ✓'
+                ),
+                total=100, completed=True
+            )
+        else:
+            progress.update(
+                step3_6_extra_packages,
+                description='[green]No optional MariaDB packages installed ✓',
+                total=100, completed=True
+            )
+        progress.stop_task(step3_6_extra_packages)
+
         step4_preupgrade_backup = progress.add_task(
             'Starting pre-upgrade backup DBRM and configs on each node...', total=None
         )
@@ -1038,6 +1207,7 @@ def install_es(
             task_id=step5_upgrade_mdb_mcs,
             mariadb_version=mdb_target_ver,
             columnstore_version=mcs_target_ver,
+            ignore_unavailable_extras=ignore_unavailable_extras,
         )
         if upgrade_errors:
             failed_node = next(iter(upgrade_errors))

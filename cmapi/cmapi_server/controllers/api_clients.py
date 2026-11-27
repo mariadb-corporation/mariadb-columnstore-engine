@@ -485,17 +485,35 @@ class NodeControllerClient(BaseClient):
         """
         return self._request('PUT', 'preupgrade-backup', extra)
 
+    def check_extra_packages(
+        self, mariadb_version: str, extra: Optional[Dict[str, Any]] = None
+    ) -> Union[Dict[str, Any], Dict[str, str]]:
+        """Detect installed optional MariaDB packages and repo availability.
+
+        :param mariadb_version: target MariaDB version
+        :return: The response from the API with 'installed' and
+                 'unavailable' package lists.
+        """
+        return self._request(
+            'GET', 'check-extra-packages',
+            {'mariadb_version': mariadb_version, **(extra or {})}
+        )
+
     def upgrade_mdb_mcs(
         self, mariadb_version: str, columnstore_version: str,
+        ignore_unavailable_extras: bool = False,
         extra: Optional[Dict[str, Any]] = None
     ) -> Union[Dict[str, Any], Dict[str, str]]:
         """Upgrade MariaDB and Columnstore on a node.
 
+        :param ignore_unavailable_extras: skip optional MariaDB packages
+            missing from the repo instead of failing
         :return: The response from the API.
         """
         data = {
             'mariadb_version': mariadb_version,
-            'columnstore_version': columnstore_version
+            'columnstore_version': columnstore_version,
+            'ignore_unavailable_extras': ignore_unavailable_extras,
         }
         return self._request('PUT', 'upgrade-mdb-mcs', {**data, **(extra or {})})
 
