@@ -1018,6 +1018,69 @@ class RowGroupStorage
     return fFinalizedRows[gid] & (1ULL << rid);
   }
 
+  /** @brief Release an RGData from memory without saving it.
+   *
+   *  Used for RGDatas that already have an up-to-date dump file, so nothing is lost.
+   *
+   * @param rgid(in) RGData ID
+   */
+  void dropRGData(uint64_t rgid)
+  {
+    if (UNLIKELY(!fRGDatas[rgid]))  // this box is almost never already gone
+    {
+      return;
+    }
+    fRowGroupOut->setData(fRGDatas[rgid].get());  // point the reader on the box
+    fMM->release(fRowGroupOut->getSizeWithStrings(fMaxRows));  // release the data to mem accounting
+    fRGDatas[rgid].reset();  // delete the box
+  }
+
+  /** @brief Finalize only: remember that the RGData holding row `idx` was changed.
+   *
+   * @param idx(in) row index
+   */
+  void markDirty(uint64_t idx)
+  {
+    uint64_t rgid = idx / fMaxRows;  // box number
+    if (rgid >= fDirty.size())
+      fDirty.resize(rgid + 1, false);
+    fDirty[rgid] = true;
+  }
+
+  /** @brief Finalize only: evict the least recently used RGData to free memory.
+   *
+   *  Every RGData has an up-to-date dump file when finalization starts and ordinary
+   *  reloads keep that file, so an unchanged RGData is just released. A changed one
+   *  is saved first.
+   *
+   * @returns true if an RGData was evicted
+   */
+  bool evictForFinalize()
+  {
+    constexpr size_t MIN_INMEMORY = 2;
+    while (fLRU->size() > MIN_INMEMORY)
+    {
+      uint64_t rgid = *fLRU->rbegin();
+      if (!fRGDatas[rgid])
+      {
+        fLRU->remove(rgid);  // stale entry: already released
+        continue;
+      }
+      if (rgid < fDirty.size() && fDirty[rgid])
+      {
+        saveRG(rgid);  // writes the dump file, releases memory, removes the LRU entry
+        fDirty[rgid] = false;
+      }
+      else
+      {
+        fLRU->remove(rgid);
+        dropRGData(rgid);
+      }
+      return true;
+    }
+    return false;
+  }
+
   void getTmpFilePrefixes(std::vector<std::string>& prefixes) const
   {
     char buf[PATH_MAX];
@@ -1286,6 +1349,7 @@ class RowGroupStorage
   std::unique_ptr<MemManager> fMM;
   std::unique_ptr<LRUIface> fLRU;
   RGDataStorage fRGDatas;
+  std::vector<bool> fDirty;  // used for finalize to check if the RGData changed since it was saved
   const void* fUniqId;
 
   uint64_t fCurRgid{0};
@@ -1715,6 +1779,28 @@ void RowAggStorage::dump()
   }
 }
 
+// Evicts RGDatas until free memory is back to target: previous generation first (never changed,
+// so nothing is written), then current generation (values first, then keys);
+// stops early if no storage has anything left to evict.
+void RowAggStorage::keepFinalizeMemoryBounded(int64_t target, RowGroupStorage* prevStorage,
+                                              RowGroupStorage* prevKeyStorage)
+{
+  while (fMM->getFree() < target)
+  {
+    // Previous-generation RGDatas: just released, finalize never changes them
+    if (prevStorage->evictForFinalize())
+      continue;
+    if (fExtKeys && prevKeyStorage->evictForFinalize())
+      continue;
+    // Evict value RGDatas first: key RGDatas are probed on every lookup
+    if (fStorage->evictForFinalize())
+      continue;
+    if (fExtKeys && fKeysStorage->evictForFinalize())
+      continue;
+    break;  // no eligible RGData to evict in any storage
+  }
+}
+
 void RowAggStorage::append(RowAggStorage& other)
 {
   // we don't need neither key rows storage nor any internal data anymore
@@ -2093,6 +2179,11 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
 
     auto elems = calcSizeWithBuffer(fCurData->fMask + 1);
 
+    // Preferred reserve is 50 MiB or twice the fixed RGData size, whichever is larger
+    const int64_t reserve =
+        std::max<int64_t>(50LL << 20, 2LL * static_cast<int64_t>(fRowGroupOut->getDataSize(fMaxRows)));
+    // If the round starts below reserve, aim for the starting level: don't let finalize add more
+    const int64_t target = std::min(reserve, fMM->getFree());
     for (uint16_t prevGen = 0; prevGen < curGen; ++prevGen)
     {
       prevRowStorage.reset(fStorage->clone(prevGen));
@@ -2120,6 +2211,9 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
           // done finalizing generation
           break;
         }
+
+        // Free memory before any Row below is pointed at an RGData of either generation
+        keepFinalizeMemoryBounded(target, prevRowStorage.get(), prevKeyRowStorage);
 
         const auto& pos = fCurData->fHashes->get(idx);
         if (fKeysStorage->isFinalized(pos.idx))
@@ -2206,8 +2300,10 @@ void RowAggStorage::finalize(std::function<void(Row&)> mergeFunc, Row& rowOut)
           fStorage->getRow(pos.idx, rowOut);
         }
         mergeFunc(tmpRow);
+        fStorage->markDirty(pos.idx);  // mergeFunc changed this current-generation RGData
         genUpdated = true;
         prevKeyRowStorage->markFinalized(ppos.idx);
+        // if Keys and Rows are separate, then mark the rows as well
         if (fExtKeys)
         {
           prevRowStorage->markFinalized(ppos.idx);

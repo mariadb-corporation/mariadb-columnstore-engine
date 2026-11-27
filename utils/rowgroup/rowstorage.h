@@ -282,6 +282,14 @@ class RowAggStorage
    */
   void startNewGeneration();
 
+  /** @brief Finalize only: evict RGDatas of both generations until free memory is back to target.
+   * @param target(in)         free memory to keep, computed once per round in finalize()
+   * @param prevStorage(in)    previous-generation storage being merged
+   * @param prevKeyStorage(in) its key storage (the same as prevStorage without external keys)
+   */
+  void keepFinalizeMemoryBounded(int64_t target, RowGroupStorage* prevStorage,
+                                 RowGroupStorage* prevKeyStorage);
+
   /** @brief Save internal info data on disk */
   void dumpInternalData() const;
 
