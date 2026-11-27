@@ -116,6 +116,7 @@ private:
   bool fDisableTableLockTimeOut{false};
   bool fSilent{false};
   std::string fModuleIDandPID;
+  std::string fTargetPartitionTriple;  // Directory.Segment.DBRoot for -a flag
 
   std::string fReportFilename;
   bool fKeepRollbackMetaData{false};
