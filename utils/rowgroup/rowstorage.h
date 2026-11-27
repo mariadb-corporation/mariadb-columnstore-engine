@@ -294,6 +294,11 @@ class RowAggStorage
    */
   void startNewGeneration();
 
+  /** @brief Finalize only: evict current-generation RGDatas until free memory is back to target.
+   * @param target(in) free memory to keep, computed once per round in finalize()
+   */
+  void keepFinalizeMemoryBounded(int64_t target);
+
   /** @brief Save internal info data on disk */
   void dumpInternalData() const;
 
