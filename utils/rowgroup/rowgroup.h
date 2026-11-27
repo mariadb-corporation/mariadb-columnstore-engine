@@ -1430,6 +1430,8 @@ class RowGroup : public messageqcpp::Serializeable
   inline uint32_t getRowSizeWithStrings() const;
   inline uint64_t getBaseRid() const;
   void setData(RGData* rgd);
+  // Point at no RGData. Call before freeing the RGData this RowGroup is attached to.
+  inline void detachData();
   inline uint8_t* getData() const;
   inline RGData* getRGData() const;
 
@@ -1635,6 +1637,13 @@ inline void RowGroup::setData(RGData* rgd)
   data = rgd->rowData.get();
   strings = rgd->strings.get();
   rgData = rgd;
+}
+
+inline void RowGroup::detachData()
+{
+  data = nullptr;
+  strings = nullptr;
+  rgData = nullptr;
 }
 
 inline uint8_t* RowGroup::getData() const
