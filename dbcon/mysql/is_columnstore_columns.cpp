@@ -61,11 +61,11 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
   InformationSchemaCond isCond;
 
   execplan::CalpontSystemCatalog csc;
+  csc.identity(execplan::CalpontSystemCatalog::FE);
+
   const std::vector<
       std::pair<execplan::CalpontSystemCatalog::OID, execplan::CalpontSystemCatalog::TableName> >
       catalog_tables = csc.getTables();
-
-  csc.identity(execplan::CalpontSystemCatalog::FE);
 
   if (cond)
   {
@@ -96,7 +96,7 @@ static int is_columnstore_columns_fill(THD* thd, TABLE_LIST* tables, COND* cond)
       }
       else
       {
-        return 1;
+        throw;
       }
     }
 
@@ -195,6 +195,6 @@ int is_columnstore_columns_plugin_init(void* p)
 {
   ST_SCHEMA_TABLE* schema = (ST_SCHEMA_TABLE*)p;
   schema->fields_info = is_columnstore_columns_fields;
-  schema->fill_table = is_columnstore_columns_fill;
+  schema->fill_table = is_columnstore_fill_guarded<is_columnstore_columns_fill>;
   return 0;
 }

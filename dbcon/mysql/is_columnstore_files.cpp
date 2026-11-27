@@ -311,6 +311,6 @@ int is_columnstore_files_plugin_init(void* p)
 {
   ST_SCHEMA_TABLE* schema = (ST_SCHEMA_TABLE*)p;
   schema->fields_info = is_columnstore_files_fields;
-  schema->fill_table = is_columnstore_files_fill;
+  schema->fill_table = is_columnstore_fill_guarded<is_columnstore_files_fill>;
   return 0;
 }
